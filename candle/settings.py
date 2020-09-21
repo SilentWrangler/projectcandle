@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'players',
     'world',
+    'rest_framework',
 ]
 
 MIDDLEWARE = [

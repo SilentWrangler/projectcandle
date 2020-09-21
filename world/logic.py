@@ -198,6 +198,7 @@ class WorldGenerator:
                     else:
                         fail_count+=1
             #end pops spawn
+            return world.id
 
 
 
