@@ -8,7 +8,7 @@ class CellSerializerShort(serializers.ModelSerializer):
         fields=['x','y','main_biome','biome_mod','city_type','city_tier']
 
 class WorldSerializer(serializers.ModelSerializer):
-    cells = CellSerializerShort(many = True)
+    cell_set = CellSerializerShort(many = True)
     class Meta:
         model=World
         fields='__all__'

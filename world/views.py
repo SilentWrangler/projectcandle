@@ -5,9 +5,9 @@ from rest_framework.response import Response
 from rest_framework.status import HTTP_200_OK, HTTP_404_NOT_FOUND
 from rest_framework.permissions import IsAdminUser
 
-from models import World
-from serializers import WorldSerializer
-from logic import WorldGenerator
+from .models import World
+from .serializers import WorldSerializer
+from .logic import WorldGenerator
 
 def index(request):
     return HttpResponse("Hello, world. You're at the index.")

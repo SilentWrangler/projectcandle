@@ -1,7 +1,7 @@
 from .constants import WORLD_GEN, MAIN_BIOME, BIOME_MOD, POP_RACE, CITY_TYPE
 from .models import World, Cell, Pop
 from django.db import transaction
-import datetime
+from datetime import datetime
 from random import randint,choice
 
 
@@ -10,6 +10,7 @@ class WorldGenerator:
     """Class for generating a new world. The only function you need to use is
     generate_world(self). All the configs for world generation are in WORLD_GEN
     class in constants.py"""
+    @classmethod
     def can_erupt_into(self,x,y):
         if x<0: return False
         if x>=WORLD_GEN.WIDTH: return False
@@ -18,6 +19,8 @@ class WorldGenerator:
         cell = self.cells[x][y]
         if cell.biome_mod == BIOME_MOD.MOUNTAINS: return False
         return True
+
+    @classmethod
     def can_grow_forest(self,x,y):
         if x<0: return False
         if x>=WORLD_GEN.WIDTH: return False
@@ -29,6 +32,7 @@ class WorldGenerator:
         if cell.biome_mod == BIOME_MOD.HILLS: return False
         if cell.biome_mod == BIOME_MOD.FOREST: return False
         return True
+    @classmethod
     def can_make_swamp(self,x,y):
         if x<0: return False
         if x>=WORLD_GEN.WIDTH: return False
@@ -40,7 +44,7 @@ class WorldGenerator:
         if cell.biome_mod == BIOME_MOD.HILLS: return False
         if cell.biome_mod == BIOME_MOD.SWAMP: return False
         return True
-
+    @classmethod
     def cell_score(self,x,y):
         """Function for determining whether a cell is suitable for placing a city"""
         if x<0: return -1
@@ -61,6 +65,7 @@ class WorldGenerator:
             result -=5
         return result
 
+    @classmethod
     def area_score(self,x,y):
         """If total score of this cell and surrounding above WORLD_GEN.CITY_SCORE
         this cell is eligible for placing a city."""
@@ -70,6 +75,7 @@ class WorldGenerator:
                 result+=self.cell_score(i,j)
         return result
 
+    @classmethod
     def choose_race(self, index):
         if index%16==0:
             return POP_RACE.FEY
@@ -83,7 +89,7 @@ class WorldGenerator:
             return POP_RACE.GOBLIN
         else:
             return POP_RACE.ORC
-
+    @classmethod
     def generate_world(self):
         """Only function you need to call as a method. Generates and stores a world."""
         with transaction.atomic():
@@ -98,8 +104,8 @@ class WorldGenerator:
             #Start eruptions
             for e in range(WORLD_GEN.ERUPTIONS):
                 pwr=WORLD_GEN.ERUPTION_POWER
-                start_x = randint(WORLD_GEN.WIDTH/4,(WORLD_GEN.WIDTH/4)*3)
-                start_y = randint(WORLD_GEN.HEIGHT/4,(WORLD_GEN.HEIGHT/4)*3)
+                start_x = randint(int(WORLD_GEN.WIDTH/4),(int(WORLD_GEN.WIDTH/4))*3)
+                start_y = randint(int(WORLD_GEN.HEIGHT/4),(int(WORLD_GEN.HEIGHT/4))*3)
                 c_x = start_x
                 c_y = start_y
                 land_type = choice([MAIN_BIOME.PLAIN,MAIN_BIOME.PLAIN,MAIN_BIOME.DESERT])
@@ -120,8 +126,8 @@ class WorldGenerator:
             #End eruptions
             #Grow forests
             forest_quota = WORLD_GEN.FOREST_CELLS
-            seed_x = randint(WORLD_GEN.WIDTH/4,(WORLD_GEN.WIDTH/4)*3)
-            seed_y = randint(WORLD_GEN.HEIGHT/4,(WORLD_GEN.HEIGHT/4)*3)
+            seed_x = randint(int(WORLD_GEN.WIDTH/4),(int(WORLD_GEN.WIDTH/4))*3)
+            seed_y = randint(int(WORLD_GEN.HEIGHT/4),(int(WORLD_GEN.HEIGHT/4))*3)
             fail_count = 0
             while forest_quota>0 and fail_count<10:
                 if self.can_grow_forest(seed_x,seed_y):
@@ -132,13 +138,13 @@ class WorldGenerator:
                     seed_y+=randint(-1,1)
                 else:
                     fail_count+=1
-                    seed_x = randint(WORLD_GEN.WIDTH/4,(WORLD_GEN.WIDTH/4)*3)
-                    seed_y = randint(WORLD_GEN.HEIGHT/4,(WORLD_GEN.HEIGHT/4)*3)
+                    seed_x = randint(int(WORLD_GEN.WIDTH/4),(int(WORLD_GEN.WIDTH/4))*3)
+                    seed_y = randint(int(WORLD_GEN.HEIGHT/4),(int(WORLD_GEN.HEIGHT/4))*3)
             #Stop growing forests
             #Start making swamps
             swamp_quota = WORLD_GEN.SWAMP_CELLS
-            seed_x = randint(WORLD_GEN.WIDTH/4,(WORLD_GEN.WIDTH/4)*3)
-            seed_y = randint(WORLD_GEN.HEIGHT/4,(WORLD_GEN.HEIGHT/4)*3)
+            seed_x = randint(int(WORLD_GEN.WIDTH/4),(int(WORLD_GEN.WIDTH/4))*3)
+            seed_y = randint(int(WORLD_GEN.HEIGHT/4),(int(WORLD_GEN.HEIGHT/4))*3)
             fail_count = 0
             while swamp_quota>0 and fail_count<10:
                 if self.can_make_swamp(seed_x,seed_y):
@@ -149,8 +155,8 @@ class WorldGenerator:
                     seed_y+=randint(-1,1)
                 else:
                     fail_count+=1
-                    seed_x = randint(WORLD_GEN.WIDTH/4,(WORLD_GEN.WIDTH/4)*3)
-                    seed_y = randint(WORLD_GEN.HEIGHT/4,(WORLD_GEN.HEIGHT/4)*3)
+                    seed_x = randint(int(WORLD_GEN.WIDTH/4),int(WORLD_GEN.WIDTH/4)*3)
+                    seed_y = randint(int(WORLD_GEN.HEIGHT/4),int(WORLD_GEN.HEIGHT/4)*3)
             #stop making swamps
 
             #prepare map for spawning pops
@@ -165,8 +171,8 @@ class WorldGenerator:
             pop_max = WORLD_GEN.CITY_NUMBER*WORLD_GEN.POPS_PER_CITY
             fail_count = 0
             while pop_count<pop_max and fail_count<10:
-                c_x = randint(0,WORLD_GEN.WIDTH)
-                c_y = randint(0,WORLD_GEN.HEIGHT)
+                c_x = randint(0,WORLD_GEN.WIDTH-1)
+                c_y = randint(0,WORLD_GEN.HEIGHT-1)
                 cell = self.cells[c_x][c_y]
                 if cell.main_biome!=MAIN_BIOME.WATER and self.area_score(c_x,c_y)>WORLD_GEN.CITY_SCORE:
                     fail_count=0
@@ -176,8 +182,8 @@ class WorldGenerator:
                         if race==POP_RACE.FEY: #Place Fey separately from other races
                             placed = False
                             while not placed:
-                                c_x = randint(0,WORLD_GEN.WIDTH)
-                                c_y = randint(0,WORLD_GEN.HEIGHT)
+                                c_x = randint(0,WORLD_GEN.WIDTH-1)
+                                c_y = randint(0,WORLD_GEN.HEIGHT-1)
                                 cell = self.cells[c_x][c_y]
                                 if cell.main_biome!=MAIN_BIOME.WATER:
                                     placed=True

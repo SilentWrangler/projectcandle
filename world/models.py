@@ -12,12 +12,13 @@ WORLD_END_CHOICES = [
 
 class World(models.Model):
     start_date = models.DateTimeField('Мир запущен')
-    end_date = models.DateTimeField('Мир закрыт')
+    end_date = models.DateTimeField('Мир закрыт', null=True)
     end_type = models.CharField(
         max_length = 2,
         choices = WORLD_END_CHOICES,
         default = 'NY'
     )
+
 
 
 class Cell(models.Model):
@@ -41,6 +42,8 @@ class Cell(models.Model):
         choices = RESOURCE_TYPE.choices,
         max_length = 3
     )
+    class Meta:
+        ordering = ['world','x','y']
 
 class Pop(models.Model):
     location = models.ForeignKey(Cell, on_delete=models.CASCADE)
