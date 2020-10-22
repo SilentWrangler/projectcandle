@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'players',
     'world',
     'rest_framework',
+    'background_task',
 ]
 
 MIDDLEWARE = [

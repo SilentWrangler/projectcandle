@@ -27,6 +27,9 @@ def getworld(request,id):
 @api_view(["POST"])
 @permission_classes((IsAdminUser,))
 def create_world(request):
-    wid = WorldGenerator.generate_world()
-    return getworld(request,wid)
+    generator = WorldGenerator()
+    generator.generate_world(generator)
+    return Response({'status':'processing'},HTTP_200_OK)
+
+
 
