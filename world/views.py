@@ -28,7 +28,7 @@ def getworld(request,id):
 @permission_classes((IsAdminUser,))
 def create_world(request):
     generator = WorldGenerator()
-    generator.generate_world(generator)
+    generator.generate_world(generator.__dict__, verbose_name="Generate World", creator=request.user)
     return Response({'status':'processing'},HTTP_200_OK)
 
 

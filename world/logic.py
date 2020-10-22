@@ -107,6 +107,12 @@ class WorldGenerator:
     @background(queue='worldgen')
     def generate_world(self):
         """Only function you need to call as a method. Generates and stores a world."""
+        print('=======================================')
+        print(type(self))
+        if self.__class__!=WorldGenerator:
+            print("Converting...")
+            self = WorldGenerator(self)
+            print(f'{type(self)}\n================================')
         with transaction.atomic():
             world = World(start_date=datetime.now())
             world.save()
@@ -220,10 +226,9 @@ class WorldGenerator:
                         fail_count+=1
             #end pops spawn
             return world.id
-
-        def toJson(self):
-            return json.dumps(self, default=lambda o: o.__dict__,
-            sort_keys=True, indent=4)
+    def to_json(self):
+        return json.dumps(self, default=lambda o: o.__dict__,
+        sort_keys=True, indent=4)
 
 
 
