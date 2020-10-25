@@ -7,7 +7,7 @@ from rest_framework.permissions import IsAdminUser
 
 from .models import World
 from .serializers import WorldSerializer
-from .logic import WorldGenerator
+from .logic import WorldGenerator, generate_world_background
 
 def index(request):
     return HttpResponse("Hello, world. You're at the index.")
@@ -28,7 +28,7 @@ def getworld(request,id):
 @permission_classes((IsAdminUser,))
 def create_world(request):
     generator = WorldGenerator()
-    generator.generate_world(generator.__dict__, verbose_name="Generate World", creator=request.user)
+    generate_world_background(**generator.__dict__, verbose_name="Generate World", creator=request.user)
     return Response({'status':'processing'},HTTP_200_OK)
 
 

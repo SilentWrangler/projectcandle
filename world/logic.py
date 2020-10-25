@@ -104,15 +104,11 @@ class WorldGenerator:
         else:
             return POP_RACE.ORC
 
-    @background(queue='worldgen')
+
     def generate_world(self):
         """Only function you need to call as a method. Generates and stores a world."""
-        print('=======================================')
-        print(type(self))
-        if self.__class__!=WorldGenerator:
-            print("Converting...")
-            self = WorldGenerator(self)
-            print(f'{type(self)}\n================================')
+
+
         with transaction.atomic():
             world = World(start_date=datetime.now())
             world.save()
@@ -189,7 +185,7 @@ class WorldGenerator:
 
             #spawn pops
             pop_count = 0
-            pop_max = self.city_cumber*self.pops_per_city
+            pop_max = self.city_number*self.pops_per_city
             fail_count = 0
             while pop_count<pop_max and fail_count<10:
                 c_x = randint(0,self.width-1)
@@ -230,13 +226,10 @@ class WorldGenerator:
         return json.dumps(self, default=lambda o: o.__dict__,
         sort_keys=True, indent=4)
 
-
-
-
-
-
-
-
+@background(queue='worldgen')
+def generate_world_background(**kwargs):
+    generator = WorldGenerator(**kwargs)
+    generator.generate_world()
 
 
 
