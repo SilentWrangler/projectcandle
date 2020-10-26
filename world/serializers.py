@@ -8,7 +8,7 @@ class CellSerializerShort(serializers.ModelSerializer):
         fields=['x','y','main_biome','biome_mod','city_type','city_tier']
 
 class WorldSerializer(serializers.ModelSerializer):
-    cell_set = CellSerializerShort(many = True)
+    cells = CellSerializerShort(many = True, source='cell_set')
     class Meta:
         model=World
         fields='__all__'
@@ -27,8 +27,8 @@ class PopSerializerShort(serializers.ModelSerializer):
         fields = ['id','race']
 
 class CellSerializerFull(serializers.ModelSerializer):
-    tags = CellTagSrl(many = True)
-    pops = PopSerializerShort(many = True)
+    tags = CellTagSrl(many = True, source = 'celltag_set')
+    pops = PopSerializerShort(many = True, source = 'pop_set')
     class Meta:
         model=Cell
         fields='__all__'
@@ -40,7 +40,7 @@ class PopTagSrl(serializers.ModelSerializer):
         fields = ['name','content']
 
 class PopSerializerFull(serializers.ModelSerializer):
-    tags = PopTagSrl(many = True)
+    tags = PopTagSrl(many = True, source = 'poptag_set')
     class Meta:
         model = Pop
         fields = '__all__'
