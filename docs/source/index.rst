@@ -9,6 +9,7 @@ Welcome to World of Candle's documentation!
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
+   api
 
 
 
