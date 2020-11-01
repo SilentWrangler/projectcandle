@@ -18,16 +18,18 @@ from dotenv import load_dotenv
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 load_dotenv(os.path.join(BASE_DIR,'.env'))
 
+
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'l)jq)0&hmr+#-afz1nknzv9_&^+656vkkz3!tf-bqn%=*q543h'
+SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['silentwrangler.pythonanywhere.com' ]
+ALLOWED_HOSTS = ['silentwrangler.pythonanywhere.com', 'portal.worldofcandle.club' ]
 
 
 # Application definition
@@ -43,6 +45,7 @@ INSTALLED_APPS = [
     'world',
     'rest_framework',
     'background_task',
+    'rest_framework.authtoken',
 ]
 
 MIDDLEWARE = [
@@ -60,7 +63,9 @@ ROOT_URLCONF = 'candle.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [
+            os.path.join(BASE_DIR, 'templates'),
+            ],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -92,7 +97,23 @@ DATABASES = {
         },
     }
 }
+#Email
 
+
+EMAIL_BACKEND = "anymail.backends.sendinblue.EmailBackend"
+ANYMAIL = {
+    "SENDINBLUE_API_KEY": os.getenv('SENDINBLUE_API_KEY'),
+}
+
+
+DEFAULT_FROM_EMAIL = 'noreply@worldofcandle.club'
+#REST API
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES':[
+        'rest_framework.authentication.TokenAuthentication',
+        ]
+    }
 
 # Password validation
 # https://docs.djangoproject.com/en/3.0/ref/settings/#auth-password-validators
@@ -114,7 +135,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 
 AUTH_USER_MODEL = 'players.Player'
-
+LOGOUT_REDIRECT_URL = 'home'
 # Internationalization
 # https://docs.djangoproject.com/en/3.0/topics/i18n/
 
@@ -131,5 +152,5 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.0/howto/static-files/
-
+STATIC_ROOT = os.path.join(BASE_DIR,'static/')
 STATIC_URL = '/static/'

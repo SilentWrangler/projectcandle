@@ -1,0 +1,47 @@
+{% load static %}
+{% load i18n %}
+<head>
+    <title>Candle — experimental turn-based MMO</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'css/main.css' %}" />
+</head>
+<body>
+    <div class="navbar">
+        <div class="container">
+            <a class="brand" href={% url 'home' %}>
+                <img src="{% static 'common/logo.png' %}" alt="Candle logo">
+            </a>
+
+            <a class="menu-link" href="#">
+                {% trans "Меню" %}
+            </a>
+            <a class="menu-link" href="#">
+                {% trans "Лор" %}
+            </a>
+
+            <a class="menu-link" href="#">
+                <strong>{% trans "Игра" %}</strong>
+            </a>
+            {% if user.is_authenticated %}
+            {% if user.is_staff %}
+            <a class="menu-link" href="/admin/">
+                {% trans "Администрирование" %}
+            </a>
+            {% endif %}
+            <a class="menu-link" href = "{% url 'profile' %}">{{user.username}}</a>
+            <a class="menu-link" href = "{% url 'logout' %}">{% trans "Выйти" %} </a>
+            {% else %}
+            <a class="menu-link" href = "{% url 'signup' %}">{% trans "Зарегистрироваться" %}</a>
+            <a class="menu-link" href = "{% url 'login' %}"><strong>{% trans "Войти" %} </strong></a>
+            {% endif %}
+        </div>
+    </div>
+    {%block content%}
+    <p>This is a placeholder landing.</p>
+    <p>World of Candle is an experimental (to-be) RPG which is supposed to be played a few minutes once every few days.
+    The fastest actions will take at least an IRL day to finish, which corresponds to an in-game month.</p>
+    <p>Player characters can, and eventually will, die permanently, but new ones will take up their legacy (not unlike famuous Crusader Kings series).
+    Except the stakes are a bit higher. Rather than just guiding their dynasties to greatness, the players are supposed to face a bigger threat than each other...
+    The one that can stomp the world they so carefully conquered into dirt, and force them to rebuild on a brand new one.</p>
+
+    {% endblock %}
+</body>
