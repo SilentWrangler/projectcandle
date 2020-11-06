@@ -6,11 +6,15 @@ from rest_framework.status import HTTP_200_OK, HTTP_404_NOT_FOUND, HTTP_400_BAD_
 from rest_framework.permissions import IsAdminUser
 
 from .models import World, Cell, Pop
-from .serializers import WorldSerializer, CellSerializerFull,PopSerializerFull
-from .logic import WorldGenerator, generate_world_background
+from .serializers import WorldSerializer, CellSerializerFull, PopSerializerFull,CellSerializerShort
+from .logic import WorldGenerator, generate_world_background, put_resource_deposits
 
 def index(request):
-    return HttpResponse("Hello, world. You're at the index.")
+    try:
+        world = World.objects.get(is_active=True)
+    except World.DoesNotExist:
+        world = None
+    return render(request,"worldtable.html",{'world':world})
 
 
 @api_view(["GET"])
@@ -27,9 +31,20 @@ def getworld(request,id):
 @api_view(["POST"])
 @permission_classes((IsAdminUser,))
 def create_world(request):
-    generator = WorldGenerator()
-    generate_world_background(**generator.__dict__, verbose_name="Generate World", creator=request.user)
-    return Response({'status':'processing'},HTTP_200_OK)
+    try:
+        generator = WorldGenerator()
+        generator.eruptions = int(request.data.get('eruptions', generator.eruptions))
+        generator.eruption_power = int(request.data.get('eruption_power', generator.eruption_power))
+        generator.forest_cells = int(request.data.get('forest_cells', generator.forest_cells))
+        generator.swamp_cells = int(request.data.get('swamp_cells', generator.swamp_cells))
+        generator.city_number = int(request.data.get('city_number', generator.city_number))
+        generator.pops_per_city = int(request.data.get('pops_per_city', generator.pops_per_city))
+        generator.city_score  = int(request.data.get('city_score', generator.city_score))
+        generate_world_background(**generator.__dict__, verbose_name="Generate World", creator=request.user)
+
+        return Response({'status':'processing'},HTTP_200_OK)
+    except ValueError as err:
+        return Response({'detail':str(err)},HTTP_400_BAD_REQUEST)
 
 @api_view(["GET"])
 def get_cell_info(request):
@@ -52,4 +67,25 @@ def get_pop_info(request,id):
         return Response({'status':'ok','data':seri.data},HTTP_200_OK)
     except Pop.DoesNotExist:
         return Response({'detail':'Incorrect id'},HTTP_404_NOT_FOUND)
+
+
+@api_view(["GET"])
+def get_world_cities(request,worldid):
+    cities = Cell.objects.filter(city_tier__gt=0)
+    seri = CellSerializerShort(cities, many=True)
+    return Response({'status':'ok','data':seri.data},HTTP_200_OK)
+
+
+@api_view(["POST"])
+@permission_classes((IsAdminUser,))
+def world_populate_res(request,worldid):
+    put_resource_deposits(worldid, creator=request.user)
+    return Response({'status':'processing'},HTTP_200_OK)
+
+@api_view(["POST"])
+@permission_classes((IsAdminUser,))
+def strip_resources(request,worldid):
+    cells = Cell.objects.filter(world_id=worldid)
+    cells.update(local_resource = None)
+    return Response({'status':'ok'},HTTP_200_OK)
 

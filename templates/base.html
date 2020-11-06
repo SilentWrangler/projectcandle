@@ -3,6 +3,7 @@
 <head>
     <title>Candle — experimental turn-based MMO</title>
     <link rel="stylesheet" type="text/css" href="{% static 'css/main.css' %}" />
+    <link rel="shortcut icon" type="image/png" href="{% static 'favicon.ico' %}"/>
 </head>
 <body>
     <div class="navbar">
@@ -18,7 +19,7 @@
                 {% trans "Лор" %}
             </a>
 
-            <a class="menu-link" href="#">
+            <a class="menu-link" href="{% url 'map' %}">
                 <strong>{% trans "Игра" %}</strong>
             </a>
             {% if user.is_authenticated %}

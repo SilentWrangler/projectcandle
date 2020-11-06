@@ -1,4 +1,5 @@
 from .constants import WORLD_GEN, MAIN_BIOME, BIOME_MOD, POP_RACE, CITY_TYPE
+from .constants import RESOURCE_TYPE as rt
 from .models import World, Cell, Pop
 from django.db import transaction
 from datetime import datetime
@@ -119,6 +120,7 @@ class WorldGenerator:
                 self.width)] #flood the world
 
             #Start eruptions
+            modlist = [(BIOME_MOD.NONE,1),(BIOME_MOD.HILLS,2),(BIOME_MOD.MOUNTAINS,3)]
             for e in range(self.eruptions):
                 pwr=self.eruption_power
                 start_x = randint(int(self.width/4),(int(self.width/4))*3)
@@ -127,15 +129,13 @@ class WorldGenerator:
                 c_y = start_y
                 land_type = choice([MAIN_BIOME.PLAIN,MAIN_BIOME.PLAIN,MAIN_BIOME.DESERT])
                 fail_count=0
-                while pwr>0 and fail_count<5:
+                while pwr>0 and fail_count<15:
                     if self.can_erupt_into(c_x,c_y):
-                        pwr-=1
+                        t = choice(modlist)
+                        pwr-= t[1]
                         cell = self.cells[c_x][c_y]
                         cell.main_biome = land_type
-                        if cell.biome_mod == BIOME_MOD.NONE:
-                            cell.biome_mod = BIOME_MOD.HILLS
-                        if cell.biome_mod == BIOME_MOD.HILLS:
-                            cell.biome_mod = BIOME_MOD.MOUNTAINS
+                        cell.biome_mod = t[0]
                     else:
                         fail_count+=1
                     c_x+= randint(-1,1)
@@ -232,8 +232,83 @@ def generate_world_background(**kwargs):
     generator.generate_world()
 
 
+def pick_resource(main,mod):
+    table = {
+        MAIN_BIOME.PLAIN:{
+            '': [rt.IRON, rt.QUARTZ, rt.WYVERNS],
+            BIOME_MOD.FOREST: [rt.AMBER],
+            BIOME_MOD.SWAMP: [rt.IRON],
+            BIOME_MOD.HILLS: [rt.IRON,rt.RUBIES,rt.SAPHIRES,rt.SILVER, rt.GOLD],
+            BIOME_MOD.MOUNTAINS: [rt.ALUMINIUM, rt.GOLD, rt.OBSIDIAN,rt.AMETHISTS]
+            },
+        MAIN_BIOME.DESERT:{
+            '': [rt.HORSES],
+            BIOME_MOD.FOREST: [rt.AMBER],
+            BIOME_MOD.SWAMP: [rt.SAPHIRES],
+            BIOME_MOD.HILLS: [rt.IRON, rt.EMERALD,rt.AMETHISTS,rt.SILVER],
+            BIOME_MOD.MOUNTAINS: [rt.ALUMINIUM, rt.SILVER, rt.DIAMONDS,rt.SAPHIRES]
+            }
+        }
+    drop_list = table[main][mod]
+    return choice(drop_list)
+
+@background(queue='worldgen')
+def put_resource_deposits(world_id):
+    with transaction.atomic():
+        cells = Cell.objects.filter(world_id = world_id)
+        for cell in cells:
+            if cell.main_biome == MAIN_BIOME.WATER:
+                continue
+            else:
+                if randint(1,100)>80:
+                    cell.local_resource = pick_resource(cell.main_biome, cell.biome_mod)
+                    cell.save()
 
 
+def food_value(x,y, world_id):
+    try:
+        cell = Cell.objects.get(world_pk=world_id,x=x,y=y)
+        base_table = {
+            MAIN_BIOME.PLAIN:{
+                BIOME_MOD.NONE: 4,
+                BIOME_MOD.FOREST: 3,
+                BIOME_MOD.SWAMP: 3,
+                BIOME_MOD.HILLS: 2,
+                BIOME_MOD.MOUNTAINS:1
+                },
+            MAIN_BIOME.DESERT:{
+                BIOME_MOD.NONE: 1,
+                BIOME_MOD.FOREST: 2,
+                BIOME_MOD.SWAMP: 3,
+                BIOME_MOD.HILLS: 1,
+                BIOME_MOD.MOUNTAINS: 1
+                }
+        }
+        multiplier_table = {
+            CITY_TYPE.GENERIC: [2,2,1,1,0],
+            CITY_TYPE.MANA: [1,0],
+            CITY_TYPE.FARM: [3,5],
+            CITY_TYPE.LIBRARY: [1,1],
+            CITY_TYPE.FORT: [0,0],
+            CITY_TYPE.FACTORY: [0,0],
+            CITY_TYPE.MINE: [1,0]
+        }
+
+        def get_multiplier(city_type,tier):
+            if city_type is None:
+                return 2
+            elif city_type == CITY_TYPE.SORROW_LAIR:
+                return 0
+            else:
+                return multiplier_table[city_type][tier-1]
 
 
+        return base_table[cell.main_biome][cell.biome_mod]*get_multiplier(cell.city_type,cell.city_tier)
+    except Cell.DoesNotExist:
+        return 0
 
+def cell_total_food(cell):
+    s = 0
+    for x in range(cell.x-1,cell.x+2):
+        for y in range(cell.y-1,cell.y+2):
+            s+=food_value(x,y,cell.world.id)
