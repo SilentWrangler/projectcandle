@@ -92,8 +92,8 @@ DATABASES = {
         'PASSWORD': os.getenv('DB_PASS'),
         'HOST': os.getenv('DB_HOST'),
         'TEST':{
-            'ENGINE': 'django.db.backends.mysql',
-            'NAME': 'SilentWrangler$projectcandle_test',
+            'ENGINE': os.getenv('TEST_DB_BACK'),
+            'NAME': os.getenv('TEST_DB_NAME'),
         },
     }
 }
