@@ -7,8 +7,11 @@ from .constants import MAIN_BIOME, BIOME_MOD
 
 class GenerationTestCase(TestCase):
     def setUp(self):
-        WorldGenerator.generate_world()
-    def all_biomes_present(self):
+        generator = WorldGenerator()
+        print(f"Generator created:\n{generator.__dict__}")
+        generator.generate_world(True)
+        print("Generation finished")
+    def test_all_biomes_present(self):
         """Passes if the generator creates all types of biomes"""
 
         self.assertEqual(Cell.objects.filter(main_biome = MAIN_BIOME.WATER).exists(), True)
@@ -20,5 +23,5 @@ class GenerationTestCase(TestCase):
         self.assertEqual(Cell.objects.filter(biome_mod = BIOME_MOD.HILLS).exists(), True)
         self.assertEqual(Cell.objects.filter(biome_mod = BIOME_MOD.MOUNTAINS).exists(), True)
 
-    def cities_present(self):
+    def test_cities_present(self):
         self.assertEqual(Cell.objects.filter(city_tier=1).exists(),True)
