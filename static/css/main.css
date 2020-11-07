@@ -9,3 +9,11 @@
     padding-left:5%;
     vertical-align: middle;
 }
+
+.worldmap  {
+
+    border: #862012 double 10px;
+    border-radius: 20px;
+    background: brown;
+
+}

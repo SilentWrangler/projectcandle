@@ -12,9 +12,10 @@ from .logic import WorldGenerator, generate_world_background, put_resource_depos
 def index(request):
     try:
         world = World.objects.get(is_active=True)
+        seri = WorldSerializer(world)
     except World.DoesNotExist:
         world = None
-    return render(request,"worldtable.html",{'world':world})
+    return render(request,"worldtable.html",{'world':seri.data})
 
 
 @api_view(["GET"])

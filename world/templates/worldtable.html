@@ -5,10 +5,14 @@
 {% block content %}
 
 {% if world %}
-<input type = "hidden" value="{{world.id}}" id="wid">
+{{ world|json_script:"world" }}
 <script src = "{% static 'map/mapper.js' %}"></script>
 <!-- TODO: make canvas draggable instead of huge -->
-<canvas id="map" width = "3200" height = "2400"></canvas>
+<p></p>
+<center>
+    <canvas id="map" width = "1" height = "1" class="worldmap"></canvas>
+</center>
+
 
 {% endif %}
 
