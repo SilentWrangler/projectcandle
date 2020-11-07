@@ -2,7 +2,7 @@ from .constants import WORLD_GEN, MAIN_BIOME, BIOME_MOD, POP_RACE, CITY_TYPE
 from .constants import RESOURCE_TYPE as rt
 from .models import World, Cell, Pop
 from django.db import transaction
-from datetime import datetime
+from django.utils import timezone
 from random import randint,choice
 from background_task import background
 
@@ -34,6 +34,25 @@ class WorldGenerator:
         cell = self.cells[x][y]
         if cell.biome_mod == BIOME_MOD.MOUNTAINS: return False
         return True
+
+
+    def determine_eruption_height(self, power):
+
+        power_left = power/self.eruption_power
+
+        if power_left>0.95:
+            modlist = [(BIOME_MOD.NONE,1)] +[(BIOME_MOD.HILLS,2)]*2 + [(BIOME_MOD.MOUNTAINS,3)]*3
+        elif power_left>0.8:
+            modlist = [(BIOME_MOD.NONE,1)]*2 +[(BIOME_MOD.HILLS,2)]*2 + [(BIOME_MOD.MOUNTAINS,3)]
+        elif power_left>0.6:
+            modlist = [(BIOME_MOD.NONE,1)]*3 +[(BIOME_MOD.HILLS,2)]*2
+        elif power_left>0.45:
+            modlist = [(BIOME_MOD.NONE,1)]*5 +[(BIOME_MOD.HILLS,2)]
+        else:
+            modlist = [(BIOME_MOD.NONE,1)]
+        return choice(modlist)
+
+
 
 
     def can_grow_forest(self,x,y):
@@ -112,7 +131,7 @@ class WorldGenerator:
 
         with transaction.atomic():
             if printDebug: print('Creating World object...')
-            world = World(start_date=datetime.now())
+            world = World(start_date=timezone.now(),width = self.width,height = self.height)
             world.save()
             if printDebug: print('Done.')
             if printDebug: print('Creating Water cells...')
@@ -124,18 +143,18 @@ class WorldGenerator:
             if printDebug: print('Done.')
             if printDebug: print('Generating elevation...')
             #Start eruptions
-            modlist = [(BIOME_MOD.NONE,1),(BIOME_MOD.HILLS,2),(BIOME_MOD.MOUNTAINS,3)]
+
             for e in range(self.eruptions):
                 pwr=self.eruption_power
-                start_x = randint(int(self.width/4),(int(self.width/4))*3)
-                start_y = randint(int(self.height/4),(int(self.height/4))*3)
+                start_x = randint(int(self.width/6),(int(self.width/6))*5)
+                start_y = randint(int(self.height/6),(int(self.height/6))*5)
                 c_x = start_x
                 c_y = start_y
                 land_type = choice([MAIN_BIOME.PLAIN,MAIN_BIOME.PLAIN,MAIN_BIOME.DESERT])
                 fail_count=0
                 while pwr>0 and fail_count<15:
                     if self.can_erupt_into(c_x,c_y):
-                        t = choice(modlist)
+                        t = self.determine_eruption_height(pwr)
                         pwr-= t[1]
                         cell = self.cells[c_x][c_y]
                         cell.main_biome = land_type
@@ -149,11 +168,12 @@ class WorldGenerator:
             #Grow forests
             if printDebug: print('Growing forests...')
             forest_quota = self.forest_cells
-            seed_x = randint(int(self.width/4),(int(self.width/4))*3)
-            seed_y = randint(int(self.height/4),(int(self.height/4))*3)
+            seed_x = randint(int(self.width/6),(int(self.width/6))*5)
+            seed_y = randint(int(self.height/6),(int(self.height/6))*5)
             fail_count = 0
             while forest_quota>0 and fail_count<10:
                 if self.can_grow_forest(seed_x,seed_y):
+                    fail_count = 0
                     forest_quota-=1
                     cell = self.cells[seed_x][seed_y]
                     cell.biome_mod= BIOME_MOD.FOREST
@@ -162,19 +182,20 @@ class WorldGenerator:
                     seed_y+= add_y
                 else:
                     fail_count+=1
-                    seed_x = randint(int(self.width/4),(int(self.width/4))*3)
-                    seed_y = randint(int(self.height/4),(int(self.height/4))*3)
+                    seed_x = randint(int(self.width/6),(int(self.width/6))*5)
+                    seed_y = randint(int(self.height/6),(int(self.height/6))*5)
             #Stop growing forests
             if printDebug: print('Done.')
             #Start making swamps
             if printDebug: print('Creating swamps...')
             swamp_quota = self.swamp_cells
-            seed_x = randint(int(self.width/4),(int(self.width/4))*3)
-            seed_y = randint(int(self.height/4),(int(self.height/4))*3)
+            seed_x = randint(int(self.width/6),(int(self.width/6))*5)
+            seed_y = randint(int(self.height/6),(int(self.height/6))*5)
             fail_count = 0
             while swamp_quota>0 and fail_count<10:
                 if self.can_make_swamp(seed_x,seed_y):
                     swamp_quota-=1
+                    fail_count = 0
                     cell = self.cells[seed_x][seed_y]
                     cell.biome_mod= BIOME_MOD.SWAMP
                     add_x, add_y = choice([(1,0),(-1,0),(0,1),(0,-1)])

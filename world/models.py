@@ -19,6 +19,8 @@ class World(models.Model):
         default = 'NY'
     )
     is_active = models.BooleanField(default = False)
+    width = models.IntegerField()
+    height = models.IntegerField()
     def save(self, *args, **kwargs):
         if self.is_active:
             try:
