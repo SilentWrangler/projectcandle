@@ -29,7 +29,8 @@ SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['silentwrangler.pythonanywhere.com', 'portal.worldofcandle.club' ]
+ALLOWED_HOSTS = ['silentwrangler.pythonanywhere.com',
+ 'portal.worldofcandle.club', 'localhost' ]
 
 
 # Application definition
@@ -86,7 +87,7 @@ WSGI_APPLICATION = 'candle.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql',
+        'ENGINE': os.getenv('DB_BACK'),
         'NAME': os.getenv('DB_NAME'),
         'USER': os.getenv('DB_USER'),
         'PASSWORD': os.getenv('DB_PASS'),
