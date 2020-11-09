@@ -6,12 +6,40 @@
 
 {% if world %}
 {{ world|json_script:"world" }}
-<script src = "{% static 'map/mapper.js' %}"></script>
+
 <!-- TODO: make canvas draggable instead of huge -->
 <p></p>
-<center>
-    <canvas id="map" width = "1" height = "1" class="worldmap"></canvas>
-</center>
+<div>
+    <center>
+        <div class="worldmap-scale-container">
+            <button type="button" id="scale_minus" class='map-scale-button fancyminus'></button>
+            <input type="range" step="0.05" min="0.05" max="1" id="scale_range" value="0.2" class="slider"></input>
+            <button type="button" id="scale_plus" class='map-scale-button fancyplus'></button>
+
+        </div>
+
+        <div class="worldmap-map-container" id="map-container">
+            <div class = "cellinfo" id="celldata">
+                <p>
+                    <strong id="celldata-info-coord"></strong>
+                </p>
+                <p id ="celldata-info-biome">
+
+                </p>
+                <p id ="celldata-info-city">
+
+                </p>
+                <p id ="celldata-info-pops">
+
+                </p>
+            </div>
+            <canvas id="map" width = "1" height = "1" class="worldmap"></canvas>
+        </div>
+
+    </center>
+
+</div>
+<script src = "{% static 'map/mapper.js' %}"></script>
 
 
 {% endif %}

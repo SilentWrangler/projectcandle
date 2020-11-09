@@ -6,6 +6,7 @@
     <link rel="shortcut icon" type="image/png" href="{% static 'favicon.ico' %}"/>
 </head>
 <body>
+    <script src="{% url 'javascript-catalog' %}"></script>
     <div class="navbar">
         <div class="container">
             <a class="brand" href={% url 'home' %}>
@@ -28,11 +29,11 @@
                 {% trans "Администрирование" %}
             </a>
             {% endif %}
-            <a class="menu-link" href = "{% url 'profile' %}">{{user.username}}</a>
-            <a class="menu-link" href = "{% url 'logout' %}">{% trans "Выйти" %} </a>
+            <a class="menu-link right" href = "{% url 'profile' %}">{{user.username}}</a>
+            <a class="menu-link right" href = "{% url 'logout' %}">{% trans "Выйти" %} </a>
             {% else %}
-            <a class="menu-link" href = "{% url 'signup' %}">{% trans "Зарегистрироваться" %}</a>
-            <a class="menu-link" href = "{% url 'login' %}"><strong>{% trans "Войти" %} </strong></a>
+            <a class="menu-link right" href = "{% url 'signup' %}">{% trans "Зарегистрироваться" %}</a>
+            <a class="menu-link right" href = "{% url 'login' %}"><strong>{% trans "Войти" %} </strong></a>
             {% endif %}
         </div>
     </div>
