@@ -72,7 +72,7 @@ def get_pop_info(request,id):
 
 @api_view(["GET"])
 def get_world_cities(request,worldid):
-    cities = Cell.objects.filter(city_tier__gt=0)
+    cities = Cell.objects.filter(city_tier__gt=0, world_id = worldid)
     seri = CellSerializerShort(cities, many=True)
     return Response({'status':'ok','data':seri.data},HTTP_200_OK)
 

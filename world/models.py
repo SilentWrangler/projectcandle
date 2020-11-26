@@ -21,6 +21,7 @@ class World(models.Model):
     is_active = models.BooleanField(default = False)
     width = models.IntegerField()
     height = models.IntegerField()
+    ticks_age = models.IntegerField(default = 0)
     def save(self, *args, **kwargs):
         if self.is_active:
             try:
