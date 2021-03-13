@@ -55,12 +55,19 @@ msgid ""
 msgstr ""
 
 #: players/templates/char_template.html:4
+msgctxt "m"
 msgid "мужчина"
-msgstr ""
+msgstr "мужчина"
+msgctxt "f"
+msgid "мужчина"
+msgstr "женщина"
 
 #: players/templates/char_template.html:5
-msgctxt "gender:"
+msgctxt "m"
 msgid "родился"
+msgstr ""
+msgctxt "f"
+msgid "родилась"
 msgstr ""
 
 #: players/templates/char_template.html:12
