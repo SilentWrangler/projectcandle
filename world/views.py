@@ -9,6 +9,8 @@ from .models import World, Cell, Pop
 from .serializers import WorldSerializer, CellSerializerFull, PopSerializerFull,CellSerializerShort
 from .logic import WorldGenerator, generate_world_background, put_resource_deposits
 
+
+
 def index(request):
     try:
         world = World.objects.get(is_active=True)
@@ -55,8 +57,8 @@ def get_cell_info(request):
         cell = Cell.objects.get(world_id = wid, x = x, y = y)
         seri = CellSerializerFull(cell)
         return Response({'status':'ok','data':seri.data},HTTP_200_OK)
-    except KeyError:
-        return Response({'detail':"Query must contain parameters 'world', 'x' and 'y'"},HTTP_400_BAD_REQUEST)
+    except KeyError as ke:
+        return Response({'detail':str(ke)},HTTP_400_BAD_REQUEST)
     except Cell.DoesNotExist:
         return Response({'detail':'Cell not found'},HTTP_404_NOT_FOUND)
 

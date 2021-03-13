@@ -1,0 +1,216 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-03-14 00:02+0300\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=4; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
+"%10<=4 && (n%100<12 || n%100>14) ? 1 : n%10==0 || (n%10>=5 && n%10<=9) || (n"
+"%100>=11 && n%100<=14)? 2 : 3);\n"
+
+#: players/managers.py:15
+msgid "The Email must be set"
+msgstr ""
+
+#: players/managers.py:31
+msgid "Superuser must have is_staff=True."
+msgstr ""
+
+#: players/managers.py:33
+msgid "Superuser must have is_superuser=True."
+msgstr ""
+
+#: players/templates/account_activation_email.html:2
+#, python-format
+msgid ""
+"\n"
+"Приветствую, %(user.username)s!\n"
+"\n"
+"Кто-то пытался зарегистрироваться на World of Candle, используя эту почту.\n"
+"Если это были не вы, просто проигнорируйте это письмо. Для завершения "
+"регистрации используйте ссылку ниже:\n"
+"\n"
+msgstr ""
+
+#: players/templates/account_activation_invalid.html:4
+msgid "Извините, эта ссылка недействительна."
+msgstr ""
+
+#: players/templates/account_activation_sent.html:4
+msgid ""
+"Для завершения регистрации используйте ссылку, отправленную на указанную "
+"почту."
+msgstr ""
+
+#: players/templates/char_template.html:4
+msgctxt "gender: {{character.gender}}"
+msgid "мужчина"
+msgstr ""
+
+#: players/templates/char_template.html:5
+msgctxt "gender: {{gender}}"
+msgid "родился"
+msgstr ""
+
+#: players/templates/char_template.html:12
+msgid "Основная раса"
+msgstr ""
+
+#: players/templates/char_template.html:13
+msgid "Вторичная раса"
+msgstr ""
+
+#: players/templates/char_template.html:14
+msgid "Черты"
+msgstr ""
+
+#: players/templates/custom_interface.html:5
+msgid "Основные"
+msgstr ""
+
+#: players/templates/custom_interface.html:6
+#: players/templates/custom_interface.html:11
+msgid "Цвет фона"
+msgstr ""
+
+#: players/templates/custom_interface.html:8
+#: players/templates/custom_interface.html:13
+msgid "Цвет текста"
+msgstr ""
+
+#: players/templates/profile.html:8
+msgid "Этот токен используется для авторизации сторонних приложений."
+msgstr ""
+
+#: players/templates/profile.html:9
+msgid "Приложения должны запрашивать этот токен, а не логин с паролем"
+msgstr ""
+
+#: players/templates/profile.html:12
+msgid "Сбросить токен"
+msgstr ""
+
+#: templates/base.html:21
+msgid "Меню"
+msgstr ""
+
+#: templates/base.html:25
+msgid "Сменить персонажа"
+msgstr ""
+
+#: templates/base.html:27
+msgid "Настройка интерфейса"
+msgstr ""
+
+#: templates/base.html:32
+msgid "Лор"
+msgstr ""
+
+#: templates/base.html:37
+msgid "Игра"
+msgstr ""
+
+#: templates/base.html:44
+msgid "Выйти"
+msgstr ""
+
+#: templates/base.html:52
+msgid "Администрирование"
+msgstr ""
+
+#: templates/base.html:59 templates/signup.html:19
+msgid "Зарегистрироваться"
+msgstr ""
+
+#: templates/base.html:62 templates/registration/login.html:19
+msgid "Войти"
+msgstr ""
+
+#: templates/logout.html:4
+msgid "Вы вышли из системы."
+msgstr ""
+
+#: templates/logout.html:5
+msgid "Войти снова?"
+msgstr ""
+
+#: templates/registration/login.html:4
+msgid "Вход"
+msgstr ""
+
+#: templates/registration/login.html:22
+#: templates/registration/password_reset_form.html:4
+msgid "Забыли пароль?"
+msgstr ""
+
+#: templates/registration/password_reset_form.html:10
+msgid "Отправить инструкции"
+msgstr ""
+
+#: templates/signup.html:4
+msgid "Регистрация"
+msgstr ""
+
+#. Translators: Month names, Spring
+#: world/strings.py:7
+msgid "Луна Земли"
+msgstr ""
+
+#: world/strings.py:8
+msgid "Луна Ручьёв"
+msgstr ""
+
+#: world/strings.py:9
+msgid "Луна Песен"
+msgstr ""
+
+#. Translators:  Month names, Summer
+#: world/strings.py:11
+msgid "Луна Травы"
+msgstr ""
+
+#: world/strings.py:12
+msgid "Луна Солнца"
+msgstr ""
+
+#: world/strings.py:13
+msgid "Луна Урожая"
+msgstr ""
+
+#. Translators:  Month names, Autumn
+#: world/strings.py:15
+msgid "Луна Дождей"
+msgstr ""
+
+#: world/strings.py:16
+msgid "Луна Листопада"
+msgstr ""
+
+#: world/strings.py:17
+msgid "Луна Холода"
+msgstr ""
+
+#. Translators:  Month names, Winter
+#: world/strings.py:19
+msgid "Луна Снега"
+msgstr ""
+
+#: world/strings.py:20
+msgid "Луна Искр"
+msgstr ""
+
+#: world/strings.py:21
+msgid "Луна Ветров"
+msgstr ""

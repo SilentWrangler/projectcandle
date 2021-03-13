@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.sites.shortcuts import get_current_site
 from django.http import HttpResponse,HttpResponseNotAllowed
 from django.template.loader import render_to_string
@@ -17,7 +17,7 @@ from rest_framework.status import HTTP_200_OK
 from rest_framework.response import Response
 
 
-from .models import Player
+from .models import Player, Character
 from .forms import SignupForm
 from .tokens import account_activation_token
 # Create your views here.
@@ -93,4 +93,14 @@ def reset_token(request):
     except token.DoesNotExist:
         pass
     return redirect('profile')
+
+
+def customise_interface(request):
+    return render(request,'custom_interface.html')
+
+
+def char_profile(request, charid):
+    character = get_object_or_404(Character, id=charid)
+    return render (request, 'char_template.html', {'character':character})
+
 

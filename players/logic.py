@@ -4,7 +4,7 @@ from random import randint, choice
 from .models import Character, Trait, CharTag
 from world.models import Pop, World
 from .namegens import hungarian
-from .constatnts import GENDER
+from .constants import GENDER
 
 
 def add_racial_traits(char, mother = None, father = None):
@@ -32,7 +32,7 @@ def add_racial_traits(char, mother = None, father = None):
 
 def create_character_outta_nowhere(cell, minage = 16, maxage = None):
     """Создать персонажа "из ниоткуда", без учёта родителей."""
-    pops = cell.pop_set
+    pops = cell.pop_set.all()
     world_age = cell.world.ticks_age
     if pops.count()==0:
         return None
@@ -43,12 +43,12 @@ def create_character_outta_nowhere(cell, minage = 16, maxage = None):
     if minage<0:
         raise ValueError("minage should be positive")
     if maxage is None:
-        age = minage
+        age = minage*12
     else:
         if minage>maxage:
             raise ValueError("minage should be less or equal to maxage")
         else:
-            age = minage*12 + randint(0, (maxage-minage)*12)
+            age = choice(range(minage*12, maxage*12))
     birth_date = world_age - age
     character = Character(name = name, gender = gender,
         birth_date = birth_date,

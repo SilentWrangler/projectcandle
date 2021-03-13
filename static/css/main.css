@@ -1,33 +1,59 @@
 
 
 body{
-    background:darkred;
-    color:burlywood;
+    background:burlywood;
+}
+
+strong{
+    font-weight: bold;
+}
+
+p{
+    padding: 15px 10px 5px 0px;
 }
 
 .navbar {
     background-color: #362236;
     border: double blueviolet 5px;
     border-radius:5px;
-    /* display:flex;*/
+    display:flex;
 }
 
+ul .nav{
+    list-style: none;
+    display: table;
+}
+
+.container{
+    width: 90%;
+}
+
+.nav-element{
+    float: left;
+    padding: 0 2%;
+}
+.nav-element.right{
+    float: right;
+}
 .menu-link{
     color:#aa99aa;
-    padding-left:5%;
+    display: block;
+    /*padding-left:5%;
     align-self:middle;
-    display:inline-block;
+    display:inline-block;*/
 }
 
-.menu-link.right{
-    color:#aa99aa;
-
-    text-align:right;
-    padding-right:5%;
-    vertical-align:middle;
-
-
+.menu-dropdown {
+    display: none;
 }
+
+.menu-dropdown.open{
+    display: block;
+    overflow: auto;
+    position: absolute;
+}
+
+
 
 .brand{
     display:inline-block;
@@ -64,7 +90,7 @@ body{
     image-rendering: pixelated;
     width: fixed;
     height: fixed;
-    color: burlywood;
+
 }
 
 .cellinfo.wait {
@@ -90,6 +116,18 @@ WHY DO THEY ALL HAVE TO BE GODDAMN SPECIAL SNOWFLAKES?!
         background: #672010;
         border-radius: 5px;
     }
+    .cellinfo {
+    background: url(/static/interface/tooltip_bg.png);
+
+    background-size: cover;
+    background-repeat: no-repeat;
+    grid-column: 1/1;
+    grid-row: 1/2;
+    image-rendering: crisp-edges;
+    width: fixed;
+    height: fixed;
+
+}
 }
 
 .slider::-webkit-slider-thumb {

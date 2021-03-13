@@ -2,6 +2,7 @@
 {% load i18n %}
 <head>
     <title>Candle — experimental turn-based MMO</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'css/reset.css' %}" />
     <link rel="stylesheet" type="text/css" href="{% static 'css/main.css' %}" />
     <link rel="shortcut icon" type="image/png" href="{% static 'favicon.ico' %}"/>
 </head>
@@ -9,33 +10,62 @@
     <script src="{% url 'javascript-catalog' %}"></script>
     <div class="navbar">
         <div class="container">
-            <a class="brand" href={% url 'home' %}>
-                <img src="{% static 'common/logo.png' %}" alt="Candle logo">
-            </a>
+            <ul  class="nav">
+                <li class="nav-element">
+                    <a class="brand" href={% url 'home' %}>
+                        <img src="{% static 'common/logo.png' %}" alt="Candle logo">
+                    </a>
+                </li>
+                <li class="nav-element">
+                    <a class="menu-link" id="navbar-menu" href="#">
+                        {% trans "Меню" %}
+                    </a>
+                    <ul class="navbar menu-dropdown" id="navbar-menu-dd">
+                        {% if user.is_authenticated %}
+                        <li><a class="menu-link" href="#">{% trans "Сменить персонажа" %}</a></li>
+                        {% endif %}
+                        <li><a class="menu-link" href="#">{% trans "Настройка интерфейса" %}</a></li>
+                    </ul>
+                </li>
+                <li class="nav-element">
+                    <a class="menu-link" id="navbar-lore" href="#">
+                        {% trans "Лор" %}
+                    </a>
+                </li>
+                <li class="nav-element">
+                    <a class="menu-link" href="{% url 'map' %}">
+                        <strong>{% trans "Игра" %}</strong>
+                    </a>
+                </li>
+                {% if user.is_authenticated %}
 
-            <a class="menu-link" href="#">
-                {% trans "Меню" %}
-            </a>
-            <a class="menu-link" href="#">
-                {% trans "Лор" %}
-            </a>
 
-            <a class="menu-link" href="{% url 'map' %}">
-                <strong>{% trans "Игра" %}</strong>
-            </a>
-            {% if user.is_authenticated %}
-            {% if user.is_staff %}
-            <a class="menu-link" href="/admin/">
-                {% trans "Администрирование" %}
-            </a>
-            {% endif %}
-            <a class="menu-link right" href = "{% url 'profile' %}">{{user.username}}</a>
-            <a class="menu-link right" href = "{% url 'logout' %}">{% trans "Выйти" %} </a>
-            {% else %}
-            <a class="menu-link right" href = "{% url 'signup' %}">{% trans "Зарегистрироваться" %}</a>
-            <a class="menu-link right" href = "{% url 'login' %}"><strong>{% trans "Войти" %} </strong></a>
-            {% endif %}
+                <li class="nav-element right">
+                    <a class="menu-link" href = "{% url 'logout' %}">{% trans "Выйти" %} </a>
+                </li>
+                <li class="nav-element right">
+                    <a class="menu-link" href = "{% url 'profile' %}">{{user.username}}</a>
+                </li>
+                {% if user.is_staff %}
+                <li class="nav-element right">
+                    <a class="menu-link" href="/admin/">
+                        {% trans "Администрирование" %}
+                    </a>
+                </li>
+                {% endif %}
+
+                {% else %}
+                <li class="nav-element right">
+                    <a class="menu-link" href = "{% url 'signup' %}">{% trans "Зарегистрироваться" %}</a>
+                </li>
+                <li class="nav-element right">
+                    <a class="menu-link" href = "{% url 'login' %}"><strong>{% trans "Войти" %} </strong></a>
+                </li>
+                {% endif %}
+
+            </ul>
         </div>
+        <script src="{% static 'interface/menu_dropdowns.js' %}"></script>
     </div>
     {%block content%}
     <p>This is a placeholder landing.</p>

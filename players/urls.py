@@ -11,4 +11,5 @@ urlpatterns = [
     path('accounts/',include('django.contrib.auth.urls')),
     path('accounts/profile/', views.profile, name = 'profile'),
     path('accounts/reset_token/',views.reset_token, name = 'reset_token'),
+    path('characters/<int:charid>', views.char_profile, name = 'char_profile'),
     ]
