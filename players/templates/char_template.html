@@ -1,8 +1,8 @@
 {% extends "base.html" %}
 {% load i18n %}
 
-{% trans "мужчина" as born context 'gender: {{character.gender}}'%}
-{% trans "родился" as born context 'gender: {{gender}}'%}
+{% trans "мужчина" as born context {{character.gender}}%}
+{% trans "родился" as born context 'gender:' {{gender}}%}
 
 {% block content %}
 
