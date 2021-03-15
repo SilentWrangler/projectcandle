@@ -1,16 +1,13 @@
 {% extends "base.html" %}
 {% load i18n %}
 
-{% trans "мужчина" as born context {{character.gender}}%}
-{% trans "родился" as born context 'gender:' {{gender}}%}
+
+
 
 {% block content %}
 
-    <h2>{{character.name}}</h2>
-    {{born}} {{character.birth_date_human_readable}}
-    <p>{{gender}}</p>
-    <p>{% trans "Основная раса" %}: {{character.primary_race}}</p>
-    <p>{% trans "Вторичная раса" %}: {{character.secondary_race}}</p>
+    <h2>{{character.name}}, {{character.race_human_readable}}</h2>
+    {{character.birth_date_human_readable}}
     <h3>{% trans "Черты" %}</h3>
     <table>
     {% for trait in character.traits.all %}

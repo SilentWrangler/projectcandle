@@ -8,6 +8,7 @@ from world.strings import month_names
 from .constants import GENDER
 
 from django.utils.text import format_lazy
+from django.utils.translation import pgettext_lazy
 
 class Player(AbstractUser):
     total_score = models.IntegerField(default = 0)
@@ -41,7 +42,13 @@ class Character(models.Model):
         else:
             months = 11 - (self.birth_date%12)
             years = self.birth_date//12
-        return format_lazy( f'{years}',', ', month_names[months])
+        return format_lazy( '{born}: {years}, {month}',
+        years=years, month = month_names[months],
+        born = pgettext_lazy(self.gender,"родился").capitalize())
+
+    @property
+    def race_human_readable(self):
+        return pgettext_lazy(f'char-{self.gender}-{self.secondary_race}',self.primary_race)
 
     def __str__(self):
         return f'Character ({self.id}): {self.name}'

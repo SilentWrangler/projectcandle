@@ -473,6 +473,11 @@ display_celldata = function(response){
              }
          }
         cell_info_pops.innerHTML += "</table>";
+        cell_info_chars = document.getElementById('celldata-info-chars');
+        cell_info_chars.innerHTML = '';
+        cell.characters.forEach((char)=>{
+            cell_info_chars.innerHTML+=`<tr><a href="/characters/${char.id}">${char.name}</a></tr>`
+        });
     }
 
 

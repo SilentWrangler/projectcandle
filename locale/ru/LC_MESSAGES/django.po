@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-03-14 00:19+0300\n"
+"POT-Creation-Date: 2021-03-15 10:42+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -32,6 +32,16 @@ msgstr ""
 msgid "Superuser must have is_superuser=True."
 msgstr ""
 
+#: players/strings.py:6
+msgctxt "m"
+msgid "родился"
+msgstr "родился"
+
+#: players/strings.py:7
+msgctxt "f"
+msgid "родился"
+msgstr "родилась"
+
 #: players/templates/account_activation_email.html:2
 #, python-format
 msgid ""
@@ -54,31 +64,7 @@ msgid ""
 "почту."
 msgstr ""
 
-#: players/templates/char_template.html:4
-msgctxt "m"
-msgid "мужчина"
-msgstr "мужчина"
-msgctxt "f"
-msgid "мужчина"
-msgstr "женщина"
-
-#: players/templates/char_template.html:5
-msgctxt "m"
-msgid "родился"
-msgstr ""
-msgctxt "f"
-msgid "родилась"
-msgstr ""
-
-#: players/templates/char_template.html:12
-msgid "Основная раса"
-msgstr ""
-
-#: players/templates/char_template.html:13
-msgid "Вторичная раса"
-msgstr ""
-
-#: players/templates/char_template.html:14
+#: players/templates/char_template.html:11
 msgid "Черты"
 msgstr ""
 
@@ -98,19 +84,19 @@ msgstr ""
 
 #: players/templates/profile.html:8
 msgid "Этот токен используется для авторизации сторонних приложений."
-msgstr ""
+msgstr "Этот токен используется для авторизации сторонних приложений."
 
 #: players/templates/profile.html:9
 msgid "Приложения должны запрашивать этот токен, а не логин с паролем"
-msgstr ""
+msgstr "Приложения должны запрашивать этот токен, а не логин с паролем"
 
 #: players/templates/profile.html:12
 msgid "Сбросить токен"
-msgstr ""
+msgstr "Сбросить токен"
 
 #: templates/base.html:21
 msgid "Меню"
-msgstr ""
+msgstr "Меню"
 
 #: templates/base.html:25
 msgid "Сменить персонажа"
@@ -172,51 +158,527 @@ msgstr ""
 #. Translators: Month names, Spring
 #: world/strings.py:7
 msgid "Луна Земли"
-msgstr ""
+msgstr "Луна Земли"
 
 #: world/strings.py:8
 msgid "Луна Ручьёв"
-msgstr ""
+msgstr "Луна Ручьёв"
 
 #: world/strings.py:9
 msgid "Луна Песен"
-msgstr ""
+msgstr "Луна Песен"
 
 #. Translators:  Month names, Summer
 #: world/strings.py:11
 msgid "Луна Травы"
-msgstr ""
+msgstr "Луна Травы"
 
 #: world/strings.py:12
 msgid "Луна Солнца"
-msgstr ""
+msgstr "Луна Солнца"
 
 #: world/strings.py:13
 msgid "Луна Урожая"
-msgstr ""
+msgstr "Луна Урожая"
 
 #. Translators:  Month names, Autumn
 #: world/strings.py:15
 msgid "Луна Дождей"
-msgstr ""
+msgstr "Луна Дождей"
 
 #: world/strings.py:16
 msgid "Луна Листопада"
-msgstr ""
+msgstr "Луна Листопада"
 
 #: world/strings.py:17
 msgid "Луна Холода"
-msgstr ""
+msgstr "Луна Холода"
 
 #. Translators:  Month names, Winter
 #: world/strings.py:19
 msgid "Луна Снега"
-msgstr ""
+msgstr "Луна Снега"
 
 #: world/strings.py:20
 msgid "Луна Искр"
-msgstr ""
+msgstr "Луна Искр"
 
 #: world/strings.py:21
 msgid "Луна Ветров"
+msgstr "Луна Ветров"
+
+#. Translators: this one should be plural
+#: world/strings.py:27
+msgctxt "pop"
+msgid "HUM"
 msgstr ""
+
+#. Translators: this one should be plural
+#: world/strings.py:29
+msgctxt "pop"
+msgid "ELF"
+msgstr ""
+
+#. Translators: this one should be plural
+#: world/strings.py:31
+msgctxt "pop"
+msgid "DWA"
+msgstr ""
+
+#. Translators: this one should be plural
+#: world/strings.py:33
+msgctxt "pop"
+msgid "ORC"
+msgstr ""
+
+#. Translators: this one should be plural
+#: world/strings.py:35
+msgctxt "pop"
+msgid "GOB"
+msgstr ""
+
+#. Translators: this one should be plural
+#: world/strings.py:37
+msgctxt "pop"
+msgid "FEY"
+msgstr ""
+
+#. Translators: this is supposed to be character's race. If race code in context and  pharse match, it's "pureblood" character, otherwise it's a half-blood of other race. Important: Half-elf human and half-human elf are DIFFERENT!
+#: world/strings.py:39
+msgctxt "char-m-HUM"
+msgid "HUM"
+msgstr "чистокровный человек (♂)"
+
+#. Translators: this is supposed to be character's race. If race code in context and  pharse match, it's "pureblood" character, otherwise it's a half-blood of other race. Important: Half-elf human and half-human elf are DIFFERENT!
+#: world/strings.py:41
+msgctxt "char-f-HUM"
+msgid "HUM"
+msgstr "чистокровный человек (♀)"
+
+#. Translators: this is supposed to be character's race. If race code in context and  pharse match, it's "pureblood" character, otherwise it's a half-blood of other race. Important: Half-elf human and half-human elf are DIFFERENT!
+#: world/strings.py:43
+msgctxt "char-m-ELF"
+msgid "HUM"
+msgstr "человек-полуэльф (♂)"
+
+#. Translators: this is supposed to be character's race. If race code in context and  pharse match, it's "pureblood" character, otherwise it's a half-blood of other race. Important: Half-elf human and half-human elf are DIFFERENT!
+#: world/strings.py:45
+msgctxt "char-f-ELF"
+msgid "HUM"
+msgstr "человек-полуэльфийка (♀)"
+
+#. Translators: this is supposed to be character's race. If race code in context and  pharse match, it's "pureblood" character, otherwise it's a half-blood of other race. Important: Half-elf human and half-human elf are DIFFERENT!
+#: world/strings.py:47
+msgctxt "char-m-DWA"
+msgid "HUM"
+msgstr "человек-полудварф (♂)"
+
+#. Translators: this is supposed to be character's race. If race code in context and  pharse match, it's "pureblood" character, otherwise it's a half-blood of other race. Important: Half-elf human and half-human elf are DIFFERENT!
+#: world/strings.py:49
+msgctxt "char-f-DWA"
+msgid "HUM"
+msgstr "человек-полудварфийка (♀)"
+
+#. Translators: this is supposed to be character's race. If race code in context and  pharse match, it's "pureblood" character, otherwise it's a half-blood of other race. Important: Half-elf human and half-human elf are DIFFERENT!
+#: world/strings.py:51
+msgctxt "char-m-ORC"
+msgid "HUM"
+msgstr "человек-полуорк (♂)"
+
+#. Translators: this is supposed to be character's race. If race code in context and  pharse match, it's "pureblood" character, otherwise it's a half-blood of other race. Important: Half-elf human and half-human elf are DIFFERENT!
+#: world/strings.py:53
+msgctxt "char-f-ORC"
+msgid "HUM"
+msgstr "человек-полуорчиха (♀)"
+
+#. Translators: this is supposed to be character's race. If race code in context and  pharse match, it's "pureblood" character, otherwise it's a half-blood of other race. Important: Half-elf human and half-human elf are DIFFERENT!
+#: world/strings.py:55
+msgctxt "char-m-GOB"
+msgid "HUM"
+msgstr "человек-полугоблин (♂)"
+
+#. Translators: this is supposed to be character's race. If race code in context and  pharse match, it's "pureblood" character, otherwise it's a half-blood of other race. Important: Half-elf human and half-human elf are DIFFERENT!
+#: world/strings.py:57
+msgctxt "char-f-GOB"
+msgid "HUM"
+msgstr "человек-полугоблинша (♀)"
+
+#. Translators: this is supposed to be character's race. If race code in context and  pharse match, it's "pureblood" character, otherwise it's a half-blood of other race. Important: Half-elf human and half-human elf are DIFFERENT!
+#: world/strings.py:59
+msgctxt "char-m-FEY"
+msgid "HUM"
+msgstr "человек-полуфея (♂)"
+
+#. Translators: this is supposed to be character's race. If race code in context and  pharse match, it's "pureblood" character, otherwise it's a half-blood of other race. Important: Half-elf human and half-human elf are DIFFERENT!
+#: world/strings.py:61
+msgctxt "char-f-FEY"
+msgid "HUM"
+msgstr "человек-полуфея (♀)"
+
+#. Translators: this is supposed to be character's race. If race code in context and  pharse match, it's "pureblood" character, otherwise it's a half-blood of other race. Important: Half-elf human and half-human elf are DIFFERENT!
+#: world/strings.py:63
+msgctxt "char-m-HUM"
+msgid "ELF"
+msgstr "эльф-получеловек (♂)"
+
+#. Translators: this is supposed to be character's race. If race code in context and  pharse match, it's "pureblood" character, otherwise it's a half-blood of other race. Important: Half-elf human and half-human elf are DIFFERENT!
+#: world/strings.py:65
+msgctxt "char-f-HUM"
+msgid "ELF"
+msgstr "эльфийка-получеловек (♀)"
+
+#. Translators: this is supposed to be character's race. If race code in context and  pharse match, it's "pureblood" character, otherwise it's a half-blood of other race. Important: Half-elf human and half-human elf are DIFFERENT!
+#: world/strings.py:67
+msgctxt "char-m-ELF"
+msgid "ELF"
+msgstr "чистокровный эльф (♂)"
+
+#. Translators: this is supposed to be character's race. If race code in context and  pharse match, it's "pureblood" character, otherwise it's a half-blood of other race. Important: Half-elf human and half-human elf are DIFFERENT!
+#: world/strings.py:69
+msgctxt "char-f-ELF"
+msgid "ELF"
+msgstr "чистокровная эльфийка (♀)"
+
+#. Translators: this is supposed to be character's race. If race code in context and  pharse match, it's "pureblood" character, otherwise it's a half-blood of other race. Important: Half-elf human and half-human elf are DIFFERENT!
+#: world/strings.py:71
+msgctxt "char-m-DWA"
+msgid "ELF"
+msgstr "эльф-полудварф (♂)"
+
+#. Translators: this is supposed to be character's race. If race code in context and  pharse match, it's "pureblood" character, otherwise it's a half-blood of other race. Important: Half-elf human and half-human elf are DIFFERENT!
+#: world/strings.py:73
+msgctxt "char-f-DWA"
+msgid "ELF"
+msgstr "эльфийка-полудварфийка (♀)"
+
+#. Translators: this is supposed to be character's race. If race code in context and  pharse match, it's "pureblood" character, otherwise it's a half-blood of other race. Important: Half-elf human and half-human elf are DIFFERENT!
+#: world/strings.py:75
+msgctxt "char-m-ORC"
+msgid "ELF"
+msgstr "эльф-полуорк (♂)"
+
+#. Translators: this is supposed to be character's race. If race code in context and  pharse match, it's "pureblood" character, otherwise it's a half-blood of other race. Important: Half-elf human and half-human elf are DIFFERENT!
+#: world/strings.py:77
+msgctxt "char-f-ORC"
+msgid "ELF"
+msgstr "эльфийка-полуорчиха (♀)"
+
+#. Translators: this is supposed to be character's race. If race code in context and  pharse match, it's "pureblood" character, otherwise it's a half-blood of other race. Important: Half-elf human and half-human elf are DIFFERENT!
+#: world/strings.py:79
+msgctxt "char-m-GOB"
+msgid "ELF"
+msgstr "эльф-полугоблин (♂)"
+
+#. Translators: this is supposed to be character's race. If race code in context and  pharse match, it's "pureblood" character, otherwise it's a half-blood of other race. Important: Half-elf human and half-human elf are DIFFERENT!
+#: world/strings.py:81
+msgctxt "char-f-GOB"
+msgid "ELF"
+msgstr "эльфийка-полугоблинша (♀)"
+
+#. Translators: this is supposed to be character's race. If race code in context and  pharse match, it's "pureblood" character, otherwise it's a half-blood of other race. Important: Half-elf human and half-human elf are DIFFERENT!
+#: world/strings.py:83
+msgctxt "char-m-FEY"
+msgid "ELF"
+msgstr "эльф-полуфея (♂)"
+
+#. Translators: this is supposed to be character's race. If race code in context and  pharse match, it's "pureblood" character, otherwise it's a half-blood of other race. Important: Half-elf human and half-human elf are DIFFERENT!
+#: world/strings.py:85
+msgctxt "char-f-FEY"
+msgid "ELF"
+msgstr "эльфийка-полуфея (♀)"
+
+#. Translators: this is supposed to be character's race. If race code in context and  pharse match, it's "pureblood" character, otherwise it's a half-blood of other race. Important: Half-elf human and half-human elf are DIFFERENT!
+#: world/strings.py:87
+msgctxt "char-m-HUM"
+msgid "DWA"
+msgstr "дварф-получеловек (♂)"
+
+#. Translators: this is supposed to be character's race. If race code in context and  pharse match, it's "pureblood" character, otherwise it's a half-blood of other race. Important: Half-elf human and half-human elf are DIFFERENT!
+#: world/strings.py:89
+msgctxt "char-f-HUM"
+msgid "DWA"
+msgstr "дфарфийка-получеловек (♀)"
+
+#. Translators: this is supposed to be character's race. If race code in context and  pharse match, it's "pureblood" character, otherwise it's a half-blood of other race. Important: Half-elf human and half-human elf are DIFFERENT!
+#: world/strings.py:91
+msgctxt "char-m-ELF"
+msgid "DWA"
+msgstr "дварф-полуэльф (♂)"
+
+#. Translators: this is supposed to be character's race. If race code in context and  pharse match, it's "pureblood" character, otherwise it's a half-blood of other race. Important: Half-elf human and half-human elf are DIFFERENT!
+#: world/strings.py:93
+msgctxt "char-f-ELF"
+msgid "DWA"
+msgstr "дфарфийка-полуэльфийка (♀)"
+
+#. Translators: this is supposed to be character's race. If race code in context and  pharse match, it's "pureblood" character, otherwise it's a half-blood of other race. Important: Half-elf human and half-human elf are DIFFERENT!
+#: world/strings.py:95
+msgctxt "char-m-DWA"
+msgid "DWA"
+msgstr "чистокровный дварф (♂)"
+
+#. Translators: this is supposed to be character's race. If race code in context and  pharse match, it's "pureblood" character, otherwise it's a half-blood of other race. Important: Half-elf human and half-human elf are DIFFERENT!
+#: world/strings.py:97
+msgctxt "char-f-DWA"
+msgid "DWA"
+msgstr "чистокровная дварфийка (♀)"
+
+#. Translators: this is supposed to be character's race. If race code in context and  pharse match, it's "pureblood" character, otherwise it's a half-blood of other race. Important: Half-elf human and half-human elf are DIFFERENT!
+#: world/strings.py:99
+msgctxt "char-m-ORC"
+msgid "DWA"
+msgstr "дварф-полуорк (♂)"
+
+#. Translators: this is supposed to be character's race. If race code in context and  pharse match, it's "pureblood" character, otherwise it's a half-blood of other race. Important: Half-elf human and half-human elf are DIFFERENT!
+#: world/strings.py:101
+msgctxt "char-f-ORC"
+msgid "DWA"
+msgstr "дварфийка-полуорчиха (♀)"
+
+#. Translators: this is supposed to be character's race. If race code in context and  pharse match, it's "pureblood" character, otherwise it's a half-blood of other race. Important: Half-elf human and half-human elf are DIFFERENT!
+#: world/strings.py:103
+msgctxt "char-m-GOB"
+msgid "DWA"
+msgstr "дварф-полугоблин (♂)"
+
+#. Translators: this is supposed to be character's race. If race code in context and  pharse match, it's "pureblood" character, otherwise it's a half-blood of other race. Important: Half-elf human and half-human elf are DIFFERENT!
+#: world/strings.py:105
+msgctxt "char-f-GOB"
+msgid "DWA"
+msgstr "дварфийка-полугоблинша (♀)"
+
+#. Translators: this is supposed to be character's race. If race code in context and  pharse match, it's "pureblood" character, otherwise it's a half-blood of other race. Important: Half-elf human and half-human elf are DIFFERENT!
+#: world/strings.py:107
+msgctxt "char-m-FEY"
+msgid "DWA"
+msgstr "дварф-полуфея (♂)"
+
+#. Translators: this is supposed to be character's race. If race code in context and  pharse match, it's "pureblood" character, otherwise it's a half-blood of other race. Important: Half-elf human and half-human elf are DIFFERENT!
+#: world/strings.py:109
+msgctxt "char-f-FEY"
+msgid "DWA"
+msgstr "дварфийка-полуфея (♀)"
+
+#. Translators: this is supposed to be character's race. If race code in context and  pharse match, it's "pureblood" character, otherwise it's a half-blood of other race. Important: Half-elf human and half-human elf are DIFFERENT!
+#: world/strings.py:111
+msgctxt "char-m-HUM"
+msgid "ORC"
+msgstr "орк-получеловек (♂)"
+
+#. Translators: this is supposed to be character's race. If race code in context and  pharse match, it's "pureblood" character, otherwise it's a half-blood of other race. Important: Half-elf human and half-human elf are DIFFERENT!
+#: world/strings.py:113
+msgctxt "char-f-HUM"
+msgid "ORC"
+msgstr "орчиха-получеловек (♀)"
+
+#. Translators: this is supposed to be character's race. If race code in context and  pharse match, it's "pureblood" character, otherwise it's a half-blood of other race. Important: Half-elf human and half-human elf are DIFFERENT!
+#: world/strings.py:115
+msgctxt "char-m-ELF"
+msgid "ORC"
+msgstr "орк-полуэльф (♂)"
+
+#. Translators: this is supposed to be character's race. If race code in context and  pharse match, it's "pureblood" character, otherwise it's a half-blood of other race. Important: Half-elf human and half-human elf are DIFFERENT!
+#: world/strings.py:117
+msgctxt "char-f-ELF"
+msgid "ORC"
+msgstr "орчиха-полуэльфийка (♀)"
+
+#. Translators: this is supposed to be character's race. If race code in context and  pharse match, it's "pureblood" character, otherwise it's a half-blood of other race. Important: Half-elf human and half-human elf are DIFFERENT!
+#: world/strings.py:119
+msgctxt "char-m-DWA"
+msgid "ORC"
+msgstr "орк-полудварф (♂)"
+
+#. Translators: this is supposed to be character's race. If race code in context and  pharse match, it's "pureblood" character, otherwise it's a half-blood of other race. Important: Half-elf human and half-human elf are DIFFERENT!
+#: world/strings.py:121
+msgctxt "char-f-DWA"
+msgid "ORC"
+msgstr "орчиха-полудварфийка (♀)"
+
+#. Translators: this is supposed to be character's race. If race code in context and  pharse match, it's "pureblood" character, otherwise it's a half-blood of other race. Important: Half-elf human and half-human elf are DIFFERENT!
+#: world/strings.py:123
+msgctxt "char-m-ORC"
+msgid "ORC"
+msgstr "чистокровный орк (♂)"
+
+#. Translators: this is supposed to be character's race. If race code in context and  pharse match, it's "pureblood" character, otherwise it's a half-blood of other race. Important: Half-elf human and half-human elf are DIFFERENT!
+#: world/strings.py:125
+msgctxt "char-f-ORC"
+msgid "ORC"
+msgstr "чистокровная орчиха (♀)"
+
+#. Translators: this is supposed to be character's race. If race code in context and  pharse match, it's "pureblood" character, otherwise it's a half-blood of other race. Important: Half-elf human and half-human elf are DIFFERENT!
+#: world/strings.py:127
+msgctxt "char-m-GOB"
+msgid "ORC"
+msgstr "орк-полугоблин (♂)"
+
+#. Translators: this is supposed to be character's race. If race code in context and  pharse match, it's "pureblood" character, otherwise it's a half-blood of other race. Important: Half-elf human and half-human elf are DIFFERENT!
+#: world/strings.py:129
+msgctxt "char-f-GOB"
+msgid "ORC"
+msgstr "орчиха-полугоблинша (♀)"
+
+#. Translators: this is supposed to be character's race. If race code in context and  pharse match, it's "pureblood" character, otherwise it's a half-blood of other race. Important: Half-elf human and half-human elf are DIFFERENT!
+#: world/strings.py:131
+msgctxt "char-m-FEY"
+msgid "ORC"
+msgstr "орк-полуфея (♂)"
+
+#. Translators: this is supposed to be character's race. If race code in context and  pharse match, it's "pureblood" character, otherwise it's a half-blood of other race. Important: Half-elf human and half-human elf are DIFFERENT!
+#: world/strings.py:133
+msgctxt "char-f-FEY"
+msgid "ORC"
+msgstr "орчиха-полуфея (♀)"
+
+#. Translators: this is supposed to be character's race. If race code in context and  pharse match, it's "pureblood" character, otherwise it's a half-blood of other race. Important: Half-elf human and half-human elf are DIFFERENT!
+#: world/strings.py:135
+msgctxt "char-m-HUM"
+msgid "GOB"
+msgstr "гоблин-получеловек (♂)"
+
+#. Translators: this is supposed to be character's race. If race code in context and  pharse match, it's "pureblood" character, otherwise it's a half-blood of other race. Important: Half-elf human and half-human elf are DIFFERENT!
+#: world/strings.py:137
+msgctxt "char-f-HUM"
+msgid "GOB"
+msgstr "гоблинша-получеловек (♀)"
+
+#. Translators: this is supposed to be character's race. If race code in context and  pharse match, it's "pureblood" character, otherwise it's a half-blood of other race. Important: Half-elf human and half-human elf are DIFFERENT!
+#: world/strings.py:139
+msgctxt "char-m-ELF"
+msgid "GOB"
+msgstr "гоблин-полуэльф (♂)"
+
+#. Translators: this is supposed to be character's race. If race code in context and  pharse match, it's "pureblood" character, otherwise it's a half-blood of other race. Important: Half-elf human and half-human elf are DIFFERENT!
+#: world/strings.py:141
+msgctxt "char-f-ELF"
+msgid "GOB"
+msgstr "гоблинша-полуэльфийка (♀)"
+
+#. Translators: this is supposed to be character's race. If race code in context and  pharse match, it's "pureblood" character, otherwise it's a half-blood of other race. Important: Half-elf human and half-human elf are DIFFERENT!
+#: world/strings.py:143
+msgctxt "char-m-DWA"
+msgid "GOB"
+msgstr "гоблин-полудварф (♂)"
+
+#. Translators: this is supposed to be character's race. If race code in context and  pharse match, it's "pureblood" character, otherwise it's a half-blood of other race. Important: Half-elf human and half-human elf are DIFFERENT!
+#: world/strings.py:145
+msgctxt "char-f-DWA"
+msgid "GOB"
+msgstr "гоблинша-полудварфийка (♀)"
+
+#. Translators: this is supposed to be character's race. If race code in context and  pharse match, it's "pureblood" character, otherwise it's a half-blood of other race. Important: Half-elf human and half-human elf are DIFFERENT!
+#: world/strings.py:147
+msgctxt "char-m-ORC"
+msgid "GOB"
+msgstr "гоблин-полуорк (♂)"
+
+#. Translators: this is supposed to be character's race. If race code in context and  pharse match, it's "pureblood" character, otherwise it's a half-blood of other race. Important: Half-elf human and half-human elf are DIFFERENT!
+#: world/strings.py:149
+msgctxt "char-f-ORC"
+msgid "GOB"
+msgstr "гоблинша-полуорчиха (♀)"
+
+#. Translators: this is supposed to be character's race. If race code in context and  pharse match, it's "pureblood" character, otherwise it's a half-blood of other race. Important: Half-elf human and half-human elf are DIFFERENT!
+#: world/strings.py:151
+msgctxt "char-m-GOB"
+msgid "GOB"
+msgstr "чистокровный гоблин (♂)"
+
+#. Translators: this is supposed to be character's race. If race code in context and  pharse match, it's "pureblood" character, otherwise it's a half-blood of other race. Important: Half-elf human and half-human elf are DIFFERENT!
+#: world/strings.py:153
+msgctxt "char-f-GOB"
+msgid "GOB"
+msgstr "чистокровная гоблинша (♀)"
+
+#. Translators: this is supposed to be character's race. If race code in context and  pharse match, it's "pureblood" character, otherwise it's a half-blood of other race. Important: Half-elf human and half-human elf are DIFFERENT!
+#: world/strings.py:155
+msgctxt "char-m-FEY"
+msgid "GOB"
+msgstr "гоблин-полуфея (♂)"
+
+#. Translators: this is supposed to be character's race. If race code in context and  pharse match, it's "pureblood" character, otherwise it's a half-blood of other race. Important: Half-elf human and half-human elf are DIFFERENT!
+#: world/strings.py:157
+msgctxt "char-f-FEY"
+msgid "GOB"
+msgstr "гоблинша-полуфея (♀)"
+
+#. Translators: this is supposed to be character's race. If race code in context and  pharse match, it's "pureblood" character, otherwise it's a half-blood of other race. Important: Half-elf human and half-human elf are DIFFERENT!
+#: world/strings.py:159
+msgctxt "char-m-HUM"
+msgid "FEY"
+msgstr "фея (♂)"
+
+#. Translators: this is supposed to be character's race. If race code in context and  pharse match, it's "pureblood" character, otherwise it's a half-blood of other race. Important: Half-elf human and half-human elf are DIFFERENT!
+#: world/strings.py:161
+msgctxt "char-f-HUM"
+msgid "FEY"
+msgstr "фея (♀)"
+
+#. Translators: this is supposed to be character's race. If race code in context and  pharse match, it's "pureblood" character, otherwise it's a half-blood of other race. Important: Half-elf human and half-human elf are DIFFERENT!
+#: world/strings.py:163
+msgctxt "char-m-ELF"
+msgid "FEY"
+msgstr "фея (♂)"
+
+#. Translators: this is supposed to be character's race. If race code in context and  pharse match, it's "pureblood" character, otherwise it's a half-blood of other race. Important: Half-elf human and half-human elf are DIFFERENT!
+#: world/strings.py:165
+msgctxt "char-f-ELF"
+msgid "FEY"
+msgstr "фея (♀)"
+
+#. Translators: this is supposed to be character's race. If race code in context and  pharse match, it's "pureblood" character, otherwise it's a half-blood of other race. Important: Half-elf human and half-human elf are DIFFERENT!
+#: world/strings.py:167
+msgctxt "char-m-DWA"
+msgid "FEY"
+msgstr "фея (♂)"
+
+#. Translators: this is supposed to be character's race. If race code in context and  pharse match, it's "pureblood" character, otherwise it's a half-blood of other race. Important: Half-elf human and half-human elf are DIFFERENT!
+#: world/strings.py:169
+msgctxt "char-f-DWA"
+msgid "FEY"
+msgstr "фея (♀)"
+
+#. Translators: this is supposed to be character's race. If race code in context and  pharse match, it's "pureblood" character, otherwise it's a half-blood of other race. Important: Half-elf human and half-human elf are DIFFERENT!
+#: world/strings.py:171
+msgctxt "char-m-ORC"
+msgid "FEY"
+msgstr "фея (♂)"
+
+#. Translators: this is supposed to be character's race. If race code in context and  pharse match, it's "pureblood" character, otherwise it's a half-blood of other race. Important: Half-elf human and half-human elf are DIFFERENT!
+#: world/strings.py:173
+msgctxt "char-f-ORC"
+msgid "FEY"
+msgstr "фея (♀)"
+
+#. Translators: this is supposed to be character's race. If race code in context and  pharse match, it's "pureblood" character, otherwise it's a half-blood of other race. Important: Half-elf human and half-human elf are DIFFERENT!
+#: world/strings.py:175
+msgctxt "char-m-GOB"
+msgid "FEY"
+msgstr "фея (♂)"
+
+#. Translators: this is supposed to be character's race. If race code in context and  pharse match, it's "pureblood" character, otherwise it's a half-blood of other race. Important: Half-elf human and half-human elf are DIFFERENT!
+#: world/strings.py:177
+msgctxt "char-f-GOB"
+msgid "FEY"
+msgstr "фея (♀)"
+
+#. Translators: this is supposed to be character's race. If race code in context and  pharse match, it's "pureblood" character, otherwise it's a half-blood of other race. Important: Half-elf human and half-human elf are DIFFERENT!
+#: world/strings.py:179
+msgctxt "char-m-FEY"
+msgid "FEY"
+msgstr "фея (♂)"
+
+#. Translators: this is supposed to be character's race. If race code in context and  pharse match, it's "pureblood" character, otherwise it's a half-blood of other race. Important: Half-elf human and half-human elf are DIFFERENT!
+#: world/strings.py:181
+msgctxt "char-f-FEY"
+msgid "FEY"
+msgstr "фея (♀)"
+
+#~ msgctxt "m"
+#~ msgid "мужчина"
+#~ msgstr "мужчина"
+
+#~ msgctxt "f"
+#~ msgid "мужчина"
+#~ msgstr "женщина"
