@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+
+
+
+{% block content %}
+
+    <h2>{{character.name}}, {{character.race_human_readable}}</h2>
+    {{character.birth_date_human_readable}}
+    <h3>{% trans "Черты" %}</h3>
+    <table>
+    {% for trait in character.traits.all %}
+       <tr>{{trait.verbose_name}}</tr>
+    {% endfor %}
+    </table>
+{% endblock %}

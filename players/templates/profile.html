@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block content %}
+{% if user.is_authenticated %}
+<h2>{{user.username}}</h2>
+<p><strong>API token:</strong></p>
+<p>{% trans "Этот токен используется для авторизации сторонних приложений." %}
+{% trans "Приложения должны запрашивать этот токен, а не логин с паролем" %}</p>
+<form action={% url 'reset_token' %}>
+    <input  value = "{{token.key}}" disabled>
+    <button type = "submit">{% trans "Сбросить токен" %}</button>
+</form>
+{% endif %}
+{% endblock %}

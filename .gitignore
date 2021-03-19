@@ -64,6 +64,7 @@ instance/
 
 # Sphinx documentation
 docs/_build/
+docs/build
 
 # PyBuilder
 target/
@@ -107,6 +108,11 @@ media/
 *.pyc
 *.db
 *.pid
+
+
+#collectatic output of downloadable libs
+/static/admin
+/static/rest_framework
 
 # Ignore Django Migrations in Development if you are working on team
 

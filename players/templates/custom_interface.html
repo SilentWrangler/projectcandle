@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block content %}
+<h2>{% trans "Основные" %}</h2>
+<label for="back-color">{% trans "Цвет фона" %}</label>
+<input type="color" id="back-color">
+<label for="text-color">{% trans "Цвет текста" %}</label>
+<input type="color" id="text-color">
+<h2>{% trans "Верхнее меню" %</h2>
+<label for="back-color-menu">{% trans "Цвет фона" %}</label>
+<input type="color" id="back-color-menu">
+<label for="text-color-menu">{% trans "Цвет текста" %}</label>
+<input type="color" id="text-color-menu">
+{% endblock %}

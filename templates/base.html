@@ -1,0 +1,79 @@
+{% load static %}
+{% load i18n %}
+<head>
+    <title>Candle — experimental turn-based MMO</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'css/reset.css' %}" />
+    <link rel="stylesheet" type="text/css" href="{% static 'css/main.css' %}" />
+    <link rel="shortcut icon" type="image/png" href="{% static 'favicon.ico' %}"/>
+</head>
+<body>
+    <script src="{% url 'javascript-catalog' %}"></script>
+    <div class="navbar">
+        <div class="container">
+            <ul  class="nav">
+                <li class="nav-element">
+                    <a class="brand" href={% url 'home' %}>
+                        <img src="{% static 'common/logo.png' %}" alt="Candle logo">
+                    </a>
+                </li>
+                <li class="nav-element">
+                    <a class="menu-link" id="navbar-menu" href="#">
+                        {% trans "Меню" %}
+                    </a>
+                    <ul class="navbar menu-dropdown" id="navbar-menu-dd">
+                        {% if user.is_authenticated %}
+                        <li><a class="menu-link" href="#">{% trans "Сменить персонажа" %}</a></li>
+                        {% endif %}
+                        <li><a class="menu-link" href="#">{% trans "Настройка интерфейса" %}</a></li>
+                    </ul>
+                </li>
+                <li class="nav-element">
+                    <a class="menu-link" id="navbar-lore" href="#">
+                        {% trans "Лор" %}
+                    </a>
+                </li>
+                <li class="nav-element">
+                    <a class="menu-link" href="{% url 'map' %}">
+                        <strong>{% trans "Игра" %}</strong>
+                    </a>
+                </li>
+                {% if user.is_authenticated %}
+
+
+                <li class="nav-element right">
+                    <a class="menu-link" href = "{% url 'logout' %}">{% trans "Выйти" %} </a>
+                </li>
+                <li class="nav-element right">
+                    <a class="menu-link" href = "{% url 'profile' %}">{{user.username}}</a>
+                </li>
+                {% if user.is_staff %}
+                <li class="nav-element right">
+                    <a class="menu-link" href="/admin/">
+                        {% trans "Администрирование" %}
+                    </a>
+                </li>
+                {% endif %}
+
+                {% else %}
+                <li class="nav-element right">
+                    <a class="menu-link" href = "{% url 'signup' %}">{% trans "Зарегистрироваться" %}</a>
+                </li>
+                <li class="nav-element right">
+                    <a class="menu-link" href = "{% url 'login' %}"><strong>{% trans "Войти" %} </strong></a>
+                </li>
+                {% endif %}
+
+            </ul>
+        </div>
+        <script src="{% static 'interface/menu_dropdowns.js' %}"></script>
+    </div>
+    {%block content%}
+    <p>This is a placeholder landing.</p>
+    <p>World of Candle is an experimental (to-be) RPG which is supposed to be played a few minutes once every few days.
+    The fastest actions will take at least an IRL day to finish, which corresponds to an in-game month.</p>
+    <p>Player characters can, and eventually will, die permanently, but new ones will take up their legacy (not unlike famuous Crusader Kings series).
+    Except the stakes are a bit higher. Rather than just guiding their dynasties to greatness, the players are supposed to face a bigger threat than each other...
+    The one that can stomp the world they so carefully conquered into dirt, and force them to rebuild on a brand new one.</p>
+
+    {% endblock %}
+</body>

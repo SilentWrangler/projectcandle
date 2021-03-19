@@ -1,0 +1,170 @@
+
+
+body{
+    background:burlywood;
+}
+
+strong{
+    font-weight: bold;
+}
+
+p{
+    padding: 15px 10px 5px 0px;
+}
+
+.navbar {
+    background-color: #362236;
+    border: double blueviolet 5px;
+    border-radius:5px;
+    display:flex;
+}
+
+ul .nav{
+    list-style: none;
+    display: table;
+}
+
+.container{
+    width: 90%;
+}
+
+.nav-element{
+    float: left;
+    padding: 0 2%;
+}
+.nav-element.right{
+    float: right;
+}
+.menu-link{
+    color:#aa99aa;
+    display: block;
+    /*padding-left:5%;
+    align-self:middle;
+    display:inline-block;*/
+}
+
+.menu-dropdown {
+    display: none;
+}
+
+.menu-dropdown.open{
+    display: block;
+    overflow: auto;
+    position: absolute;
+}
+
+
+
+.brand{
+    display:inline-block;
+    vertical-align:middle;
+}
+
+
+.worldmap-map-container {
+    display: grid;
+    grid-template-columns:  15%  80%;
+    grid-template-rows:  40% 20% 40%;
+}
+
+.worldmap  {
+
+    border: #862012 double 10px;
+    border-radius: 20px;
+    background: brown;
+    grid-column-start: 2;
+    grid-column-end: 2;
+    grid-row-start: 1;
+    grid-row-end:3;
+
+}
+
+
+.cellinfo {
+    background: url(/static/interface/tooltip_bg.png);
+
+    background-size: cover;
+    background-repeat: no-repeat;
+    grid-column: 1/1;
+    grid-row: 1/2;
+    image-rendering: pixelated;
+    width: fixed;
+    height: fixed;
+
+}
+
+.cellinfo.wait {
+    background: url('/static/interface/tooltip_bg_wait.png');
+}
+
+
+.slider{
+    -webkit-appearance: none;
+    height: 32px;
+    background: #672010;
+    border-radius: 5px;
+
+}
+
+/* WHY, GOD?! WHY CAN'T BROWSERS JUST DISPLAY WHAT THEY'RE TOLD TO?!
+WHY DO THEY ALL HAVE TO BE GODDAMN SPECIAL SNOWFLAKES?!
+*/
+@-moz-document url-prefix(){
+    .slider{
+        vertical-align: middle;
+        height: 32px;
+        background: #672010;
+        border-radius: 5px;
+    }
+    .cellinfo {
+    background: url(/static/interface/tooltip_bg.png);
+
+    background-size: cover;
+    background-repeat: no-repeat;
+    grid-column: 1/1;
+    grid-row: 1/2;
+    image-rendering: crisp-edges;
+    width: fixed;
+    height: fixed;
+
+}
+}
+
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  background: url('/static/interface/slider_handle_hor.png');
+  cursor: pointer;
+  overflow:visible;
+  vertical-align:middle;
+}
+
+.slider::-moz-range-thumb {
+  width: 32px;
+  height: 32px;
+  border: 0;
+  background: url('/static/interface/slider_handle_hor.png');
+  cursor: pointer;
+  overflow:visible;
+  vertical-align:middle;
+}
+
+
+
+.fancyplus {
+    background: url('/static/interface/fancy_plus.png');
+    overflow: visible;
+    width: 32px;
+    height: 32px;
+    border: none;
+}
+.fancyminus {
+    background: url('/static/interface/fancy_minus.png');
+    overflow: visible;
+    width: 32px;
+    height: 32px;
+    border: none;
+}

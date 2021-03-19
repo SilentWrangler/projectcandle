@@ -1,0 +1,50 @@
+soci.bastard,Незаконнорождённый
+soci.chieftain,Вождь
+soci.feudal,Феодал
+soci.elected_official,Избранник народа
+soci.priest,Священник
+soci.high_priest,Высший священник
+soci.renowned_scientist,Известный учёный
+soci.warrior,Воин
+soci.criminal,Преступник
+soci.military_leader,Полководец
+gene.HUM.pri.foresight,Дальновидение
+gene.HUM.pri.empathy,Эмпатия
+gene.HUM.pri.compassion,Гипертрофированное сострадание
+gene.HUM.sec.charismatic,Фантастическая харизма
+gene.HUM.sec.telepath,Естественная телепатия
+gene.ORC.pri.strong,Крепкое телосложение
+gene.ORC.pri.endurance,Второе дыхание
+gene.ORC.pri.agile,Увёртливость
+gene.ORC.sec.mighty,Богатырская мощь
+gene.ORC.sec.combat_rage,Боевая ярость
+gene.ELF.pri.will_to_live,Воля к жизни
+gene.ELF.pri.healthy,Эльфийское здоровье
+gene.ELF.sec.fast_recovery,Быстрое восстановление
+gene.ELF.sec.long_lived,Долгожительство
+gene.DWA.pri.travelers_intuition,Дорожная интуиция
+gene.DWA.pri.muse_blessed,Близость к музе
+gene.DWA.sec.inspiratioin_flashes,Вспышки вдохновения
+gene.GOB.pri.attention,Внимательность
+gene.GOB.pri.boosted_logic,Логический ум
+gene.GOB.sec.hypermnesia,Гипермнезия
+exp.politics1,Перспективный политик
+exp.politics2,Умелый политик
+exp.politics3,Матёрый политик
+exp.politics4,Серый кардинал
+exp.politics5,Мастер паутины
+exp.military1,Начинающий офицер
+exp.military2,Опытный офицер
+exp.military3,Знающий командующий
+exp.military4,Исключительный полководец
+exp.military5,Гений военного дела
+exp.economics1,Начинающий управляющий
+exp.economics2,Умелый управляющий
+exp.economics3,Знаток экономики
+exp.economics4,Видный экономист
+exp.economics5,Повелитель финансов
+exp.science1,Перспективный ученик
+exp.science2,Учёный
+exp.science3,Академик
+exp.science4,Профессор
+exp.science5,Светило науки

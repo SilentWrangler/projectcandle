@@ -1,7 +1,8 @@
 from .constants import WORLD_GEN, MAIN_BIOME, BIOME_MOD, POP_RACE, CITY_TYPE
+from .constants import RESOURCE_TYPE as rt
 from .models import World, Cell, Pop
 from django.db import transaction
-from datetime import datetime
+from django.utils import timezone
 from random import randint,choice
 from background_task import background
 
@@ -33,6 +34,25 @@ class WorldGenerator:
         cell = self.cells[x][y]
         if cell.biome_mod == BIOME_MOD.MOUNTAINS: return False
         return True
+
+
+    def determine_eruption_height(self, power):
+
+        power_left = power/self.eruption_power
+
+        if power_left>0.95:
+            modlist = [(BIOME_MOD.NONE,1)] +[(BIOME_MOD.HILLS,2)]*2 + [(BIOME_MOD.MOUNTAINS,3)]*3
+        elif power_left>0.8:
+            modlist = [(BIOME_MOD.NONE,1)]*2 +[(BIOME_MOD.HILLS,2)]*2 + [(BIOME_MOD.MOUNTAINS,3)]
+        elif power_left>0.6:
+            modlist = [(BIOME_MOD.NONE,1)]*3 +[(BIOME_MOD.HILLS,2)]*2
+        elif power_left>0.45:
+            modlist = [(BIOME_MOD.NONE,1)]*5 +[(BIOME_MOD.HILLS,2)]
+        else:
+            modlist = [(BIOME_MOD.NONE,1)]
+        return choice(modlist)
+
+
 
 
     def can_grow_forest(self,x,y):
@@ -105,93 +125,108 @@ class WorldGenerator:
             return POP_RACE.ORC
 
 
-    def generate_world(self):
+    def generate_world(self, printDebug = False):
         """Only function you need to call as a method. Generates and stores a world."""
 
 
         with transaction.atomic():
-            world = World(start_date=datetime.now())
+            if printDebug: print('Creating World object...')
+            world = World(start_date=timezone.now(),width = self.width,height = self.height)
             world.save()
+            if printDebug: print('Done.')
+            if printDebug: print('Creating Water cells...')
             self.cells = [[Cell(x=i,y=j,
             main_biome = MAIN_BIOME.WATER,
             world = world) for j in range(
                 self.height)] for i in range(
                 self.width)] #flood the world
-
+            if printDebug: print('Done.')
+            if printDebug: print('Generating elevation...')
             #Start eruptions
+
             for e in range(self.eruptions):
                 pwr=self.eruption_power
-                start_x = randint(int(self.width/4),(int(self.width/4))*3)
-                start_y = randint(int(self.height/4),(int(self.height/4))*3)
+                start_x = randint(int(self.width/6),(int(self.width/6))*5)
+                start_y = randint(int(self.height/6),(int(self.height/6))*5)
                 c_x = start_x
                 c_y = start_y
                 land_type = choice([MAIN_BIOME.PLAIN,MAIN_BIOME.PLAIN,MAIN_BIOME.DESERT])
                 fail_count=0
-                while pwr>0 and fail_count<5:
+                while pwr>0 and fail_count<15:
                     if self.can_erupt_into(c_x,c_y):
-                        pwr-=1
+                        t = self.determine_eruption_height(pwr)
+                        pwr-= t[1]
                         cell = self.cells[c_x][c_y]
                         cell.main_biome = land_type
-                        if cell.biome_mod == BIOME_MOD.NONE:
-                            cell.biome_mod = BIOME_MOD.HILLS
-                        if cell.biome_mod == BIOME_MOD.HILLS:
-                            cell.biome_mod = BIOME_MOD.MOUNTAINS
+                        cell.biome_mod = t[0]
                     else:
                         fail_count+=1
                     c_x+= randint(-1,1)
                     c_y+=randint(-1,1)
             #End eruptions
+            if printDebug: print('Done.')
             #Grow forests
+            if printDebug: print('Growing forests...')
             forest_quota = self.forest_cells
-            seed_x = randint(int(self.width/4),(int(self.width/4))*3)
-            seed_y = randint(int(self.height/4),(int(self.height/4))*3)
+            seed_x = randint(int(self.width/6),(int(self.width/6))*5)
+            seed_y = randint(int(self.height/6),(int(self.height/6))*5)
             fail_count = 0
             while forest_quota>0 and fail_count<10:
                 if self.can_grow_forest(seed_x,seed_y):
+                    fail_count = 0
                     forest_quota-=1
                     cell = self.cells[seed_x][seed_y]
                     cell.biome_mod= BIOME_MOD.FOREST
-                    seed_x+= randint(-1,1)
-                    seed_y+=randint(-1,1)
+                    add_x, add_y = choice([(1,0),(-1,0),(0,1),(0,-1)])
+                    seed_x+= add_x
+                    seed_y+= add_y
                 else:
                     fail_count+=1
-                    seed_x = randint(int(self.width/4),(int(self.width/4))*3)
-                    seed_y = randint(int(self.height/4),(int(self.height/4))*3)
+                    seed_x = randint(int(self.width/6),(int(self.width/6))*5)
+                    seed_y = randint(int(self.height/6),(int(self.height/6))*5)
             #Stop growing forests
+            if printDebug: print('Done.')
             #Start making swamps
+            if printDebug: print('Creating swamps...')
             swamp_quota = self.swamp_cells
-            seed_x = randint(int(self.width/4),(int(self.width/4))*3)
-            seed_y = randint(int(self.height/4),(int(self.height/4))*3)
+            seed_x = randint(int(self.width/6),(int(self.width/6))*5)
+            seed_y = randint(int(self.height/6),(int(self.height/6))*5)
             fail_count = 0
             while swamp_quota>0 and fail_count<10:
                 if self.can_make_swamp(seed_x,seed_y):
                     swamp_quota-=1
+                    fail_count = 0
                     cell = self.cells[seed_x][seed_y]
                     cell.biome_mod= BIOME_MOD.SWAMP
-                    seed_x+= randint(-1,1)
-                    seed_y+=randint(-1,1)
+                    add_x, add_y = choice([(1,0),(-1,0),(0,1),(0,-1)])
+                    seed_x+= add_x
+                    seed_y+= add_y
                 else:
                     fail_count+=1
                     seed_x = randint(int(self.width/4),int(self.width/4)*3)
                     seed_y = randint(int(self.height/4),int(self.height/4)*3)
             #stop making swamps
-
+            if printDebug: print('Done.')
             #prepare map for spawning pops
+            if printDebug: print('Saving cells...')
             for row in self.cells:
                 for cell in row:
                     cell.save()
 
-
+            if printDebug: print('Spawning pops...')
 
             #spawn pops
             pop_count = 0
             pop_max = self.city_number*self.pops_per_city
             fail_count = 0
+            if printDebug: poplog = open('pop.log','w')
             while pop_count<pop_max and fail_count<10:
                 c_x = randint(0,self.width-1)
                 c_y = randint(0,self.height-1)
                 cell = self.cells[c_x][c_y]
-                if cell.main_biome!=MAIN_BIOME.WATER and self.area_score(c_x,c_y)>self.city_score:
+                score = self.area_score(c_x,c_y)
+                if printDebug and cell.main_biome!=MAIN_BIOME.WATER: print(f'Checking ({c_x};{c_y}):{cell.main_biome} score {score}', file = poplog)
+                if cell.main_biome!=MAIN_BIOME.WATER and score>self.city_score:
                     fail_count=0
                     for i in range(3):
                         pop_count+=1
@@ -210,6 +245,7 @@ class WorldGenerator:
                                     pop = Pop(race=race, location=cell)
                                     pop.save()
                                     fail_count=0
+                                    if printDebug: print(f'Spawned {pop_count}/{pop_max}', end = '\r')
                                 else:
                                     fail_count+=1
                             break
@@ -218,8 +254,10 @@ class WorldGenerator:
                         cell.save()
                         pop = Pop(race=race, location=cell)
                         pop.save()
+                        if printDebug: print(f'Spawned {pop_count}/{pop_max}', end = '\r')
                     else:
                         fail_count+=1
+            if printDebug: poplog.close()
             #end pops spawn
             return world.id
     def to_json(self):
@@ -232,8 +270,83 @@ def generate_world_background(**kwargs):
     generator.generate_world()
 
 
+def pick_resource(main,mod):
+    table = {
+        MAIN_BIOME.PLAIN:{
+            '': [rt.IRON, rt.QUARTZ, rt.WYVERNS],
+            BIOME_MOD.FOREST: [rt.AMBER],
+            BIOME_MOD.SWAMP: [rt.IRON],
+            BIOME_MOD.HILLS: [rt.IRON,rt.RUBIES,rt.SAPHIRES,rt.SILVER, rt.GOLD],
+            BIOME_MOD.MOUNTAINS: [rt.ALUMINIUM, rt.GOLD, rt.OBSIDIAN,rt.AMETHISTS]
+            },
+        MAIN_BIOME.DESERT:{
+            '': [rt.HORSES],
+            BIOME_MOD.FOREST: [rt.AMBER],
+            BIOME_MOD.SWAMP: [rt.SAPHIRES],
+            BIOME_MOD.HILLS: [rt.IRON, rt.EMERALD,rt.AMETHISTS,rt.SILVER],
+            BIOME_MOD.MOUNTAINS: [rt.ALUMINIUM, rt.SILVER, rt.DIAMONDS,rt.SAPHIRES]
+            }
+        }
+    drop_list = table[main][mod]
+    return choice(drop_list)
+
+@background(queue='worldgen')
+def put_resource_deposits(world_id):
+    with transaction.atomic():
+        cells = Cell.objects.filter(world_id = world_id)
+        for cell in cells:
+            if cell.main_biome == MAIN_BIOME.WATER:
+                continue
+            else:
+                if randint(1,100)>80:
+                    cell.local_resource = pick_resource(cell.main_biome, cell.biome_mod)
+                    cell.save()
 
 
+def food_value(x,y, world_id):
+    try:
+        cell = Cell.objects.get(world_pk=world_id,x=x,y=y)
+        base_table = {
+            MAIN_BIOME.PLAIN:{
+                BIOME_MOD.NONE: 4,
+                BIOME_MOD.FOREST: 3,
+                BIOME_MOD.SWAMP: 3,
+                BIOME_MOD.HILLS: 2,
+                BIOME_MOD.MOUNTAINS:1
+                },
+            MAIN_BIOME.DESERT:{
+                BIOME_MOD.NONE: 1,
+                BIOME_MOD.FOREST: 2,
+                BIOME_MOD.SWAMP: 3,
+                BIOME_MOD.HILLS: 1,
+                BIOME_MOD.MOUNTAINS: 1
+                }
+        }
+        multiplier_table = {
+            CITY_TYPE.GENERIC: [2,2,1,1,0],
+            CITY_TYPE.MANA: [1,0],
+            CITY_TYPE.FARM: [3,5],
+            CITY_TYPE.LIBRARY: [1,1],
+            CITY_TYPE.FORT: [0,0],
+            CITY_TYPE.FACTORY: [0,0],
+            CITY_TYPE.MINE: [1,0]
+        }
+
+        def get_multiplier(city_type,tier):
+            if city_type is None:
+                return 2
+            elif city_type == CITY_TYPE.SORROW_LAIR:
+                return 0
+            else:
+                return multiplier_table[city_type][tier-1]
 
 
+        return base_table[cell.main_biome][cell.biome_mod]*get_multiplier(cell.city_type,cell.city_tier)
+    except Cell.DoesNotExist:
+        return 0
 
+def cell_total_food(cell):
+    s = 0
+    for x in range(cell.x-1,cell.x+2):
+        for y in range(cell.y-1,cell.y+2):
+            s+=food_value(x,y,cell.world.id)

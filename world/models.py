@@ -12,12 +12,27 @@ WORLD_END_CHOICES = [
 
 class World(models.Model):
     start_date = models.DateTimeField('Мир запущен')
-    end_date = models.DateTimeField('Мир закрыт', null=True)
+    end_date = models.DateTimeField('Мир закрыт', null=True, blank = True)
     end_type = models.CharField(
         max_length = 2,
         choices = WORLD_END_CHOICES,
         default = 'NY'
     )
+    is_active = models.BooleanField(default = False)
+    width = models.IntegerField()
+    height = models.IntegerField()
+    ticks_age = models.IntegerField(default = 0)
+    def save(self, *args, **kwargs):
+        if self.is_active:
+            try:
+                temp = World.objects.get(is_active = True)
+                if self!=temp:
+                    temp.is_active = False
+                    temp.save()
+            except World.DoesNotExist:
+                pass
+        super(World, self).save(*args, **kwargs)
+
 
 
 
