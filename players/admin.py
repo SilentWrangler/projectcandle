@@ -8,7 +8,6 @@ admin.site.register(Player)
 
 class TraitInline(admin.TabularInline):
     model = Trait.character.through
-    filter_horizontal = ('character',)
     extra = 1
 
 class CharTagInline(admin.StackedInline):
