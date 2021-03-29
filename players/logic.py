@@ -3,6 +3,7 @@ from django.core.mail import send_mail
 from random import randint, choice
 from .models import Character, Trait, CharTag
 from world.models import Pop, World
+from world.logic import get_active_world
 from .namegens import hungarian
 from .constants import GENDER
 
@@ -58,6 +59,19 @@ def create_character_outta_nowhere(cell, minage = 16, maxage = None):
     loc_tag = CharTag(character = character, name = "location", content = f'{{"x":{cell.x}, "y":{cell.y} }}')
     loc_tag.save()
     add_racial_traits(character)
+    return character
 
 
+def create_character_char_creator(**kwargs):
+    """Создание персонажа с использованием редактора"""
+    world = get_active_world()
+    race = kwargs['race']
+    pops = Pop.objects.select_related('location').filter(location__world_id = world.id, race = race)
+    cell = choice(pops).location
+    player = kwargs['player']
+    char = create_character_outta_nowhere(cell)
+    control_tag = CharTag(character = char, name = 'controlled_by', content = f'{{"id":{player.id}}}')
+    control_tag.save()
+    blood_tag = CharTag(character = char, name = 'bloodline', content = f'{{"id":{player.id}}}')
+    blood_tag.save()
 
