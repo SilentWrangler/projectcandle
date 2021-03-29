@@ -26,3 +26,18 @@ class EXP:
     TRAIT_EXR_MULT = 1.5 # Каждый следующий уровень увеличивает требования по EXP в полтора раза
 
     TRAIT_LVL_MAX = 5
+
+class CHAR_DISPLAY:
+    clothes = {'stone_age':'stone_age.png'}
+    race = {
+        'hum':'human',
+        'human':'human',
+        'elf':'elf',
+        'orc':'orc',
+        'gob':'goblin',
+        'goblin':'goblin',
+        'dwa':'dwarf',
+        'dwarf':'dwarf',
+        'fey':'fey'
+        }
+    gender = {'f':'female','female':'female','m':'male','male':'male'}

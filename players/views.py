@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.sites.shortcuts import get_current_site
 from django.http import HttpResponse,HttpResponseNotAllowed
-from django.template.loader import render_to_string
+from django.conf import settings
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 
@@ -10,6 +10,7 @@ from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.translation import gettext as _
 from django.utils.encoding import force_bytes, force_text
 from django.core.mail import EmailMessage
+from django.core.exceptions import SuspiciousOperation
 
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import api_view, permission_classes
@@ -20,6 +21,10 @@ from rest_framework.response import Response
 from .models import Player, Character
 from .forms import SignupForm
 from .tokens import account_activation_token
+from .constants import CHAR_DISPLAY
+
+import os
+from PIL import Image
 # Create your views here.
 
 
@@ -102,5 +107,32 @@ def customise_interface(request):
 def char_profile(request, charid):
     character = get_object_or_404(Character, id=charid)
     return render (request, 'char_template.html', {'character':character})
+
+def char_image(request):
+    base_path = settings.BASE_DIR
+    base_path = os.path.join(base_path,'players','graphics','characters')
+    try:
+        race = request.GET.get('race', '').lower()
+        assert race in CHAR_DISPLAY.race,\
+        f"Invalid race value '{race}'. Allowed values: {list(CHAR_DISPLAY.race)}"
+        base_path = os.path.join(base_path,CHAR_DISPLAY.race[race])
+        gender = request.GET.get('gender', None)
+        assert gender in CHAR_DISPLAY.gender,\
+        f"Invalid gender value '{gender}'. Allowed values: {list(CHAR_DISPLAY.gender)}"
+        base_path = os.path.join(base_path,CHAR_DISPLAY.gender[gender])
+        clothes = request.GET.get('clothes', None)
+        assert clothes in CHAR_DISPLAY.clothes,\
+        f"Invalid clothes value '{clothes}'. Allowed values: {list(CHAR_DISPLAY.clothes)}"
+        bim = Image.open(os.path.join(base_path,'base.png'))
+        clim = Image.open(os.path.join(base_path,'clothes',CHAR_DISPLAY.clothes[clothes]))
+        xsize,ysize = bim.size
+        bim.paste(clim,(0,0,xsize,ysize),clim)
+        response = HttpResponse(content_type="image/png")
+        bim.save(response,"PNG")
+        return response
+    except AssertionError as ex:
+        raise SuspiciousOperation from ex
+
+
 
 

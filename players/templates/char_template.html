@@ -8,10 +8,11 @@
 
     <h2>{{character.name}}, {{character.race_human_readable}}</h2>
     {{character.birth_date_human_readable}}
+    <img src="{% url 'char_image' %}?gender={{character.gender}}&race={{character.primary_race}}&clothes=stone_age"></img>
     <h3>{% trans "Черты" %}</h3>
     <table>
     {% for trait in character.traits.all %}
-       <tr>{{trait.verbose_name}}</tr>
+       <tr><td>{{trait.verbose_name}}</td></tr>
     {% endfor %}
     </table>
 {% endblock %}

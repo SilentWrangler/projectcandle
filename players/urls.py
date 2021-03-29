@@ -12,4 +12,5 @@ urlpatterns = [
     path('accounts/profile/', views.profile, name = 'profile'),
     path('accounts/reset_token/',views.reset_token, name = 'reset_token'),
     path('characters/<int:charid>', views.char_profile, name = 'char_profile'),
+    path('characters/makeimage/',views.char_image,name = 'char_image'),
     ]
