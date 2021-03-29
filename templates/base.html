@@ -24,6 +24,9 @@
                         {% if user.is_authenticated %}
                         <li><a class="menu-link" href="#">{% trans "Сменить персонажа" %}</a></li>
                         {% endif %}
+                        {% if user.is_staff %}
+                        <li><a class="menu-link" href="/admin/">{% trans "Администрирование" %}</a></li>
+                        {% endif %}
                         <li><a class="menu-link" href="#">{% trans "Настройка интерфейса" %}</a></li>
                     </ul>
                 </li>
@@ -46,13 +49,7 @@
                 <li class="nav-element right">
                     <a class="menu-link" href = "{% url 'profile' %}">{{user.username}}</a>
                 </li>
-                {% if user.is_staff %}
-                <li class="nav-element right">
-                    <a class="menu-link" href="/admin/">
-                        {% trans "Администрирование" %}
-                    </a>
-                </li>
-                {% endif %}
+
 
                 {% else %}
                 <li class="nav-element right">
@@ -62,6 +59,9 @@
                     <a class="menu-link" href = "{% url 'login' %}"><strong>{% trans "Войти" %} </strong></a>
                 </li>
                 {% endif %}
+                <li class="nav-element right">
+                    <a class="menu-link">{{world.ticks_human_readable}}</a>
+                </li>
 
             </ul>
         </div>

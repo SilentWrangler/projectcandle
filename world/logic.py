@@ -350,3 +350,7 @@ def cell_total_food(cell):
     for x in range(cell.x-1,cell.x+2):
         for y in range(cell.y-1,cell.y+2):
             s+=food_value(x,y,cell.world.id)
+
+def get_active_world():
+    return World.objects.get(is_active=True)
+

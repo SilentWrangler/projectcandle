@@ -10,6 +10,7 @@ class CellSerializerShort(serializers.ModelSerializer):
 
 class WorldSerializer(serializers.ModelSerializer):
     cells = CellSerializerShort(many = True, source='cell_set')
+    ticks_human_readable = serializers.ReadOnlyField()
     class Meta:
         model=World
         fields='__all__'

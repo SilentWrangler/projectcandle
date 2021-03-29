@@ -1,5 +1,8 @@
 from django.db import models
 from .constants import RESOURCE_TYPE, MAIN_BIOME, BIOME_MOD, CITY_TYPE, POP_RACE
+from .strings import month_names
+
+from django.utils.text import format_lazy
 # Create your models here.
 
 
@@ -32,8 +35,12 @@ class World(models.Model):
             except World.DoesNotExist:
                 pass
         super(World, self).save(*args, **kwargs)
-
-
+    @property
+    def ticks_human_readable(self):
+        months = 11 - (self.ticks_age%12)
+        years = self.ticks_age//12
+        return format_lazy( '{years}, {month}',
+        years=years, month = month_names[months])
 
 
 class Cell(models.Model):
