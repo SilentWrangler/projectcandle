@@ -3,9 +3,9 @@ const atlas_src = "/static/map/hires_wip.png";
 const atlas_cols = 6;
 var scale = 0.2;
 
-const min_scale = 0.05;
-const max_scale = 1;
-const scale_step = 0.05;
+const min_scale = 0.0025;
+const max_scale = 0.5;
+const scale_step = 0.0005;
 
 
 var ImageIndexes = {};
