@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block content %}
+{% if process_error%}
+<p>{{process_error}}</p>
+{% endif %}
+{{ form.non_field_errors }}
+<form action="{% url 'char_change' %}" method="post">
+    {% csrf_token %}
+    {{ form }}
+    <input type="submit" value="{% trans 'Выбрать персонажа' %}">
+</form>
+{% endblock %}

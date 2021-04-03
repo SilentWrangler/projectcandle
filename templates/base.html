@@ -4,6 +4,7 @@
     <title>Candle — experimental turn-based MMO</title>
     <link rel="stylesheet" type="text/css" href="{% static 'css/reset.css' %}" />
     <link rel="stylesheet" type="text/css" href="{% static 'css/main.css' %}" />
+    {% block addhead %}{% endblock %}
     <link rel="shortcut icon" type="image/png" href="{% static 'favicon.ico' %}"/>
 </head>
 <body>
@@ -21,9 +22,17 @@
                         {% trans "Меню" %}
                     </a>
                     <ul class="navbar menu-dropdown" id="navbar-menu-dd">
-                        {% if user.is_authenticated %}
-                        <li><a class="menu-link" href="#">{% trans "Сменить персонажа" %}</a></li>
+                        {% if current_char %}
+                            <li><a class="menu-link" href="{% url 'char_profile' charid=current_char.id %}">{{current_char.name}}</a></li>
+                            <li><a class="menu-link" href="{% url 'char_change' %}">{% trans "Сменить персонажа (текущий станет NPC!)" %}</a></li>
+                            <li><a class="menu-link" href="{% url 'char_new' %}">{% trans "Создать персонажа (текущий станет NPC!)" %}</a></li>
+                        {% else %}
+                            {% if user.is_authenticated %}
+                                <li><a class="menu-link" href="{% url 'char_change' %}">{% trans "Выбрать персонажа" %}</a></li>
+                                <li><a class="menu-link" href="{% url 'char_new' %}">{% trans "Создать персонажа" %}</a></li>
+                            {% endif %}
                         {% endif %}
+
                         {% if user.is_staff %}
                         <li><a class="menu-link" href="/admin/">{% trans "Администрирование" %}</a></li>
                         {% endif %}

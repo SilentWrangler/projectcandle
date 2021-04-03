@@ -24,6 +24,6 @@ class CharAdmin(admin.ModelAdmin):
 
 @admin.register(Trait)
 class TraitAdmin(admin.ModelAdmin):
-    fields = ('verbose_name', 'character')
+    fields = ('verbose_name', 'character', 'image')
     list_display = ('name', 'from_module', 'verbose_name')
     filter_horizontal = ('character',)

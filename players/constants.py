@@ -1,5 +1,5 @@
 from django.db import models
-
+from world.constants import POP_RACE
 
 class GENDER(models.TextChoices):
     MALE = 'm'
@@ -41,3 +41,18 @@ class CHAR_DISPLAY:
         'fey':'fey'
         }
     gender = {'f':'female','female':'female','m':'male','male':'male'}
+
+
+class CHAR_TAG_NAMES:
+    BLOODLINE = "bloodline"
+    CONTROLLED = "controlled_by"
+    LOCATION = "location"
+    CLOTHES = "clothes"
+
+class UNIQUE_TAGS:
+    ONE_PER_PLAYER = [CHAR_TAG_NAMES.CONTROLLED]
+    ONE_PER_CHARACTER = [CHAR_TAG_NAMES.LOCATION]
+
+
+ALLOWED_RACES = [POP_RACE.HUMAN,POP_RACE.ELF,POP_RACE.ORC,POP_RACE.GOBLIN,POP_RACE.DWARF]
+ALLOWED_EXP = ['politics','military','economics','science']

@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block content %}
+<h1>{% trans "Запросы на переименование" %}</h1>
+<ul>
+{% for rename in object_list %}
+    <li><a href="{% url 'char_renames_details' pk=rename.id %}">#{{rename.id}}</a> {{rename.player.name}} : <a href="{% url 'char_profile' charid=rename.character.id %}">{{rename.character}}</a>
+    >> {{rename.new_name}}
+    <a href="{% url 'char_renames_approve' id=rename.id %}">Approve</a>
+    <a href="{% url 'char_renames_reject' id=rename.id %}">Reject</a></li>
+{% empty %}
+    <li>{% trans "Запросы на переименование отсутствуют" %}</li>
+{% endfor %}
+</ul>
+{% endblock %}

@@ -51,6 +51,7 @@ ul .nav{
     display: block;
     overflow: auto;
     position: absolute;
+    margin: 1%;
 }
 
 

@@ -1,0 +1,17 @@
+
+
+.fancyback{
+    background: url(/static/interface/tooltip_bg.png);
+    image-rendering: crisp-edges;
+    background-size: cover;
+    background-repeat: no-repeat;
+}
+
+@-moz-document url-prefix(){
+    .fancyback{
+        background: url(/static/interface/tooltip_bg.png);
+        image-rendering: pixelated;
+        background-size: cover;
+        background-repeat: no-repeat;
+    }
+}

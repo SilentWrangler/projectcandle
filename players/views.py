@@ -4,11 +4,16 @@ from django.http import HttpResponse,HttpResponseNotAllowed
 from django.conf import settings
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
+from django.contrib.admin.views.decorators import staff_member_required
+from django.views import View
+from django.views.generic.list import ListView
+from django.views.generic.detail import DetailView
 
 
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.translation import gettext as _
 from django.utils.encoding import force_bytes, force_text
+from django.utils.decorators import method_decorator
 from django.core.mail import EmailMessage
 from django.core.exceptions import SuspiciousOperation
 
@@ -18,10 +23,11 @@ from rest_framework.status import HTTP_200_OK
 from rest_framework.response import Response
 
 
-from .models import Player, Character
-from .forms import SignupForm
+from .models import Player, Character, RenameRequest
+from .forms import SignupForm, CharPickForm
 from .tokens import account_activation_token
-from .constants import CHAR_DISPLAY
+from .constants import CHAR_DISPLAY, ALLOWED_RACES, GENDER, ALLOWED_EXP, CHAR_TAG_NAMES
+from .logic import PCUtils
 
 import os
 from PIL import Image
@@ -133,6 +139,84 @@ def char_image(request):
     except AssertionError as ex:
         raise SuspiciousOperation from ex
 
+@method_decorator(login_required, name='dispatch')
+class PickChar(View):
+    form_class = CharPickForm
+    template_name = 'pick_new_char.html'
+    def get(self, request):
+        form = self.form_class(request.user)
+        return render(request, self.template_name, {'form': form})
 
+    def post(self, request, *args, **kwargs):
+        form = self.form_class(request.user,request.POST)
+        if form.is_valid():
+            success, charid = PCUtils.try_pick_character(request.user, form.cleaned_data['charpick'])
+            if success:
+                return redirect('char_profile', charid = charid)
+            return render(request, self.template_name, {'form': form,'process_error':charid})
+        return render(request, self.template_name, {'form': form,'process_error':'Invalid form'})
 
+@method_decorator(login_required, name='dispatch')
+class MakeChar(View):
+    template_name = 'char_maker_template.html'
+    def get(self, request):
+        return render(request, self.template_name, {'ALLOWED_RACES':ALLOWED_RACES})
+    def post(self, request, *args, **kwargs):
+        try:
+            race = request.POST.get("race","")
+            assert race in ALLOWED_RACES
+            gender = request.POST.get("gender","")
+            assert gender in GENDER
+            exp = request.POST.get("exp","")
+            assert exp in ALLOWED_EXP
+            char = PCUtils.create_character_char_creator(
+                player = request.user,
+                gender = gender,
+                race = race,
+                exp = exp,
+                name = request.POST.get("name","")
+            )
+            return redirect('char_profile', charid = char.id)
+        except AssertionError:
+            return render(request, self.template_name, {'ALLOWED_RACES':ALLOWED_RACES, 'err':_("Хорошая попытка, но нет.")})
+
+@method_decorator(staff_member_required, name='dispatch')
+class Renames(ListView):
+    model = RenameRequest
+    pagination_by = 25
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        return context
+
+@method_decorator(login_required, name='dispatch')
+class RenameDetail(DetailView):
+    model = RenameRequest
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        return context
+
+@staff_member_required
+def rename_approve(request, id):
+    rr = RenameRequest.objects.get(id=id)
+    rr.approve()
+    return redirect('char_renames')
+
+@staff_member_required
+def rename_reject(request, id):
+    rr = RenameRequest.objects.get(id=id)
+    rr.reject()
+    return redirect('char_renames')
+
+@login_required
+def request_rename(request,charid):
+    try:
+        char = Character.objects.get(id=charid)
+        assert char.tags.filter(name = CHAR_TAG_NAMES.CONTROLLED, content=f'{request.user.id}').exists()
+        name = request.POST.get("name","")
+        rr = RenameRequest(player = request.user, character = char, new_name = name)
+        rr.save()
+        return redirect('char_profile', charid = char.id)
+    except AssertionError:
+        return redirect('char_profile', charid = char.id)
 

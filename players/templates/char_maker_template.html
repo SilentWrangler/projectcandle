@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load static %}
+
+{% block addhead %}
+    <link rel="stylesheet" type="text/css" href="{% static 'css/charmaker.css' %}" />
+{% endblock %}
+
+{% block content %}
+    {% if err %}<p>{{err}}</p>{% endif %}
+
+    {% for race in ALLOWED_RACES %}
+        <a onclick = "race_pick(this,'{{race}}','f')"><img src="/characters/makeimage/?gender=f&race={{race}}&clothes=stone_age"></a>
+        <a onclick = "race_pick(this,'{{race}}','m')"><img src="/characters/makeimage/?gender=m&race={{race}}&clothes=stone_age"></a>
+    {% endfor %}
+    <p><strong id="race_name"></strong></p>
+    <p id="race_desc"></p>
+    <a onclick = "spec_pick(this,'politics')"><img src="{% static 'characters/politics_big.png' %}"></a>
+    <a onclick = "spec_pick(this,'military')"><img src="{% static 'characters/military_big.png' %}"></a>
+    <a onclick = "spec_pick(this,'economics')"><img src="{% static 'characters/economics_big.png' %}"></a>
+    <a onclick = "spec_pick(this,'science')"><img src="{% static 'characters/science_big.png' %}"></a>
+    <p><strong id="spec_name"></strong></p>
+    <p id="spec_desc"></p>
+    <form action="#" method="post" onsubmit="return yesno()">
+        {% csrf_token %}
+        <input type="hidden" name = "gender" id="char_gender">
+        <input type="hidden" name = "race" id="char_race">
+        <input type="hidden" name = "exp" id="char_exp">
+        <label for="cname">Имя персонажа (сначала проходит модерацию)</label>
+        <input name ="name" id="char_name">
+        <input type = "hidden" value = "{% trans 'Создать персонажа' %}" id="confirm">
+    </form>
+    <script src = "{% static 'characters/charmaker.js' %}"></script>
+
+{% endblock %}
+
+f"<a onclick = \"race_pick(\'{r}\',\'{g}\')\"><img src=\"/characters/makeimage/?gender={g}&race={r}&clothes=stone_age\"></a>"
