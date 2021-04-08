@@ -10,6 +10,7 @@ urlpatterns = [
     path('accounts/activationsent/',views.asnt,name = 'activation_sent'),
     path('accounts/',include('django.contrib.auth.urls')),
     path('accounts/profile/', views.profile, name = 'profile'),
+    path('accounts/<int:pk>/', views.PlayerPage.as_view(), name = 'player_page'),
     path('accounts/reset_token/',views.reset_token, name = 'reset_token'),
     path('characters/<int:charid>', views.char_profile, name = 'char_profile'),
     path('characters/<int:charid>/rename/', views.request_rename, name = 'char_rename'),

@@ -2,10 +2,13 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 # Create your models here.
 
+import json
+
 from .managers import CustomUserManager
 from world.constants import POP_RACE
 from world.strings import month_names
-from .constants import GENDER, UNIQUE_TAGS
+from .constants import GENDER, UNIQUE_TAGS, CHAR_TAG_NAMES
+
 
 from django.utils.text import format_lazy
 from django.utils.translation import pgettext_lazy
@@ -17,6 +20,18 @@ class Player(AbstractUser):
 
     objects=CustomUserManager()
     bloodline_traits = models.ManyToManyField('Trait', blank = True)
+    @property
+    def current_char(self):
+        from .logic import PCUtils
+        return PCUtils.get_current_char(self)
+    @property
+    def bloodline_chars(self):
+        return Character.objects.filter(
+            tags__content = f'{self.id}',
+            tags__name = CHAR_TAG_NAMES.BLOODLINE
+        )
+
+
 
 class RenameRequest(models.Model):
     new_name = models.CharField(max_length = 100)
@@ -62,13 +77,36 @@ class Character(models.Model):
     def race_human_readable(self):
         return pgettext_lazy(f'char-{self.gender}-{self.secondary_race}',self.primary_race)
 
+    @property
+    def location(self):
+        try:
+            tag = self.tags.get(name = CHAR_TAG_NAMES.LOCATION)
+            return json.loads(tag.content)
+        except CharTag.DoesNotExist:
+            return None
+    @property
+    def controller(self):
+        try:
+            tag = self.tags.get(name = CHAR_TAG_NAMES.CONTROLLED)
+            return Player.objects.get(id = int(tag.content))
+        except CharTag.DoesNotExist:
+            return None
+
+    @property
+    def clothes(self):
+        try:
+            return self.tags.get(name = CHAR_TAG_NAMES.CLOTHES).content
+        except CharTag.DoesNotExist:
+            return "stone_age"
+
+
     def __str__(self):
         return f'Character ({self.id}): {self.name}'
 
 
 class CharTag(models.Model):
     character = models.ForeignKey(Character, on_delete=models.CASCADE, related_name = "tags")
-    name = models.CharField(max_length=16)
+    name = models.CharField(max_length=16,choices = CHAR_TAG_NAMES)
     content = models.CharField(max_length = 100)
     def save(self, *args, **kwargs):
         if self.name in UNIQUE_TAGS.ONE_PER_PLAYER:

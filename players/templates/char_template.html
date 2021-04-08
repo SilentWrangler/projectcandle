@@ -8,21 +8,35 @@
 
     <h2>{{character.name}}, {{character.race_human_readable}}</h2>
     <p>{{character.birth_date_human_readable}}</p>
-    <p><img src="{% url 'char_image' %}?gender={{character.gender}}&race={{character.primary_race}}&clothes=stone_age"></img></p>
+    <p><img src="{% url 'char_image' %}?gender={{character.gender}}&race={{character.primary_race}}&clothes={{character.clothes}}"></img></p>
+    {% if character.controller%}
+        <p>Этот персонаж находится под контролем игрока <a href="{% url 'player_page' pk=character.controller.id %}">
+            {{character.controller.username}}</a>
+        </p>
+    {% endif %}
+
+    {% if character.location %}
+        <p>Местонахождение: {{character.location.x}}x{{character.location.y}}</p>
+    {% endif %}
+
     {% if character == current_char %}
+    <hr>
     <form action="{% url 'char_rename' charid=character.id %}" method="post">
         {% csrf_token %}
         <input name="name">
         <input type="submit" value="{% trans 'Запросить переименование' %}">
     </form>
     {% endif %}
+
     {% if character == current_char or user.is_staff %}
     <p>Рассматириваются запросы:</p>
+    <hr>
     <ul>
         {% for rename in character.renamerequest_set.all %}
         <li><a href="{% url 'char_renames_details' pk=rename.id %}">#{{rename.id}}</a> {{rename.new_name}}</li>
         {% endfor %}
     </ul>
+    <hr>
     {% endif %}
     <h3>{% trans "Черты" %}</h3>
     <table>

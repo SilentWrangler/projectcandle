@@ -220,3 +220,8 @@ def request_rename(request,charid):
     except AssertionError:
         return redirect('char_profile', charid = char.id)
 
+class PlayerPage(DetailView):
+    model = Player
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        return context

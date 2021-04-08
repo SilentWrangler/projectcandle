@@ -43,7 +43,7 @@ class CHAR_DISPLAY:
     gender = {'f':'female','female':'female','m':'male','male':'male'}
 
 
-class CHAR_TAG_NAMES:
+class CHAR_TAG_NAMES(models.TextChoices):
     BLOODLINE = "bloodline"
     CONTROLLED = "controlled_by"
     LOCATION = "location"
@@ -51,7 +51,7 @@ class CHAR_TAG_NAMES:
 
 class UNIQUE_TAGS:
     ONE_PER_PLAYER = [CHAR_TAG_NAMES.CONTROLLED]
-    ONE_PER_CHARACTER = [CHAR_TAG_NAMES.LOCATION]
+    ONE_PER_CHARACTER = [CHAR_TAG_NAMES.LOCATION, CHAR_TAG_NAMES.CLOTHES]
 
 
 ALLOWED_RACES = [POP_RACE.HUMAN,POP_RACE.ELF,POP_RACE.ORC,POP_RACE.GOBLIN,POP_RACE.DWARF]
