@@ -13,6 +13,9 @@ Django==3.0.8
 django-anymail==8.1
 django-background-tasks==1.2.5
 django-compat==1.0.15
+django-haystack==3.0
+django-infinite-scroll-pagination==1.1.0
+django-precise-bbcode==1.2.13
 djangorestframework==3.11.1
 docutils==0.16
 idna==2.10
@@ -21,8 +24,11 @@ importlib-metadata==2.0.0
 Jinja2==2.11.2
 kombu==5.0.2
 MarkupSafe==1.1.1
+mistune==0.8.4
 mysqlclient==2.0.1
+olefile==0.46
 packaging==20.4
+Pillow==8.0.1
 prompt-toolkit==3.0.7
 Pygments==2.7.2
 Pynames==0.2.3
@@ -44,4 +50,5 @@ unicodecsv==0.14.1
 urllib3==1.25.11
 vine==5.0.0
 wcwidth==0.2.5
+Whoosh==2.7.4
 zipp==3.2.0

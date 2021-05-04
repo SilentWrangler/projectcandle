@@ -44,6 +44,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'players',
     'world',
+    'forum',
+    'precise_bbcode',
     'rest_framework',
     'background_task',
     'rest_framework.authtoken',

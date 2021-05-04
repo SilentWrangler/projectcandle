@@ -21,5 +21,6 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('world/', include('world.urls')),
     path('',include('players.urls')),
+    path('forum/',include('forum.urls')),
     path('jsi18n/', JavaScriptCatalog.as_view(), name='javascript-catalog'),
 ]

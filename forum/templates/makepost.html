@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block content %}
+    {% if OP %}
+        <p>{{OP.author.username}}</p>
+        <hr>
+        {{OP.content.rendered}}
+    {% endif %}
+
+    <form action="#" method="POST">
+        {% csrf_token %}
+        {{form}}
+    </form>
+
+{% endblock %}

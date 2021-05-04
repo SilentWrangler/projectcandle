@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block content %}
+
+    <h1>{{post.headline}}</h1>
+    <p>{{post.author.username}}</p>
+    <hr>
+    <p>{{post.content.rendered}}</p>
+    <a href="{% url 'reply' pk=post.id}">{% trans 'Ответить' %}</a>
+    <hr>
+    {% for p in post.replies.all %}
+        <p>{{p.author.username}}</p>
+        <hr>
+        <p>{{p.content.rendered}}</p>
+        <a href="{% url 'showpost' pk=p.id}">
+            Ответы: {{p.replies.count}}
+        </a>
+        <hr>
+    {% endfor %}
+
+
+{% endblock %}
