@@ -106,7 +106,7 @@ class Character(models.Model):
 
 class CharTag(models.Model):
     character = models.ForeignKey(Character, on_delete=models.CASCADE, related_name = "tags")
-    name = models.CharField(max_length=16,choices = CHAR_TAG_NAMES)
+    name = models.CharField(max_length=16,choices = CHAR_TAG_NAMES.choices)
     content = models.CharField(max_length = 100)
     def save(self, *args, **kwargs):
         if self.name in UNIQUE_TAGS.ONE_PER_PLAYER:
