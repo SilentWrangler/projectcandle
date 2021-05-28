@@ -2,14 +2,42 @@
 
 {% block content %}
     {% if OP %}
-        <p>{{OP.author.username}}</p>
-        <hr>
-        {{OP.content.rendered}}
-    {% endif %}
+    <table>
+        {% with character=OP.author.current_char %}
+        <tr>
+            <td><strong>{{OP.author.username}}</strong></td>
+            <td>{{OP.post_time}}</td>
+        </tr>
+        <tr>
+            <td>
+                {% if character %}
+                    <p><img src="{% url 'char_image' %}?gender={{character.gender}}&race={{character.primary_race}}&clothes={{character.clothes}}"></img></p>
+                {% endif %}
+            </td>
+            <td class="post-content">
+                <p>{{OP.content.rendered}}</p>
 
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <p>{{character.name}}</p>
+            </td>
+            <td>
+                <a href="{% url 'showpost' pk=OP.id %}">
+                    Ответы: {{OP.replies.count}}
+                </a>
+            </td>
+        </tr>
+        {% endwith %}
+    </table>
+
+    {% endif %}
     <form action="#" method="POST">
         {% csrf_token %}
         {{form}}
+        <input type="submit" value="Отправить">
     </form>
+
 
 {% endblock %}

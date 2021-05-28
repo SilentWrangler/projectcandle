@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block content %}
+
+<h1>{{cat.name}}</h1>
+<table>
+    {% for post in posts %}
+    <tr><td><a href="{% url 'showpost' pk=post.id %}">{{post.headline}}</a></td><td>{{post.author.username}}</td><td>{{post.post_time}}</td></tr>
+    <tr><td>{{ post.content.rendered|truncatechars_html:100 }}</td></tr>
+
+{% empty %}
+    <tr>{% trans "Посты отстутсвуют" %}<tr>
+{% endfor %}
+
+</table>
+<br>
+<br>
+<a href="{% url 'newpost' %}">{% trans "Добавить пост" %}</a>
+
+{% endblock %}

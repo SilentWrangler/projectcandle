@@ -4,20 +4,99 @@
 {% block content %}
 
     <h1>{{post.headline}}</h1>
-    <p>{{post.author.username}}</p>
-    <hr>
-    <p>{{post.content.rendered}}</p>
-    <a href="{% url 'reply' pk=post.id}">{% trans 'Ответить' %}</a>
-    <hr>
-    {% for p in post.replies.all %}
-        <p>{{p.author.username}}</p>
-        <hr>
-        <p>{{p.content.rendered}}</p>
-        <a href="{% url 'showpost' pk=p.id}">
-            Ответы: {{p.replies.count}}
-        </a>
-        <hr>
-    {% endfor %}
+    <table>
+        {% if post.reply_to %}
+            {% with OP=post.reply_to %}
+                {% with character=OP.author.current_char %}
+                    <tr>
+                        <td><strong>{{OP.author.username}}</strong></td>
+                        <td>{{OP.post_time}}</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            {% if character %}
+                            <p><img src="{% url 'char_image' %}?gender={{character.gender}}&race={{character.primary_race}}&clothes={{character.clothes}}"></img></p>
+                            {% endif %}
+                        </td>
+                        <td class="post-content">
+                            <a href="{% url 'showpost' pk=OP.id %}">
+                                Оригинальное сообщение
+                            </a>
 
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <p>{{character.name}}</p>
+                        </td>
+                        <td>
+
+                        </td>
+                    </tr>
+                {% endwith %}
+            {% endwith %}
+        {% endif %}
+        {% with character=post.author.current_char %}
+        <tr>
+            <td><strong>{{post.author.username}}</strong></td>
+            <td>{{post.post_time}}</td>
+        </tr>
+        <tr>
+            <td>
+                {% if character %}
+                    <p><img src="{% url 'char_image' %}?gender={{character.gender}}&race={{character.primary_race}}&clothes={{character.clothes}}"></img></p>
+                {% endif %}
+            </td>
+            <td class="post-content">
+                <p>{{post.content.rendered}}</p>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <p>{{character.name}}</p>
+            </td>
+            <td>
+            </td>
+        </tr>
+        {% endwith %}
+
+    {% for p in post.replies.all %}
+        {% with character=p.author.current_char %}
+        <tr>
+            <td><strong>{{p.author.username}}</strong></td>
+            <td>{{p.post_time}}</td>
+        </tr>
+        <tr>
+            <td>
+                {% if character %}
+                    <p><img src="{% url 'char_image' %}?gender={{character.gender}}&race={{character.primary_race}}&clothes={{character.clothes}}"></img></p>
+                {% endif %}
+            </td>
+            <td class="post-content">
+                <p>{{p.content.rendered}}</p>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <p>{{character.name}}</p>
+            </td>
+            <td>
+                <a href="{% url 'showpost' pk=p.id %}">
+                    Ответы: {{p.replies.count}}
+                </a>
+            </td>
+        </tr>
+        {% endwith %}
+    {% endfor %}
+    </table>
+    {% if form %}
+    <form action="{% url 'reply' pk=post.id %}" method="POST">
+        {% csrf_token %}
+        {{form}}
+        <input type="submit" value="Ответить">
+    </form>
+    {% endif %}
 
 {% endblock %}

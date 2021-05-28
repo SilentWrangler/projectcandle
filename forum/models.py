@@ -21,6 +21,9 @@ class Post(models.Model):
 
 class Category(models.Model):
     name = models.CharField(max_length = 124, unique = True)
-    subscribers = models.ManyToManyField(Player, related_name = 'subscriptions')
+    subscribers = models.ManyToManyField(Player, related_name = 'subscriptions', null = True, blank = True)
+
+    def __str__(self):
+        return self.name
 
 

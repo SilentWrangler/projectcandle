@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block content %}
+<h1>{% trans "Форум" %}</h1>
+<ul>
+    {% for cat in object_list%}
+    <li><a href = "{% url 'cat' pk=cat.id %}">{{cat.name}}</a></li>
+    {% endfor %}
+</ul>
+
+<a href="{% url 'newpost' %}">{% trans "Добавить пост" %}</a>
+
+{% endblock %}
