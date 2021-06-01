@@ -436,8 +436,19 @@ display_celldata = function(response){
 
     celldata.class = "cellinfo";
 
+    name = `${cell.x}x${cell.y}`
+
+    for (var i =0; i < cell.tags.length; i++){
+        tag = cell.tags[i]
+        if (tag.name = "NAME"){
+            name = `${tag.content} (${cell.x}x${cell.y})`;
+            break;
+        }
+
+    }
+
     cell_info = document.getElementById("celldata-info-coord");
-    cell_info.innerHTML = `${cell.x}x${cell.y}`
+    cell_info.innerHTML = name
 
 
     cell_info = document.getElementById("celldata-info-biome");

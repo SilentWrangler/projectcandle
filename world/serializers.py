@@ -29,7 +29,7 @@ class PopSerializerShort(serializers.ModelSerializer):
         fields = ['id','race']
 
 class CellSerializerFull(serializers.ModelSerializer):
-    tags = CellTagSrl(many = True, source = 'celltag_set')
+    tags = CellTagSrl(many = True)
     pops = PopSerializerShort(many = True, source = 'pop_set')
     characters = serializers.SerializerMethodField('get_characters')
     class Meta:
@@ -49,7 +49,7 @@ class PopTagSrl(serializers.ModelSerializer):
         fields = ['name','content']
 
 class PopSerializerFull(serializers.ModelSerializer):
-    tags = PopTagSrl(many = True, source = 'poptag_set')
+    tags = PopTagSrl(many = True)
     class Meta:
         model = Pop
         fields = '__all__'

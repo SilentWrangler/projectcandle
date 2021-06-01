@@ -70,3 +70,20 @@ class POP_RACE(models.TextChoices):
     DWARF = 'DWA'
     GOBLIN = 'GOB'
     FEY = 'FEY'
+
+class POP_TAG_NAMES(models.TextChoices):
+    GROWTH = 'GROWTH'
+
+class CELL_TAG_NAMES(models.TextChoices):
+    NAME = 'NAME'
+
+
+class UNIQUE_TAGS:
+    ONE_PER_CELL = [CELL_TAG_NAMES.NAME]
+    ONE_PER_POP = [POP_TAG_NAMES.GROWTH]
+
+
+
+
+
+
