@@ -1,5 +1,6 @@
 from django.db import models
 from world.constants import POP_RACE
+from django.utils.translation import ugettext_lazy as _
 
 class GENDER(models.TextChoices):
     MALE = 'm'
@@ -48,11 +49,71 @@ class CHAR_TAG_NAMES(models.TextChoices):
     CONTROLLED = "controlled_by"
     LOCATION = "location"
     CLOTHES = "clothes"
+    POLITICS_EXP = "exp_pol"
+    MILITARY_EXP = "exp_mil"
+    ECONOMIC_EXP = "exp_eco"
+    SCIENCE_EXP  = "exp_sci"
+    FRIEND_WITH = "friend"
+    ENEMY_OF = "enemy"
+
 
 class UNIQUE_TAGS:
     ONE_PER_PLAYER = [CHAR_TAG_NAMES.CONTROLLED]
-    ONE_PER_CHARACTER = [CHAR_TAG_NAMES.LOCATION, CHAR_TAG_NAMES.CLOTHES]
+    ONE_PER_CHARACTER = [
+        CHAR_TAG_NAMES.LOCATION,
+        CHAR_TAG_NAMES.CLOTHES,
+        CHAR_TAG_NAMES.POLITICS_EXP,
+        CHAR_TAG_NAMES.MILITARY_EXP,
+        CHAR_TAG_NAMES.ECONOMIC_EXP,
+        CHAR_TAG_NAMES.SCIENCE_EXP,
+        ]
 
 
 ALLOWED_RACES = [POP_RACE.HUMAN,POP_RACE.ELF,POP_RACE.ORC,POP_RACE.GOBLIN,POP_RACE.DWARF]
 ALLOWED_EXP = ['politics','military','economics','science']
+
+
+
+class UNITS:
+    class SCALING(models.TextChoices):
+        LINEAR = 'LIN'
+        QUADRATIC = 'QUA'
+        SQUARE_ROOT = 'SQR'
+    class MELEE_TYPE(models.TextChoices):
+        CHARGER = 'CHA'
+        BRACER = 'BRA'
+        SKIRMISHER = 'SKI'
+        CIVILIAN = 'CIV'
+    class SUPPORT_TYPE(models.TextChoices):
+        NO_SUPPORT = 'NO'
+        DEF_BUFF = 'DEF'
+        HEALING = 'HEA'
+        SUPPLY = 'SUP'
+
+
+class PROJECTS:
+    class TYPES(models.TextChoices):
+        #universal
+        STUDY = 'STUDY', _('Учиться')
+        TEACH = 'TEACH', _('Обучать')
+        RELOCATE = 'RELOCATE', _('Переехать')
+
+        #politics
+        MAKE_FRIEND = 'FRIEND', _('Завести друга')
+        MAKE_FACTION = 'FACT_CREATE', _('Создать фракцию')
+        RENAME_TILE = 'RENAME_TILE', _('Переименовать город')
+        GATHER_SUPPORT = 'POP_SUPPORT', _('Собрать народную поддрежку')
+
+        #military
+        CREATE_ARMY = 'ARMY_CREATE', _('Создать армию')
+        UPGRADE_ARMY = 'ARMY_UPGRADE', _('Усилить армию')
+        DESTROY_RAIDERS = 'BATTLE_DESTR', _('Уничтожить армию')
+        FORTIFY_CITY = 'CELL_FORT', _('Построить фортификации')
+
+        #economics
+        IMPROVE_MANA = 'CELL_MANA', _('Повысить доходы маны')
+        IMPROVE_FOOD = 'CELL_FOOD', _('Повысить сбор пищи')
+        BUILD_TILE = 'CELL_BUILD', _('Построить поселение')
+
+
+

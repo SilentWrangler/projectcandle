@@ -73,6 +73,8 @@ class POP_RACE(models.TextChoices):
 
 class POP_TAG_NAMES(models.TextChoices):
     GROWTH = 'GROWTH'
+    FACTION = 'FACTION'
+    SUPPORTED_CHARACTER = 'CHARACTER'
 
 class CELL_TAG_NAMES(models.TextChoices):
     NAME = 'NAME'
@@ -80,7 +82,7 @@ class CELL_TAG_NAMES(models.TextChoices):
 
 class UNIQUE_TAGS:
     ONE_PER_CELL = [CELL_TAG_NAMES.NAME]
-    ONE_PER_POP = [POP_TAG_NAMES.GROWTH]
+    ONE_PER_POP = [POP_TAG_NAMES.GROWTH, POP_TAG_NAMES.FACTION]
 
 
 

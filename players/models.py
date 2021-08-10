@@ -7,7 +7,7 @@ import json
 from .managers import CustomUserManager
 from world.constants import POP_RACE
 from world.strings import month_names
-from .constants import GENDER, UNIQUE_TAGS, CHAR_TAG_NAMES
+from .constants import GENDER, UNIQUE_TAGS, CHAR_TAG_NAMES, PROJECTS
 
 
 from django.utils.text import format_lazy
@@ -99,6 +99,12 @@ class Character(models.Model):
         except CharTag.DoesNotExist:
             return "stone_age"
 
+    @property
+    def current_project(self):
+        try:
+            return self.projects.get(current=True)
+        except Project.DoesNotExist:
+            return None
 
     def __str__(self):
         return f'Character ({self.id}): {self.name}'
@@ -134,3 +140,27 @@ class Trait(models.Model):
     image = models.ImageField(upload_to = trait_gfx_path, null = True, blank = True)
     def __str__(self):
         return f'Trait ({self.id}): {self.verbose_name}'
+
+
+class Project(models.Model):
+    type = models.CharField(max_length=16,choices = PROJECTS.TYPES.choices)
+    character = models.ForeignKey(Character,on_delete=models.CASCADE, related_name = "projects")
+    work_required = models.IntegerField()
+    work_done = models.IntegerField()
+    is_current = models.BooleanField()
+    arguments = models.CharField(max_length = 300)
+    def save(self, *args, **kwargs):
+        if self.is_current:
+            try:
+                temp = Project.objects.get(is_current=True, character = self.character)
+                if self!=temp:
+                    temp.is_current = False
+                    temp.save()
+            except Project.DoesNotExist:
+                pass
+        super(Project, self).save(*args, **kwargs)
+
+
+
+
+
