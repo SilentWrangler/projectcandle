@@ -97,12 +97,13 @@ class PROJECTS:
         STUDY = 'STUDY', _('Учиться')
         TEACH = 'TEACH', _('Обучать')
         RELOCATE = 'RELOCATE', _('Переехать')
+        ADVENTURE = 'ADVENTURE', _('Отправиться в приключение')
 
         #politics
         MAKE_FRIEND = 'FRIEND', _('Завести друга')
         MAKE_FACTION = 'FACT_CREATE', _('Создать фракцию')
         RENAME_TILE = 'RENAME_TILE', _('Переименовать город')
-        GATHER_SUPPORT = 'POP_SUPPORT', _('Собрать народную поддрежку')
+        GATHER_SUPPORT = 'POP_SUPPORT', _('Заполучить народную поддрежку')
 
         #military
         CREATE_ARMY = 'ARMY_CREATE', _('Создать армию')
@@ -114,6 +115,12 @@ class PROJECTS:
         IMPROVE_MANA = 'CELL_MANA', _('Повысить доходы маны')
         IMPROVE_FOOD = 'CELL_FOOD', _('Повысить сбор пищи')
         BUILD_TILE = 'CELL_BUILD', _('Построить поселение')
+
+
+    POLITICS = [TYPES.MAKE_FRIEND,TYPES.MAKE_FACTION,TYPES.RENAME_TILE,TYPES.GATHER_SUPPORT]
+    MILITARY = [TYPES.CREATE_ARMY,TYPES.UPGRADE_ARMY,TYPES.DESTROY_RAIDERS,TYPES.FORTIFY_CITY]
+    ECONOMICS = [TYPES.IMPROVE_MANA,TYPES.IMPROVE_FOOD,TYPES.BUILD_TILE]
+    SCIENCE = []
 
 
 

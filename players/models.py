@@ -106,6 +106,10 @@ class Character(models.Model):
         except Project.DoesNotExist:
             return None
 
+    @property
+    def educated(self):
+        return self.traits.filter(name__startswith = 'exp.').exists()
+
     def __str__(self):
         return f'Character ({self.id}): {self.name}'
 

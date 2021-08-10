@@ -1,12 +1,12 @@
 from background_task import background
 from django.core.mail import send_mail
 from random import randint, choice
-from .models import Character, Trait, CharTag, RenameRequest
+from .models import Character, Trait, CharTag, RenameRequest, Project
 from world.models import Pop, World
 from world.logic import get_active_world
 from world.constants import POP_RACE
 from .namegens import hungarian
-from .constants import GENDER, CHAR_TAG_NAMES
+from .constants import GENDER, CHAR_TAG_NAMES, EXP, PROJECTS
 
 
 def add_racial_traits(char, mother = None, father = None):
@@ -76,7 +76,7 @@ class PCUtils:
     @classmethod
     def get_available_chars(cls,player):
         current = cls.get_current_char(player)
-
+        world_age = get_active_world().ticks_age
         young_blood= Character.objects.filter(
             tags__name=CHAR_TAG_NAMES.BLOODLINE,
             tags__content = f'{player.id}'
@@ -84,6 +84,8 @@ class PCUtils:
             tags__name=CHAR_TAG_NAMES.CONTROLLED
         ).exclude(
             primary_race = POP_RACE.FEY
+        ).exclude(
+            birth_date__gt = world_age - EXP.UNDERSTANDING_START #отсекаем персонажей до 4, т.к. у них нет проектов
         )
         if current is not None:
             young_blood = young_blood.filter(
@@ -123,6 +125,43 @@ class PCUtils:
 
 
 
+def get_available_projects(char):
+    world_age = get_active_world().ticks_age
+    age = world_age - char.birth_date
+    if age<EXP.UNDERSTANDING_START:
+        return [] #Персонажи до 4 лет не
+    elif age < EXP.EDUCATION_START:
+        if char.controller is None:
+            return [PROJECTS.TYPES.MAKE_FRIEND, PROJECTS.TYPES.ADVENTURE] #NPC не учатся до 6 лет
+        else:
+            return [PROJECTS.TYPES.MAKE_FRIEND, PROJECTS.TYPES.ADVENTURE, PROJECTS.TYPES.STUDY] #А вот игроки могут
+    elif not char.educated:
+        return [PROJECTS.TYPES.MAKE_FRIEND, PROJECTS.TYPES.ADVENTURE, PROJECTS.TYPES.STUDY]
+    else:
+        base = [PROJECTS.TYPES.MAKE_FRIEND, PROJECTS.TYPES.ADVENTURE, PROJECTS.TYPES.STUDY]
+        if char.traits.filter(name__startswith = 'exp.military').exists():
+            base += PROJECTS.MILITARY
+        if char.traits.filter(name__startswith = 'exp.politics').exists():
+            base += PROJECTS.POLITICS
+        if char.traits.filter(name__startswith = 'exp.economics').exists():
+            base += PROJECTS.ECONOMICS
+        if char.traits.filter(name__startswith = 'exp.science').exists():
+            base += PROJECTS.SCIENCE
+        return base
+
+
+
+
+def process_all_projects():
+    pjs = Project.objects.filter(current=True)
+    for p in pjs:
+        process_project(p)
+
+
+
+
+def process_project(project):
+    pass
 
 
 
