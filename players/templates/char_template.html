@@ -28,6 +28,7 @@
             {% endfor %}
         </table>
     </aside>
+
     <section  class="border">
         <p>{{character.birth_date_human_readable}}</p>
     <p><img src="{% url 'char_image' %}?gender={{character.gender}}&race={{character.primary_race}}&clothes={{character.clothes}}"></img></p>
@@ -42,7 +43,18 @@
     {% endif %}
     </section>
 
+    <aside class="border">
+        <h3>{% trans 'Династии' %}</h3>
+        <table>
+            {% for bl in character.bloodlines.all %}
+            <tr>
+                <td class="border"><!-- TODO: Bloodline crest --></td>
+                <td class="border"><a href="{% url 'player_page' pk=bl.id %}">{{bl.username}}</a> </td>
+            </tr>
 
+            {% endfor %}
+        </table>
+    </aside>
 
 
     <section class="border">

@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block content %}
+    <h1>{{object.username}}</h1>
+    {% if object.current_char %}
+    <section class="border">
+
+        {% with cc=object.current_char %}
+        <h2>{% trans "Текущий персонаж" %}</h2>
+        <table>
+            <tr>
+                <td class="border"><img src="{% url 'char_image' %}?gender={{cc.gender}}&race={{cc.primary_race}}&clothes={{cc.clothes}}"></img></td>
+                <td class="border"><a href="{% url 'char_profile' charid=cc.id %}">{{cc.name}}</a></td>
+            </tr>
+        </table>
+        {% endwith %}
+    </section>
+    {% endif %}
+    <section class="border">
+        <h2>{% trans "Персонажи династии" %}</h2>
+        <table class ="reltable">
+            {% for char in object.bloodline_chars.all %}
+                <tr>
+                    <td class="border"><img src="{% url 'char_image' %}?gender={{char.gender}}&race={{char.primary_race}}&clothes={{char.clothes}}"></img></td>
+                    <td class="border"><a href="{% url 'char_profile' charid=char.id %}">{{char.name}}</a></td>
+                </tr>
+            {% endfor %}
+        </table>
+    </section>
+{% endblock %}
