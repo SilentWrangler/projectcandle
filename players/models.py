@@ -32,6 +32,15 @@ class Player(AbstractUser):
         )
 
 
+    def level(self, subject):
+        try:
+            t = self.bloodline_traits.get(name__startswith = f'exp.{subject}')
+            lvl = int(t.name.strip(f'exp.{subject}'))
+            return lvl
+        except Trait.DoesNotExist:
+            return 0
+
+
 
 class RenameRequest(models.Model):
     new_name = models.CharField(max_length = 100)
@@ -93,6 +102,12 @@ class Character(models.Model):
             return None
 
     @property
+    def bloodlines(self):
+        tags = self.tags.filter(name = CHAR_TAG_NAMES.BLOODLINE)
+        ids = map(lambda t: int(t.content), tags)
+        return Player.objects.filter(pk__in = ids)
+
+    @property
     def clothes(self):
         try:
             return self.tags.get(name = CHAR_TAG_NAMES.CLOTHES).content
@@ -109,6 +124,23 @@ class Character(models.Model):
     @property
     def educated(self):
         return self.traits.filter(name__startswith = 'exp.').exists()
+
+
+    def level(self, subject):
+        try:
+            t = self.traits.get(name__startswith = f'exp.{subject}')
+            lvl = int(t.name.strip(f'exp.{subject}'))
+            return lvl
+        except Trait.DoesNotExist:
+            return 0
+
+    def bloodline_level(self, subject):
+        if self.bloodlines.count()==0:
+            return 0
+        lvl = 0
+        for bl in self.bloodlines:
+            lvl = max(lvl, bl.level(subject))
+        return lvl
 
     def __str__(self):
         return f'Character ({self.id}): {self.name}'

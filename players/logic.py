@@ -7,6 +7,7 @@ from world.logic import get_active_world
 from world.constants import POP_RACE
 from .namegens import hungarian
 from .constants import GENDER, CHAR_TAG_NAMES, EXP, PROJECTS
+from .projects import ProjectProcessor
 
 
 def add_racial_traits(char, mother = None, father = None):
@@ -154,14 +155,15 @@ def get_available_projects(char):
 
 def process_all_projects():
     pjs = Project.objects.filter(current=True)
+    processor = ProjectProcessor()
     for p in pjs:
-        process_project(p)
+        processor.process(p)
 
 
 
 
-def process_project(project):
-    pass
+
+
 
 
 

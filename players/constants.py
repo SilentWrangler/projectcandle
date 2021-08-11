@@ -28,6 +28,10 @@ class EXP:
 
     TRAIT_LVL_MAX = 5
 
+    TEACHER_LVL_BUFF = 10 #Бафф от высокого уровня учителя
+
+    MINIMUM_EXP_GAINED = 5 #Если дебафы перевешивают бафы
+
 class CHAR_DISPLAY:
     clothes = {'stone_age':'stone_age.png'}
     race = {
