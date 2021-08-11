@@ -16,6 +16,32 @@ h1{
     font-size:300%;
 }
 
+h2{
+    font-size:200%;
+}
+
+h3{
+    font-size:150%;
+}
+
+h3{
+    font-size:130%;
+}
+
+aside {
+  width: 40%;
+  float: right;
+  display: inline;
+  margin: 5px;
+}
+
+section {
+  width: 55%;
+  float: left;
+  display: inline;
+  margin: 5px;
+}
+
 p{
     padding: 15px 10px 5px 0px;
 }
@@ -23,6 +49,13 @@ p{
 p::after{
    content: "\a";
     white-space: pre;
+}
+
+td{
+    vertical-align: middle;
+}
+.border{
+    border: solid black 1px;
 }
 
 .post-content{

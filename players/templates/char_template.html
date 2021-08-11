@@ -7,7 +7,29 @@
 {% block content %}
 
     <h2>{{character.name}}, {{character.race_human_readable}}</h2>
-    <p>{{character.birth_date_human_readable}}</p>
+    <aside class="border">
+        <h3>{% trans 'Отношения' %}</h3>
+        <h4>{% trans 'Друзья' %}</h4>
+        <table class ="reltable">
+            {% for friend in character.friends.all %}
+                <tr>
+                    <td class="border"><img src="{% url 'char_image' %}?gender={{friend.gender}}&race={{friend.primary_race}}&clothes={{friend.clothes}}"></img></td>
+                    <td class="border"><a href="{% url 'char_profile' charid=friend.id %}">{{friend.name}}</a></td>
+                </tr>
+            {% endfor %}
+        </table>
+        <h4>{% trans 'Враги' %}</h4>
+        <table class ="reltable">
+            {% for enemy in character.enemies.all %}
+                <tr>
+                    <td class="border"><img src="{% url 'char_image' %}?gender={{enemy.gender}}&race={{enemy.primary_race}}&clothes={{enemy.clothes}}"></img></td>
+                    <td class="border"><a href="{% url 'char_profile' charid=enemy.id %}">{{enemy.name}}</a></td>
+                </tr>
+            {% endfor %}
+        </table>
+    </aside>
+    <section  class="border">
+        <p>{{character.birth_date_human_readable}}</p>
     <p><img src="{% url 'char_image' %}?gender={{character.gender}}&race={{character.primary_race}}&clothes={{character.clothes}}"></img></p>
     {% if character.controller%}
         <p>Этот персонаж находится под контролем игрока <a href="{% url 'player_page' pk=character.controller.id %}">
@@ -18,30 +40,41 @@
     {% if character.location %}
         <p>Местонахождение: {{character.location.x}}x{{character.location.y}}</p>
     {% endif %}
+    </section>
 
-    {% if character == current_char %}
-    <hr>
-    <form action="{% url 'char_rename' charid=character.id %}" method="post">
+
+
+
+    <section class="border">
+        <h3>{% trans "Черты" %}</h3>
+        <table>
+        {% for trait in character.traits.all %}
+           <tr><td class="border">{% if trait.image %}<img src="{{ MEDIA_URL }}{{trait.image}}"></img>{% endif %}</td><td class="border">{{trait.verbose_name}}</td></tr>
+        {% endfor %}
+        </table>
+    </section>
+
+     {% if character == current_char %}
+    <section class="border">
+        <form action="{% url 'char_rename' charid=character.id %}" method="post">
         {% csrf_token %}
         <input name="name">
         <input type="submit" value="{% trans 'Запросить переименование' %}">
     </form>
+    </section>
+
     {% endif %}
 
     {% if character == current_char or user.is_staff %}
-    <p>Рассматириваются запросы:</p>
-    <hr>
-    <ul>
-        {% for rename in character.renamerequest_set.all %}
-        <li><a href="{% url 'char_renames_details' pk=rename.id %}">#{{rename.id}}</a> {{rename.new_name}}</li>
-        {% endfor %}
-    </ul>
-    <hr>
+    <section class="border">
+        <p>Рассматириваются запросы:</p>
+        <ul>
+            {% for rename in character.renamerequest_set.all %}
+            <li><a href="{% url 'char_renames_details' pk=rename.id %}">#{{rename.id}}</a> {{rename.new_name}}</li>
+            {% endfor %}
+        </ul>
+    </section>
     {% endif %}
-    <h3>{% trans "Черты" %}</h3>
-    <table>
-    {% for trait in character.traits.all %}
-       <tr><td>{% if trait.image %}<img src="{{ MEDIA_URL }}{{trait.image}}"></img>{% endif %}</td><td>{{trait.verbose_name}}</td></tr>
-    {% endfor %}
-    </table>
+
+
 {% endblock %}
