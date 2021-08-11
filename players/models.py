@@ -113,7 +113,7 @@ class Character(models.Model):
             return self.tags.get(name = CHAR_TAG_NAMES.CLOTHES).content
         except CharTag.DoesNotExist:
             return "stone_age"
-
+    #PROJECTS AND EXP
     @property
     def current_project(self):
         try:
@@ -124,7 +124,6 @@ class Character(models.Model):
     @property
     def educated(self):
         return self.traits.filter(name__startswith = 'exp.').exists()
-
 
     def level(self, subject):
         try:
@@ -141,6 +140,101 @@ class Character(models.Model):
         for bl in self.bloodlines:
             lvl = max(lvl, bl.level(subject))
         return lvl
+
+    #--------------------------------------------
+    #RELATIONS
+    @property
+    def friends(self):
+        tags = self.tags.filter(name = CHAR_TAG_NAMES.FRIEND_WITH)
+        ids = map(lambda t: int(t.content), tags)
+        one_side = Character.objects.filter(pk__in = ids)
+        other_side = Character.objects.filter(
+            tags__content = f'{self.id}',
+            tags__name = CHAR_TAG_NAMES.FRIEND_WITH
+        )
+        return one_side | other_side
+
+    def add_friendship(self, other):
+        other_exists = other.tags.filter(
+            tags__content = f'{self.id}',
+            tags__name = CHAR_TAG_NAMES.FRIEND_WITH
+        ).exists()
+        this_exists = self.tags.filter(
+            tags__content = f'{other.id}',
+            tags__name = CHAR_TAG_NAMES.FRIEND_WITH
+        ).exists()
+        if other_exists or this_exists:
+            return
+        CharTag(
+            character = self,
+            name = CHAR_TAG_NAMES.FRIEND_WITH,
+            content = f'{other.id}'
+        ).save()
+
+    def remove_friendship(self, other): # :(
+        try:
+            t = other.tags.get(
+                tags__content = f'{self.id}',
+                tags__name = CHAR_TAG_NAMES.FRIEND_WITH
+            )
+            t.delete()
+        except CharTag.DoesNotExist:
+            pass
+        try:
+            t = self.tags.get(
+            tags__content = f'{other.id}',
+            tags__name = CHAR_TAG_NAMES.FRIEND_WITH
+            )
+            t.delete()
+        except CharTag.DoesNotExist:
+            pass
+
+    @property
+    def enemies(self):
+        tags = self.tags.filter(name = CHAR_TAG_NAMES.ENEMY_OF)
+        ids = map(lambda t: int(t.content), tags)
+        one_side = Character.objects.filter(pk__in = ids)
+        other_side = Character.objects.filter(
+            tags__content = f'{self.id}',
+            tags__name = CHAR_TAG_NAMES.ENEMY_OF
+        )
+        return one_side | other_side
+
+    def add_enmity(self, other):
+        other_exists = other.tags.filter(
+            tags__content = f'{self.id}',
+            tags__name = CHAR_TAG_NAMES.ENEMY_OF
+        ).exists()
+        this_exists = self.tags.filter(
+            tags__content = f'{other.id}',
+            tags__name = CHAR_TAG_NAMES.ENEMY_OF
+        ).exists()
+        if other_exists or this_exists:
+            return
+        CharTag(
+            character = self,
+            name = CHAR_TAG_NAMES.ENEMY_OF,
+            content = f'{other.id}'
+        ).save()
+
+    def end_enmity(self, other): # :)
+        try:
+            t = other.tags.get(
+                tags__content = f'{self.id}',
+                tags__name = CHAR_TAG_NAMES.ENEMY_OF
+            )
+            t.delete()
+        except CharTag.DoesNotExist:
+            pass
+        try:
+            t = self.tags.get(
+            tags__content = f'{other.id}',
+            tags__name = CHAR_TAG_NAMES.ENEMY_OF
+            )
+            t.delete()
+        except CharTag.DoesNotExist:
+            pass
+    #-----------------------------------------------------------------
 
     def __str__(self):
         return f'Character ({self.id}): {self.name}'
@@ -160,6 +254,16 @@ class CharTag(models.Model):
         if self.name in UNIQUE_TAGS.ONE_PER_CHARACTER:
             try:
                 todel = CharTag.objects.get(name = self.name, character = self.character)
+                todel.delete()
+            except CharTag.DoesNotExist:
+                pass
+        if self.name in UNIQUE_TAGS.NAME_AND_CONTENT:
+            try:
+                todel = CharTag.objects.get(
+                    name = self.name,
+                    character = self.character,
+                    content = self.content
+                )
                 todel.delete()
             except CharTag.DoesNotExist:
                 pass
