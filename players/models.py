@@ -152,7 +152,8 @@ class Character(models.Model):
             tags__content = f'{self.id}',
             tags__name = CHAR_TAG_NAMES.FRIEND_WITH
         )
-        return one_side | other_side
+        pre = one_side | other_side
+        return pre.distinct()
 
     def add_friendship(self, other):
         other_exists = other.tags.filter(
@@ -198,7 +199,8 @@ class Character(models.Model):
             tags__content = f'{self.id}',
             tags__name = CHAR_TAG_NAMES.ENEMY_OF
         )
-        return one_side | other_side
+        pre = one_side | other_side
+        return pre.distinct()
 
     def add_enmity(self, other):
         other_exists = other.tags.filter(
