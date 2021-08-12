@@ -7,7 +7,7 @@ import json
 from .managers import CustomUserManager
 from world.constants import POP_RACE
 from world.strings import month_names
-from .constants import GENDER, UNIQUE_TAGS, CHAR_TAG_NAMES, PROJECTS
+from .constants import GENDER, UNIQUE_TAGS, CHAR_TAG_NAMES, PROJECTS, EXP_TO_TAG
 
 
 from django.utils.text import format_lazy
@@ -140,6 +140,43 @@ class Character(models.Model):
         for bl in self.bloodlines:
             lvl = max(lvl, bl.level(subject))
         return lvl
+
+    def get_exp(self, subject):
+        tname = EXP_TO_TAG[subject]
+        try:
+            tag = self.tags.get(name=tname)
+            return int(tag.content)
+        except CharTag.DoesNotExist:
+            return 0
+
+    def set_exp(self, subject, exp :int):
+        tname = EXP_TO_TAG[subject]
+        tag = None
+        try:
+            tag = self.tags.get(name=tname)
+        except CharTag.DoesNotExist:
+            tag = CharTag(
+                character = self,
+                name = tname
+            )
+        try:
+            tag.content = f'{int(exp)}'
+            tag.save()
+        except ValueError:
+            pass
+
+    def level_up(self, subject):
+        lvl = self.level(subject)
+        if lvl>0:
+            old_trait = self.traits.get(name = f'exp.{subject}{lvl}')
+            self.traits.remove(old_trait)
+        lvl+=1
+        try:
+            new_trait = Trait.objects.get(name = f'exp.{subject}{lvl}')
+            self.traits.add(new_trait)
+        except Trait.DoesNotExist:
+            pass
+
 
     #--------------------------------------------
     #RELATIONS

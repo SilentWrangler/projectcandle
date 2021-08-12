@@ -79,7 +79,12 @@ class UNIQUE_TAGS:
 
 ALLOWED_RACES = [POP_RACE.HUMAN,POP_RACE.ELF,POP_RACE.ORC,POP_RACE.GOBLIN,POP_RACE.DWARF]
 ALLOWED_EXP = ['politics','military','economics','science']
-
+EXP_TO_TAG = {
+    'politics' :CHAR_TAG_NAMES.POLITICS_EXP,
+    'military' :CHAR_TAG_NAMES.MILITARY_EXP,
+    'economics':CHAR_TAG_NAMES.ECONOMIC_EXP,
+    'science'  :CHAR_TAG_NAMES.SCIENCE_EXP,
+    }
 
 
 class UNITS:
