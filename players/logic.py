@@ -59,8 +59,9 @@ def create_character_outta_nowhere(cell, minage = 16, maxage = None, gender = No
         primary_race = from_pop.race,
         secondary_race = from_pop2.race)
     character.save()
-    loc_tag = CharTag(character = character, name = CHAR_TAG_NAMES.LOCATION, content = f'{{"x":{cell.x}, "y":{cell.y} }}')
-    loc_tag.save()
+    character.location = cell
+    #loc_tag = CharTag(character = character, name = CHAR_TAG_NAMES.LOCATION, content = f'{{"x":{cell.x}, "y":{cell.y} }}')
+    #loc_tag.save()
     add_racial_traits(character)
     return character
 
@@ -154,7 +155,7 @@ def get_available_projects(char):
 
 
 def process_all_projects():
-    pjs = Project.objects.filter(current=True)
+    pjs = Project.objects.filter(is_current=True)
     processor = ProjectProcessor()
     for p in pjs:
         processor.process(p)
@@ -171,5 +172,7 @@ class PCProjectUtils:
     pass
 
 
-
+def do_time_step():
+    process_all_projects()
+    #TODO: character health stuff
 

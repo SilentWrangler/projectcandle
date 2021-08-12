@@ -354,3 +354,9 @@ def cell_total_food(cell):
 def get_active_world():
     return World.objects.get(is_active=True)
 
+def do_time_step():
+    world = get_active_world()
+    world.ticks_age += 1
+    world.save()
+    #TODO: all the pop stuff
+

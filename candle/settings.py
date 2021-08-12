@@ -166,3 +166,16 @@ STATIC_URL = '/static/'
 
 MEDIA_ROOT = os.path.join(BASE_DIR,'media/')
 MEDIA_URL = '/media/'
+
+
+#Candle-specific
+
+#list of modules contatining do_time_step() function
+TIMESTEP_MODULES = [
+    'world.logic',
+    'players.logic',
+    ]
+
+
+
+

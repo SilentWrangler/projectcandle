@@ -93,6 +93,13 @@ class Character(models.Model):
             return json.loads(tag.content)
         except CharTag.DoesNotExist:
             return None
+
+    @location.setter
+    def location(self, cell):
+        tag, _ = self.tags.get_or_create(name = CHAR_TAG_NAMES.LOCATION)
+        tag.content = f'{{"x":{cell.x}, "y":{cell.y} }}'
+        tag.save()
+
     @property
     def controller(self):
         try:
@@ -117,7 +124,7 @@ class Character(models.Model):
     @property
     def current_project(self):
         try:
-            return self.projects.get(current=True)
+            return self.projects.get(is_current=True)
         except Project.DoesNotExist:
             return None
 
@@ -151,14 +158,8 @@ class Character(models.Model):
 
     def set_exp(self, subject, exp :int):
         tname = EXP_TO_TAG[subject]
-        tag = None
-        try:
-            tag = self.tags.get(name=tname)
-        except CharTag.DoesNotExist:
-            tag = CharTag(
-                character = self,
-                name = tname
-            )
+        tag, _ = self.tags.get_or_create(name=tname)
+
         try:
             tag.content = f'{int(exp)}'
             tag.save()
