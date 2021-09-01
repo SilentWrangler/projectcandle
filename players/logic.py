@@ -1,8 +1,8 @@
 from background_task import background
 from django.core.mail import send_mail
-from random import randint, choice
+from random import randint, choice, choices
 from .models import Character, Trait, CharTag, RenameRequest, Project
-from world.models import Pop, World
+from world.models import Pop
 from world.logic import get_active_world
 from world.constants import POP_RACE
 from .namegens import hungarian
@@ -19,7 +19,7 @@ def add_racial_traits(char, mother = None, father = None):
                 chance += 20
         if father and trait.character.filter(id=father.id).exists():
                 chance += 20
-        if randint(1,100)<chance:
+        if randint(1,100)<=chance:
             trait.character.add(char)
 
     for trait in secondary_traits:
@@ -28,7 +28,7 @@ def add_racial_traits(char, mother = None, father = None):
                 chance += 10
         if father and trait.character.filter(id=father.id).exists():
                 chance += 10
-        if randint(1,100)<chance:
+        if randint(1,100)<=chance:
             trait.character.add(char)
 
 
@@ -64,6 +64,53 @@ def create_character_outta_nowhere(cell, minage = 16, maxage = None, gender = No
     #loc_tag.save()
     add_racial_traits(character)
     return character
+
+
+def character_birth(mother, father):
+    world_age = get_active_world().ticks_age
+    gender = choice([GENDER.MALE, GENDER.FEMALE])
+
+    # Start name picking
+    first_name_mother, last_name_mother = mother.name.split(None, maxsplit = 1)
+    first_name_father, last_name_father = father.name.split(None, maxsplit = 1)
+
+    #default to random first name
+    first_name = hungarian.get_name_simple(gender).split()[0]
+
+    #get grandparents of appropriate gender
+    grandparents = mother.parents.filter(gender = gender) | father.parents.filter(gender = gender)
+    grandparents = grandparents.distinct()
+
+    if randint(1,100)<=25 and grandparents.count()>0: # 25% chance to pick grandparent's first name
+        first_name = choice([p.name.split()[0] for p in grandparents])
+    elif randint(1,100)<=10: # another roll, 10% to pick parent's first name
+        first_name = first_name_father if gender==GENDER.MALE else first_name_mother
+
+
+    mother_bc = mother.bloodlines.count()
+    father_bc = father.bloodlines.count()
+    weights = [mother_bc, father_bc]
+    if mother_bc==0 and father_bc==0:
+        weights = None
+
+    last_name = choices(
+        [last_name_mother,last_name_father],
+        weights = weights
+        )[0]
+
+    final_name = f'{first_name} {last_name}'
+
+    child = Character(
+        name = final_name,
+        gender = gender,
+        birth_date = world_age,
+        primary_race = mother.primary_race,
+        secondary_race = father.primary_race
+        )
+    child.save()
+    child.location = mother.location
+    child.add_parents(mother, father)
+    add_racial_traits(child, mother, father)
 
 
 class PCUtils:
@@ -127,9 +174,9 @@ class PCUtils:
 
 
 
+
 def get_available_projects(char):
-    world_age = get_active_world().ticks_age
-    age = world_age - char.birth_date
+    age = char.age
     if age<EXP.UNDERSTANDING_START:
         return [] #Персонажи до 4 лет не
     elif age < EXP.EDUCATION_START:
@@ -150,6 +197,12 @@ def get_available_projects(char):
         if char.traits.filter(name__startswith = 'exp.science').exists():
             base += PROJECTS.SCIENCE
         return base
+
+
+
+
+def roll_for_pregnancies():
+    pass
 
 
 

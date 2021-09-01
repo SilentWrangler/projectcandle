@@ -1,4 +1,6 @@
 from django.db import models
+
+from django.dispatch import receiver
 from .constants import RESOURCE_TYPE, MAIN_BIOME, BIOME_MOD, CITY_TYPE, POP_RACE, UNIQUE_TAGS, CELL_TAG_NAMES, POP_TAG_NAMES
 from .strings import month_names
 
@@ -73,6 +75,12 @@ class Cell(models.Model):
         except CellTag.DoesNotExist:
             return f'{self.x}x{self.y}'
 
+    @name.setter
+    def name(self, value):
+        tag, created = self.tags.get_or_create(name = CELL_TAG_NAMES.NAME)
+        tag.content = value
+        tag.save()
+
     def __repr__(self):
         return f'<Cell ({self.x};{self.y}) world_id={self.world.id}>'
 
@@ -101,6 +109,15 @@ class Pop(models.Model):
 
 
 
+class Faction(models.Model):
+    name = models.CharField(max_length = 100, blank = True)
+
+@receiver(models.signals.post_save, sender=Faction)
+def default_name(sender, instance, created, **kwargs):
+    if created:
+        instance.name = f'Faction {instance.id}'
+        instance.save()
+
 class CellTag(models.Model):
     cell = models.ForeignKey(Cell, on_delete=models.CASCADE, related_name = "tags")
     name = models.CharField(max_length=16, choices = CELL_TAG_NAMES.choices)
@@ -127,3 +144,27 @@ class PopTag(models.Model):
             except PopTag.DoesNotExist:
                 pass
         super(PopTag, self).save(*args, **kwargs)
+
+
+class CellRenameRequest(models.Model):
+    cell = models.ForeignKey(Cell, on_delete=models.CASCADE, related_name = "renames")
+    new_name = models.CharField(max_length = 100)
+    player = models.ForeignKey('players.Player', on_delete=models.CASCADE)
+    def approve(self):
+        self.cell.name = self.new_name
+        self.delete()
+    def reject(self):
+        self.delete()
+
+class FactionRenameRequest(models.Model):
+    new_name = models.CharField(max_length = 100)
+    faction = models.ForeignKey('Faction', on_delete=models.CASCADE, related_name = "renames")
+    player = models.ForeignKey('players.Player', on_delete=models.CASCADE)
+    def approve(self):
+        self.faction.name = self.new_name
+        self.faction.save()
+        self.delete()
+    def reject(self):
+        self.delete()
+
+

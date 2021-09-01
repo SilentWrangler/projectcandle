@@ -58,7 +58,7 @@
     <section class="border">
         <h3>{% trans "Проекты" %}</h3>
         {% if character.current_project %}
-        <p>{% trans "Текущий проект" %}: {{character.current_project.type}}</p>
+        <p>{% trans "Текущий проект" %}: {{character.current_project.get_type_display}}</p>
         {% endif %}
     </section>
     <section class="border">

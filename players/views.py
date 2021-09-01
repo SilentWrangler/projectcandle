@@ -21,13 +21,14 @@ from rest_framework.authtoken.models import Token
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.status import HTTP_200_OK
 from rest_framework.response import Response
-
+from rest_framework.permissions import IsAuthenticated
 
 from .models import Player, Character, RenameRequest
 from .forms import SignupForm, CharPickForm
 from .tokens import account_activation_token
 from .constants import CHAR_DISPLAY, ALLOWED_RACES, GENDER, ALLOWED_EXP, CHAR_TAG_NAMES
 from .logic import PCUtils
+from .permissions import IsCurrentChar
 
 import os
 from PIL import Image
@@ -225,3 +226,11 @@ class PlayerPage(DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         return context
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated, IsCurrentChar])
+def start_project(request,charid):
+    return Response({'status':'ok'},HTTP_200_OK)
+
+
+

@@ -49,17 +49,25 @@ class CHAR_DISPLAY:
 
 
 class CHAR_TAG_NAMES(models.TextChoices):
+    #player
     BLOODLINE = "bloodline"
     CONTROLLED = "controlled_by"
+    #misc
     LOCATION = "location"
     CLOTHES = "clothes"
+    DEATH = "death"
+    #exp
     POLITICS_EXP = "exp_pol"
     MILITARY_EXP = "exp_mil"
     ECONOMIC_EXP = "exp_eco"
     SCIENCE_EXP  = "exp_sci"
+    #relations
     FRIEND_WITH = "friend"
     ENEMY_OF = "enemy"
-
+    LOVER = "lover"
+    SPOUSE = "spouse"
+    CHILD_OF = "child"
+    PREGNANCY = "pregnancy"
 
 class UNIQUE_TAGS:
     ONE_PER_PLAYER = [CHAR_TAG_NAMES.CONTROLLED]
@@ -70,10 +78,15 @@ class UNIQUE_TAGS:
         CHAR_TAG_NAMES.MILITARY_EXP,
         CHAR_TAG_NAMES.ECONOMIC_EXP,
         CHAR_TAG_NAMES.SCIENCE_EXP,
+        CHAR_TAG_NAMES.DEATH,
+        CHAR_TAG_NAMES.PREGNANCY ,
         ]
     NAME_AND_CONTENT = [
         CHAR_TAG_NAMES.FRIEND_WITH,
         CHAR_TAG_NAMES.ENEMY_OF,
+        CHAR_TAG_NAMES.LOVER ,
+        CHAR_TAG_NAMES.SPOUSE,
+        CHAR_TAG_NAMES.CHILD_OF,
     ]
 
 
@@ -146,4 +159,35 @@ class PROJECTS:
         EXP_LEVEL_BUFF = 5
 
 
+
+class CHILDREN:
+    MIN_AGE = 16 * 12
+
+    #not exactly constants, but eh
+    def max_age_diff(age):
+        return int(age/10)
+
+    def age_bounds(age):
+        minimum = max(CHILDREN.MIN_AGE, 10 * age / 11)
+        return (minimum, CHILDREN.max_age_diff(age))
+
+
+    PREGNANCY_TICKS = 8
+
+    #chances in percents
+    ENEMY_PREGNANCY_CHANCE = 0
+    NORMAL_PREGNANCY_CHANCE = 3
+    FRIEND_PREGNANCY_CHANCE = 7
+    LOVER_PREGNANCY_CHANCE = 30
+    SPOUSE_PREGNANCY_CHANCE = 32
+
+    DIFFERENT_RACE_REDUCTION = 4
+
+    HAS_BETTER_RELATIONSHIP  = 5
+
+    CHILD_REDUCTION = 5 #cumulative
+
+
+    TWINS_CHANCE = 4
+    STILLBORN_CHANCE_BASE = 6
 

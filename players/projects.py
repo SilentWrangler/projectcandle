@@ -1,8 +1,9 @@
 from .constants import PROJECTS as p
 from .constants import EXP
-from .models import Character, Trait
+from .models import Character, Player
 from world.logic import get_active_world
 from world.constants import MAIN_BIOME
+from world.models import Cell, CellRenameRequest
 import json
 
 class ProjectProcessor:
@@ -40,7 +41,7 @@ def calc_exp(char, subject, teacher_id = None , on_purpose = False):
             teacher = Character.objects.get(pk=teacher_id)
             if teacher.current_project is not None:
                 if teacher.current_project.name == p.TYPES.TEACH: #учитель должен учить
-                    kwargs = json.loads(teacher.current_project.content)
+                    kwargs = json.loads(teacher.current_project.arguments)
                     if char.id in kwargs['pupils'] and subject == kwargs['subject']:
                         teacher_lvl_diff = max( teacher.level(subject) - lvl, 0)
         except Character.DoesNotExist:
@@ -53,7 +54,7 @@ def calc_exp(char, subject, teacher_id = None , on_purpose = False):
 
     if bloodline_level > 0:
         bloodline_buff += EXP.BLOODLINE_PERK_BUFF
-    if bloodline_level > lvl:
+    if bloodline_level > lvl and char.controller is not None:
         bloodline_buff += EXP.BLOODLINE_MEMORY_BUFF
 
     age_buff = 0
@@ -132,11 +133,7 @@ class RelocateHelpers:
 def process_relocate(project):
     kwargs = json.loads(project.arguments)
     target = kwargs.get('target')
-    class Dummy: #Не будем лезть за клеткой в БД, когда координаты имеются
-        def __init__(self, d):
-            self.x = d['x']
-            self.y = d['y']
-    project.character.location = Dummy(target)
+    project.character.location = target
     project.delete()
 
 
@@ -183,6 +180,22 @@ def process_make_friend(project):
         project.char.add_friendship(target)
         project.delete()
 
-
+@processor(p.TYPES.RENAME_TILE)
+def process_rename(project):
+    kwargs = json.loads(project.arguments)
+    exp = calc_exp(project.char, 'politics')
+    give_exp(project.char, 'politics', exp)
+    done = calc_power(project.char, 'politics')
+    project.work_done += done
+    if project.work_done < project.work_required:
+        project.save()
+    else:
+        target_id = kwargs.get('target')
+        name = kwargs.get('name')
+        author_id = kwargs.get('author')
+        target = Cell.objects.get(pk=target_id)
+        author = Player.objects.get(pk = author_id)
+        rr = CellRenameRequest(cell = target, player = author, name = name)
+        rr.save()
 
 
