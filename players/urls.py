@@ -21,4 +21,6 @@ urlpatterns = [
     path('characters/renames/<int:pk>/',views.RenameDetail.as_view(), name = 'char_renames_details'),
     path('characters/renames/<int:id>/approve/',views.rename_approve, name = 'char_renames_approve'),
     path('characters/renames/<int:id>/reject/',views.rename_reject, name = 'char_renames_reject'),
+    path('characters/<int:charid>/api/getinfo/', views.get_char_info, name = 'char_api_info'),
+    path('characters/<int:charid>/api/relocate/', views.start_relocate, name = 'char_api_relocate'),
     ]

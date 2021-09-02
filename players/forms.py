@@ -20,3 +20,8 @@ class CharPickForm(forms.Form):
     def __init__(self, player, *args, **kwargs):
         super(CharPickForm, self).__init__(*args, **kwargs)
         self.fields['charpick'].queryset = PCUtils.get_available_chars(player)
+
+
+class ProjectRelocateForm(forms.Form):
+    x = forms.IntegerField(min_value = 0)
+    y = forms.IntegerField(min_value = 0)

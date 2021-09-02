@@ -19,16 +19,17 @@ from django.core.exceptions import SuspiciousOperation
 
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.status import HTTP_200_OK
+from rest_framework.status import HTTP_200_OK, HTTP_404_NOT_FOUND
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 
 from .models import Player, Character, RenameRequest
-from .forms import SignupForm, CharPickForm
+from .forms import SignupForm, CharPickForm, ProjectRelocateForm
 from .tokens import account_activation_token
 from .constants import CHAR_DISPLAY, ALLOWED_RACES, GENDER, ALLOWED_EXP, CHAR_TAG_NAMES
 from .logic import PCUtils
 from .permissions import IsCurrentChar
+from .serializers import CharSerializerFull
 
 import os
 from PIL import Image
@@ -113,7 +114,9 @@ def customise_interface(request):
 
 def char_profile(request, charid):
     character = get_object_or_404(Character, id=charid)
-    return render (request, 'char_template.html', {'character':character})
+    #TODO: Find a better place for projects interface
+    relocate_form = ProjectRelocateForm() if character == request.user.current_char else None
+    return render (request, 'char_template.html', {'character':character, 'relocate_form': relocate_form})
 
 def char_image(request):
     base_path = settings.BASE_DIR
@@ -232,5 +235,17 @@ class PlayerPage(DetailView):
 def start_project(request,charid):
     return Response({'status':'ok'},HTTP_200_OK)
 
+@api_view(['GET'])
+def get_char_info(request,charid):
+    try:
+        char = Character.objects.get(pk = charid)
+        seri = CharSerializerFull(char)
+        return Response({'status':'ok', 'data':seri.data},HTTP_200_OK)
+    except Character.DoesNotExist:
+        return Response({'detail':'Character not found'},HTTP_404_NOT_FOUND)
 
+@api_view(['POST'])
+@permission_classes([IsAuthenticated, IsCurrentChar])
+def start_relocate(request,charid):
+    return Response({'received data': request.data})
 
