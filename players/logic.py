@@ -6,7 +6,7 @@ from world.models import Pop
 from world.logic import get_active_world
 from world.constants import POP_RACE
 from .namegens import hungarian
-from .constants import GENDER, CHAR_TAG_NAMES, EXP, PROJECTS
+from .constants import GENDER, CHAR_TAG_NAMES, EXP, PROJECTS, CHILDREN, HEALTH
 from .projects import ProjectProcessor
 
 
@@ -202,8 +202,131 @@ def get_available_projects(char):
 
 
 def roll_for_pregnancies():
-    pass
+    world_age = get_active_world().ticks_age
+    min_age = world_age - CHILDREN.MIN_AGE
+    males = Character.objects.filter(gender = GENDER.FEMALE).exclude(birth_date__gt = min_age)
+    for m in males:
+        weights = []
+        fs = list(get_available_females(m))
+        for f in fs:
+            if f.is_enemy_of(m):
+                weights.append(CHILDREN.ENEMY_ROLL_WEIGHT)
+            elif f.is_friend_of(m):
+                weights.append(CHILDREN.FRIEND_ROLL_WEIGHT)
+            elif f.is_lover_of(m):
+                weights.append(CHILDREN.LOVER_ROLL_WEIGHT)
+            elif f.is_spouse_of(m):
+                weights.append(CHILDREN.SPOUSE_ROLL_WEIGHT)
+            else:
+                weights.append(CHILDREN.NORMAL_ROLL_WEIGHT)
 
+        rollnum = randint(0,CHILDREN.MAX_ROLLS_PER_MALE)
+        partners = choices(
+            fs,
+            weights = weights,
+            k = rollnum
+            )
+
+        for f in partners:
+            roll = randint(1,100)
+            pregnancy = {
+                'father': m.id,
+                'date': world_age
+                }
+            if f.is_enemy_of(m) and roll<=CHILDREN.ENEMY_PREGNANCY_CHANCE:
+                f.pregnancy = pregnancy
+            elif f.is_friend_of(m) and roll<=CHILDREN.FRIEND_PREGNANCY_CHANCE:
+                f.pregnancy = pregnancy
+            elif f.is_lover_of(m) and roll<=CHILDREN.LOVER_PREGNANCY_CHANCE:
+                f.pregnancy = pregnancy
+            elif f.is_spouse_of(m) and roll<=CHILDREN.SPOUSE_PREGNANCY_CHANCE:
+                f.pregnancy = pregnancy
+            elif roll<=CHILDREN.NORMAL_PREGNANCY_CHANCE:
+               f.pregnancy = pregnancy
+
+
+def get_available_females(char):#Get possible partners for character
+    result = Character.objects.filter(gender = GENDER.FEMALE)
+
+    #I refuse to deal with incest
+    parent_ids = [p.id for p in char.parents]
+    result = result.exclude(pk__in = parent_ids)
+    for p_id in parent_ids:
+        result = result.exclude(
+            tags__name = CHAR_TAG_NAMES.CHILD_OF,
+            tags__content = f'{p_id}'
+            )
+
+    #exclude inappropriate age
+
+    bounds = CHILDREN.age_bounds(char.age)
+
+    result = result.exclude(
+        birth_date__lt = char.birth_date - bounds[0],
+        birth_date__gt = char.birth_date + bounds[1]
+    )
+
+    #Remove dead from results
+    result = result.exclude(
+        tags__name = CHAR_TAG_NAMES.DEATH
+    )
+
+
+    #and finally in the same location
+    x, y = char.location['x'], char.location['y']
+
+    result.filter(
+        tags__name = CHAR_TAG_NAMES.LOCATION,
+        tags__content = f'{{"x":{x}, "y":{y} }}'
+    )
+
+    result = result.exclude(
+        tags__name = CHAR_TAG_NAMES.PREGNANCY
+        )
+    # remove those already pregnant
+
+    return result
+
+def calc_stillborn_chance(char):
+    return CHILDREN.STILLBORN_CHANCE_BASE #TODO: implement different chance based on character
+
+def process_pregancies():
+    world_age = get_active_world().ticks_age
+    mothers = Character.objects.filter(
+        tags__name = CHAR_TAG_NAMES.PREGNANCY
+    )
+    for mother in mothers:
+        p = mother.pregnancy
+        father = Character.objects.get(id = p['father'])
+        if p['date']<= world_age - CHILDREN.PREGNANCY_TICKS:
+            if randint(1,100)<= calc_stillborn_chance(mother):
+                mother.pregnancy = None
+            elif randint(1,100)<= CHILDREN.TWINS_CHANCE:
+                character_birth(mother, father)
+                character_birth(mother, father)
+            else:
+                character_birth(mother, father)
+
+def roll_for_death():
+    world_age = get_active_world().ticks_age
+    old_chars = Character.objects.filter(birth_date__lt = world_age - HEALTH.OLD_AGE)
+    old_chars = old_chars.exclude(
+        tags__name = CHAR_TAG_NAMES.DEATH
+    ) # No need to kill already dead
+
+    for old_timer in old_chars:
+        if randint(HEALTH.OLD_AGE, HEALTH.HARD_AGE_CAP) < old_timer.age:
+            old_timer.die()
+
+
+
+def cleanup_dead():
+    dead = Character.objects.filter(
+        tags__name = CHAR_TAG_NAMES.DEATH
+    )
+    for corpse in dead:
+        corpse.pregnancy = None
+        corpse.projects.delete()
 
 
 
@@ -227,5 +350,9 @@ class PCProjectUtils:
 
 def do_time_step():
     process_all_projects()
+    process_pregancies()
+    roll_for_pregnancies()
+    roll_for_death()
+    cleanup_dead()
     #TODO: character health stuff
 

@@ -235,6 +235,19 @@ class Character(models.Model):
         except CharTag.DoesNotExist:
             pass
 
+    def is_friend_of(self, other):
+        if self.tags.filter(
+            content = f'{other.id}',
+            name = CHAR_TAG_NAMES.FRIEND_WITH
+            ).exists():
+            return True
+        if other.tags.filter(
+            content = f'{self.id}',
+            name = CHAR_TAG_NAMES.FRIEND_WITH
+            ).exists():
+            return True
+        return False
+
     @property
     def enemies(self):
         tags = self.tags.filter(name = CHAR_TAG_NAMES.ENEMY_OF)
@@ -281,6 +294,19 @@ class Character(models.Model):
             t.delete()
         except CharTag.DoesNotExist:
             pass
+
+    def is_enemy_of(self, other):
+        if self.tags.filter(
+            content = f'{other.id}',
+            name = CHAR_TAG_NAMES.ENEMY_OF
+            ).exists():
+            return True
+        if other.tags.filter(
+            content = f'{self.id}',
+            name = CHAR_TAG_NAMES.ENEMY_OF
+            ).exists():
+            return True
+        return False
 
     @property
     def parents(self):
@@ -343,6 +369,22 @@ class Character(models.Model):
             )
             t.save()
 
+    @property
+    def lovers(self):
+        #TODO: actually write logic
+        return Character.objects.none()
+
+    def is_lover_of(self, other):
+        return False
+
+    @property
+    def spouses(self):
+        #TODO: actually write logic
+        return Character.objects.none()
+
+    def is_spouse_of(self,other):
+        return False
+
     #-----------------------------------------------------------------
     #Time
     @property
@@ -364,7 +406,14 @@ class Character(models.Model):
     def is_alive(self):
         return self.death is None
 
-
+    def die(self):
+        world_age = get_active_world().ticks_age
+        t = CharTag(
+            character = self,
+            name = CHAR_TAG_NAMES.DEATH,
+            content = f'{world_age}'
+            )
+        t.save()
 
     def __str__(self):
         return f'Character ({self.id}): {self.name}'

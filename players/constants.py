@@ -79,7 +79,7 @@ class UNIQUE_TAGS:
         CHAR_TAG_NAMES.ECONOMIC_EXP,
         CHAR_TAG_NAMES.SCIENCE_EXP,
         CHAR_TAG_NAMES.DEATH,
-        CHAR_TAG_NAMES.PREGNANCY ,
+        CHAR_TAG_NAMES.PREGNANCY,
         ]
     NAME_AND_CONTENT = [
         CHAR_TAG_NAMES.FRIEND_WITH,
@@ -169,10 +169,19 @@ class CHILDREN:
 
     def age_bounds(age):
         minimum = max(CHILDREN.MIN_AGE, 10 * age / 11)
-        return (minimum, CHILDREN.max_age_diff(age))
+        maximum = min(CHILDREN.max_age_diff(age), int(age + CHILDREN.MIN_AGE * 1.5)) #To cut out grandparents
+        return (minimum, maximum)
 
 
     PREGNANCY_TICKS = 8
+
+    MAX_ROLLS_PER_MALE = 3
+
+    ENEMY_ROLL_WEIGHT = 1
+    NORMAL_ROLL_WEIGHT = 5
+    FRIEND_ROLL_WEIGHT = 15
+    LOVER_ROLL_WEIGHT = 30
+    SPOUSE_ROLL_WEIGHT = 27
 
     #chances in percents
     ENEMY_PREGNANCY_CHANCE = 0
@@ -190,4 +199,12 @@ class CHILDREN:
 
     TWINS_CHANCE = 4
     STILLBORN_CHANCE_BASE = 6
+
+class HEALTH:
+
+    HARD_AGE_CAP = 300 * 12
+    OLD_AGE = 12 * 55
+
+
+
 
