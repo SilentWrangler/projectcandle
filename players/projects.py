@@ -1,5 +1,5 @@
 from .constants import PROJECTS as p
-from .constants import EXP
+from .constants import EXP, BALANCE
 from .models import Character, Player
 from world.logic import get_active_world
 from world.constants import MAIN_BIOME
@@ -118,15 +118,22 @@ def process_teach(project):
 class RelocateHelpers:
     @classmethod
     def calculate_range(cls,char):
-        return 999
+        return BALANCE.BASE_COMMUNICATION_RANGE
     @classmethod
     def can_relocate(cls, char , target):
         result = target.main_biome != MAIN_BIOME.WATER
         loc = char.location
-        dist = max(abs(loc.x-target.x), abs(loc.y-target.y))
+        dist = max(abs(loc['x']-target.x), abs(loc['y']-target.y))
         result = result and dist<RelocateHelpers.calculate_range(char)
         return result
 
+    @classmethod
+    def can_relocate_to_coords(cls, char , x, y):
+        try:
+            target = get_active_world().cell_set.get(x = x, y= y)
+            return cls.can_relocate(char, target)
+        except Cell.DoesNotExist:
+            return False
 
 
 @processor(p.TYPES.RELOCATE)

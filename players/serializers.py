@@ -23,10 +23,11 @@ class CharSerializerFull(serializers.ModelSerializer):
     bloodlines = serializers.SerializerMethodField('get_bloodlines')
     friends = serializers.SerializerMethodField('get_friends')
     enemies = serializers.SerializerMethodField('get_enemies')
+    location = serializers.SerializerMethodField('get_location')
     class Meta:
         model=Character
         fields = ["id","name","primary_race","secondary_race", 'birth_date',
-        'tags','projects', 'bloodlines', 'friends','enemies']
+        'tags','projects', 'bloodlines', 'friends','enemies', 'location']
 
     def get_bloodlines(self, char):
         return [o.id for o in char.bloodlines]
@@ -36,3 +37,6 @@ class CharSerializerFull(serializers.ModelSerializer):
 
     def get_enemies(self, char):
         return [o.id for o in char.enemies]
+
+    def get_location(self, char):
+        return char.location

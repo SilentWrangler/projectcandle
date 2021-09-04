@@ -219,3 +219,18 @@ WHY DO THEY ALL HAVE TO BE GODDAMN SPECIAL SNOWFLAKES?!
     height: 32px;
     border: none;
 }
+
+
+.context-menu{
+    display: none;
+    position: absolute;
+    background:burlywood;
+    border: #862012 double 8px;
+    border-radius: 10px;
+}
+
+.context-menu.open{
+    display: block;
+
+}
+

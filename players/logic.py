@@ -2,12 +2,12 @@ from background_task import background
 from django.core.mail import send_mail
 from random import randint, choice, choices
 from .models import Character, Trait, CharTag, RenameRequest, Project
-from world.models import Pop
+from world.models import Pop, Cell
 from world.logic import get_active_world
-from world.constants import POP_RACE
+from world.constants import POP_RACE, MAIN_BIOME
 from .namegens import hungarian
-from .constants import GENDER, CHAR_TAG_NAMES, EXP, PROJECTS, CHILDREN, HEALTH
-from .projects import ProjectProcessor
+from .constants import GENDER, CHAR_TAG_NAMES, EXP, PROJECTS, CHILDREN, HEALTH, BALANCE
+from .projects import ProjectProcessor, RelocateHelpers
 
 
 def add_racial_traits(char, mother = None, father = None):
@@ -176,6 +176,10 @@ class PCUtils:
 
 
 def get_available_projects(char):
+    if char is None:
+        return []
+    if not char.is_alive:
+        return []
     age = char.age
     if age<EXP.UNDERSTANDING_START:
         return [] #Персонажи до 4 лет не
@@ -187,7 +191,7 @@ def get_available_projects(char):
     elif not char.educated:
         return [PROJECTS.TYPES.MAKE_FRIEND, PROJECTS.TYPES.ADVENTURE, PROJECTS.TYPES.STUDY]
     else:
-        base = [PROJECTS.TYPES.MAKE_FRIEND, PROJECTS.TYPES.ADVENTURE, PROJECTS.TYPES.STUDY]
+        base = [PROJECTS.TYPES.MAKE_FRIEND, PROJECTS.TYPES.ADVENTURE, PROJECTS.TYPES.STUDY, PROJECTS.TYPES.RELOCATE]
         if char.traits.filter(name__startswith = 'exp.military').exists():
             base += PROJECTS.MILITARY
         if char.traits.filter(name__startswith = 'exp.politics').exists():
@@ -199,7 +203,34 @@ def get_available_projects(char):
         return base
 
 
+def get_cell_projects(char, x, y):
+    if char is None:
+        return []
+    if not char.is_alive:
+        return []
+    try:
+        cell = get_active_world().cell_set.get(x=x,y=y)
+        loc = char.location
+        dist = max(abs(loc['x']-cell.x), abs(loc['y']-cell.y))
+        char_can = get_available_projects(char)
+        result = []
+        if RelocateHelpers.can_relocate(char, cell):
+            result.append(PROJECTS.TYPES.RELOCATE)
+        if dist <= BALANCE.BASE_COMMUNICATION_RANGE:
+            population = cell.pop_set.count()
+            if population==0 and cell.main_biome!=MAIN_BIOME.WATER:
+                result += [PROJECTS.TYPES.FORTIFY_CITY, PROJECTS.TYPES.BUILD_TILE]
+            elif population>0:
+                result += [PROJECTS.TYPES.MAKE_FACTION,PROJECTS.TYPES.RENAME_TILE,
+                PROJECTS.TYPES.IMPROVE_MANA,PROJECTS.TYPES.IMPROVE_FOOD]
 
+
+        return list(set(result) & set(char_can))
+    except Cell.DoesNotExist:
+        return []
+
+def get_char_projects(char, target):
+    return []
 
 def roll_for_pregnancies():
     world_age = get_active_world().ticks_age

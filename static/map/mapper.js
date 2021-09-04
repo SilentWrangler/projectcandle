@@ -1,10 +1,10 @@
-const tile_size = 425;
-const atlas_src = "/static/map/hires_wip.png";
+const tile_size = 16;
+const atlas_src = "/static/map/placeholder.png";
 const atlas_cols = 6;
-var scale = 0.2;
+var scale = 1; // 0.2 for big
 
-const min_scale = 0.0025;
-const max_scale = 0.5;
+const min_scale = 0.5; //0.025 for big
+const max_scale = 4; // 0.5 for big
 const scale_step = 0.0005;
 
 
@@ -35,6 +35,7 @@ ImageIndexes.city = {
     "SRL":60
 }
 
+ImageIndexes.player = 66
 
 Aliases = {}
 
@@ -78,6 +79,22 @@ Aliases.races = {
     'DWA':"Дварфы",
     'GOB':"Гоблины",
     'FEY':"Феи"
+}
+
+Aliases.projects = {
+    //Для любого тайла
+    'RELOCATE': gettext('Переехать'),
+    'ADVENTURE': gettext('Отправиться в приключение'),
+    //Для пустого тайла
+    'CELL_BUILD': gettext('Построить поселение'),
+    'CELL_FORT': gettext('Построить фортификации'),
+    //Для города
+    'RENAME_TILE': gettext('Переименовать город'),
+    'FACT_CREATE': gettext('Создать фракцию'),
+    'CELL_MANA': gettext('Повысить доходы маны'),
+    'CELL_FOOD': gettext('Повысить сбор пищи')
+
+
 }
 
 function resizeCanvas(canvas){
@@ -200,8 +217,8 @@ Camera.prototype.move = function (delta, dirx, diry) {
 
 Camera.prototype.cellToScreen = function(x,y){
 
-    var xScreen = x*tile_size*scale - this.x;
-    var yScreen = x*tile_size*scale - this.y;
+    var xScreen = x*tile_size*scale;
+    var yScreen = y*tile_size*scale;
 
     return [xScreen,yScreen]
 
@@ -259,6 +276,16 @@ MapPainter.tick = function (elapsed) {
 }.bind(MapPainter);
 
 
+locatePC = function(){
+    camera = MapPainter.camera;
+    loc = MapPainter.PC.location;
+    camloc = camera.cellToScreen(loc.x,loc.y)
+    camera.x = camloc[0] - camera.width/2;
+    camera.y = camloc[1] - camera.height/2;
+    MapPainter.render();
+}
+
+
 MapPainter.init = function(){
     this.atlas = Loader.getImage('tset');
     var canvas = document.getElementById('map');
@@ -268,6 +295,8 @@ MapPainter.init = function(){
     this.ctx = canvas.getContext('2d');
     this.dimensions = {"x":canvas.width,"y":canvas.height};
     var worldJSON = document.getElementById('world').innerHTML;
+    var PC_JSON  = document.getElementById('PC').innerHTML;
+    this.PC = JSON.parse(PC_JSON);
     this.cell_data = JSON.parse(worldJSON);
     var map = {'cols':this.cell_data.width,'rows':this.cell_data.height,'tsize':tile_size}
     this.camera = new Camera(map, canvas.width, canvas.height);
@@ -278,6 +307,8 @@ MapPainter.init = function(){
     canvas.addEventListener("mousedown",canvasMouseDownHandler);
     canvas.addEventListener("mouseup",canvasMouseUpHandler);
     canvas.addEventListener("mousemove",canvasMouseMoveHandler);
+    canvas.addEventListener("contextmenu",canvasContextHandler);
+    locatePC();
 
 }
 
@@ -285,7 +316,7 @@ MapPainter.init = function(){
 MapPainter.render = function(){
     var cells = this.cell_data.cells;
 
-    var renderCell = function(cell,xPos,yPos){
+    var renderCell = function(cell,xPos,yPos, draw_player = false){
 
 
         var ii = ImageIndexes.main_biome[cell.main_biome]; //Draw main biome underneath
@@ -323,6 +354,20 @@ MapPainter.render = function(){
 
         }
 
+        if (draw_player){
+            ii = ImageIndexes.player; //Draw player
+            xSor = (ii%atlas_cols)*tile_size;
+            ySor = Math.floor(ii/atlas_cols)*tile_size;
+            MapPainter.ctx.drawImage(
+                MapPainter.atlas,
+                xSor, ySor,
+                tile_size,tile_size,
+                xPos,yPos,
+                tile_size*scale,tile_size*scale
+            );
+        }
+
+
     }
 
     var startCol = Math.floor((this.camera.x) / (tile_size*scale));
@@ -340,8 +385,9 @@ MapPainter.render = function(){
 
             var x = (c - startCol) * (tile_size*scale)+ offsetX;
             var y = (r - startRow) * (tile_size*scale)+ offsetY;
-
-            renderCell(cell,x,y);
+            var loc = MapPainter.PC.location;
+            var draw_player = c==loc.x && r == loc.y;
+            renderCell(cell,x,y, draw_player);
 
         }
     }
@@ -361,6 +407,7 @@ MapPainter.load = function(){
 window.onload = function (){
     var context = document.getElementById('map').getContext('2d');
     MapPainter.run(context);
+    document.getElementById('PCloc').onclick = (e) =>{locatePC()}
 }
 
 window.onresize = function(){
@@ -509,7 +556,8 @@ canvasMouseOverHandler = function(event){
 
 canvasMouseDownHandler = function(event){
     dragflag = true;
-
+    menu = document.getElementById("map-context-menu");
+    menu.classList.remove("open");
 }
 
 canvasMouseUpHandler = function(event){
@@ -561,4 +609,86 @@ canvasMouseMoveHandler = function(event){
 
 }
 
+// For map context menu
+default_option = function(event){
+    alert("Test");
+}
 
+
+menu_set_position = ({ menu, top, left }) => {
+  menu.style.left = `${left}px`;
+  menu.style.top = `${top}px`;
+  menu.classList.add("open")
+};
+
+canvasContextHandler = function(event){
+    event.preventDefault();
+    menu = document.getElementById("map-context-menu");
+    list = menu.firstElementChild;
+
+    list.innerHTML = `<li>${gettext("Загрузка...")}</li>`;
+
+    const menudata = {
+        menu : menu,
+        left : event.pageX,
+        top: event.pageY
+
+    };
+    menu_set_position(menudata);
+    if (coords){
+        var url = `/projects/api/cellprojects?x=${coords[0]}&y=${coords[1]}`
+        httpGetAsync(url,load_options);
+    }
+
+    return false;
+
+}
+
+
+load_options = function(response){
+    options =  JSON.parse(response).data.projects
+
+    menu = document.getElementById("map-context-menu");
+    list = menu.firstElementChild;
+
+    list.innerHTML = "";
+    idx = 0
+    if (options.length>0){
+        options.forEach((i) =>{
+            list.innerHTML += `<li><a id ="map-context-option${idx}"href="#">${Aliases.projects[i]}</a></li>`
+            item = document.getElementById(`map-context-option${idx}`);
+            switch (i){
+                case 'RELOCATE':
+                    item.onclick =option_relocate;
+                    break;
+                default:
+                    item.onclick = default_option;
+            }
+
+        })
+    }
+    else{
+        list.innerHTML += `<li>${gettext("Нет проектов")}</li>`
+    }
+
+}
+
+
+option_relocate = function(event){
+
+    if (coords){
+        var url = `/projects/api/cellprojects?x=${coords[0]}&y=${coords[1]}`
+        httpGetAsync(url,relocate_response);
+    }
+}
+
+relocate_response = function(response) {
+    json_resp = JSON.parse(response)
+    if (json_resp.status == 'error'){
+        alert(json_resp.detail)
+    }
+    if (json_resp.status == 'ok'){
+        alert("Проект успешно запущен")
+    }
+
+}

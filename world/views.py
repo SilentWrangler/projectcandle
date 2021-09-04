@@ -9,15 +9,20 @@ from .models import World, Cell, Pop
 from .serializers import WorldSerializer, CellSerializerFull, PopSerializerFull,CellSerializerShort
 from .logic import WorldGenerator, generate_world_background, put_resource_deposits
 
+from players.serializers import CharSerializerFull
 
 
 def index(request):
     try:
         world = World.objects.get(is_active=True)
         seri = WorldSerializer(world)
+        pcdata = None
+        if request.user.is_authenticated and request.user.current_char is not None:
+            pcs = CharSerializerFull(request.user.current_char)
+            pcdata = pcs.data
     except World.DoesNotExist:
         world = None
-    return render(request,"worldtable.html",{'world':seri.data})
+    return render(request,"worldtable.html",{'world':seri.data, 'PC':pcdata})
 
 
 @api_view(["GET"])

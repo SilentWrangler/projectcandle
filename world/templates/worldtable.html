@@ -6,18 +6,21 @@
 
 {% if world %}
 {{ world|json_script:"world" }}
-
+{% if PC %}
+{{ PC|json_script:"PC" }}
+{% endif %}
 <!-- TODO: make canvas draggable instead of huge -->
 <p></p>
 <div>
     <center>
         <div class="worldmap-scale-container">
             <button type="button" id="scale_minus" class='map-scale-button fancyminus'></button>
-            <input type="range" step="0.0005" min="0.025" max="0.5" id="scale_range" value="0.2" class="slider"></input>
+            <input type="range" step="0.0005" min="0.5" max="4" id="scale_range" value="0.2" class="slider"></input>
+            <!-- Return to 0.025 - 0.5 when big map texture is ready -->
             <button type="button" id="scale_plus" class='map-scale-button fancyplus'></button>
 
         </div>
-
+        <a id="PCloc" href = "#">Найти персонажа</a>
         <div class="worldmap-map-container" id="map-container">
             <div class = "cellinfo" id="celldata">
                 <p>
@@ -46,5 +49,10 @@
 
 
 {% endif %}
+<nav class="menu-dropdown context-menu" id="map-context-menu">
+    <ul>
 
+    </ul>
+
+</nav>
 {% endblock %}

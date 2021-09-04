@@ -19,19 +19,21 @@ from django.core.exceptions import SuspiciousOperation
 
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.status import HTTP_200_OK, HTTP_404_NOT_FOUND
+from rest_framework.status import HTTP_200_OK, HTTP_404_NOT_FOUND, HTTP_400_BAD_REQUEST
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 
 from .models import Player, Character, RenameRequest
 from .forms import SignupForm, CharPickForm, ProjectRelocateForm
 from .tokens import account_activation_token
-from .constants import CHAR_DISPLAY, ALLOWED_RACES, GENDER, ALLOWED_EXP, CHAR_TAG_NAMES
-from .logic import PCUtils
+from .constants import CHAR_DISPLAY, ALLOWED_RACES, GENDER, ALLOWED_EXP, CHAR_TAG_NAMES, PROJECTS
+from .logic import PCUtils, get_cell_projects
 from .permissions import IsCurrentChar
 from .serializers import CharSerializerFull
+from .projects import RelocateHelpers
 
 import os
+import json
 from PIL import Image
 # Create your views here.
 
@@ -242,10 +244,46 @@ def get_char_info(request,charid):
         seri = CharSerializerFull(char)
         return Response({'status':'ok', 'data':seri.data},HTTP_200_OK)
     except Character.DoesNotExist:
-        return Response({'detail':'Character not found'},HTTP_404_NOT_FOUND)
+        return Response({'status': 'error','detail':'Character not found'},HTTP_404_NOT_FOUND)
+
 
 @api_view(['POST'])
-@permission_classes([IsAuthenticated, IsCurrentChar])
-def start_relocate(request,charid):
-    return Response({'received data': request.data})
+@permission_classes([IsAuthenticated])
+def start_relocate(request):
+    try:
+        char = requset.user.current_char
+        if char is None:
+            return Response({'status': 'error','detail':'Character not found'},HTTP_404_NOT_FOUND)
+        x, y = request.query_params['x'], request.query_params['y']
+        proj_args = {
+            'target':{
+                'x':x,
+                'y':y
+                }
+            }
+        if RelocateHelpers.can_relocate_to_coords(char,x,y):
+            p, _ = char.projects.get_or_create(
+                type = PROJECTS.TYPES.RELOCATE,
+                arguments = json.dumps(proj_args),
+                is_current = True,
+                work_done =0,
+                work_required = 0
+            )
+            p.save()
+            return Response({'status': 'ok', 'data':{'project_id': p.id}})
+        else:
+           return Response({'status': 'error','detail':"Can't move to location"},HTTP_404_NOT_FOUND)
+    except KeyError as ke:
+        return Response({'detail':str(ke)},HTTP_400_BAD_REQUEST)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_projects_for_cell(request):
+    try:
+        x, y = request.query_params['x'], request.query_params['y']
+        data = get_cell_projects(request.user.current_char,x,y)
+        return Response({'status': 'ok', 'data':{'projects': data}})
+    except KeyError as ke:
+        return Response({'detail':str(ke)},HTTP_400_BAD_REQUEST)
 

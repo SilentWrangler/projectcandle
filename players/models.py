@@ -399,7 +399,7 @@ class Character(models.Model):
                 name = CHAR_TAG_NAMES.DEATH
                 )
             return int(t.content)
-        except CharTag.doesNotExist:
+        except CharTag.DoesNotExist:
             return None
 
     @property
