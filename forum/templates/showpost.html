@@ -1,8 +1,9 @@
 {% extends "base.html" %}
 {% load i18n %}
+{% load static %}
 
 {% block content %}
-
+    <script src = "{% static 'interface/forum.js' %}"></script>
     <h1>{{post.headline}}</h1>
     <table>
         {% if post.reply_to %}
