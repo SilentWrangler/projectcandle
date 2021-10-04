@@ -14,6 +14,7 @@ urlpatterns = [
     path('accounts/reset_token/',views.reset_token, name = 'reset_token'),
     path('characters/<int:charid>', views.char_profile, name = 'char_profile'),
     path('characters/<int:charid>/rename/', views.request_rename, name = 'char_rename'),
+    path('characters/<int:charid>/projects/', views.char_projects, name = 'char_projects'),
     path('characters/makeimage/',views.char_image,name = 'char_image'),
     path('characters/change/',views.PickChar.as_view(), name = 'char_change'),
     path('characters/new/',views.MakeChar.as_view(), name = 'char_new'),
@@ -24,4 +25,9 @@ urlpatterns = [
     path('characters/<int:charid>/api/getinfo/', views.get_char_info, name = 'char_api_info'),
     path('projects/api/relocate', views.start_relocate, name = 'projects_api_relocate'),
     path('projects/api/cellprojects',views.get_projects_for_cell, name = 'projects_api_cell'),
+    path('projects/api/start_character_project',views.start_character_project, name = 'projects_api_start_char'),
+    path('projects/api/start_cell_project',views.start_cell_project, name = 'projects_api_start_cell'),
+    path('projects/api/restart',views.start_project, name = 'projects_api_restart'),
+    path('projects/api/stop',views.stop_project, name = 'projects_api_stop'),
+    path('projects/api/set_priority',views.set_project_priority, name = 'projects_api_set_priority'),
     ]

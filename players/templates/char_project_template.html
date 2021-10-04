@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load static %}
+{% load player_tags %}
+
+
+{% block content %}
+    <input type="hidden" id="auth" value="{{token}}">
+    <script src = "{% static 'characters/projects.js' %}"></script>
+    <h2><a href="{% url 'char_profile' charid=character.id %}">{{character.name}}</a>, {{character.race_human_readable}}</h2>
+
+    <section  class="border">
+    <p><img src="{% url 'char_image' %}?gender={{character.gender}}&race={{character.primary_race}}&clothes={{character.clothes}}"></img></p>
+    {% if character.controller%}
+        <p>Этот персонаж находится под контролем игрока <a href="{% url 'player_page' pk=character.controller.id %}">
+            {{character.controller.username}}</a>
+        </p>
+    {% endif %}
+    {% if character.location %}
+        <p>Местонахождение: {{character.location.x}}x{{character.location.y}}</p>
+    {% endif %}
+    </section>
+
+    <section class="border">
+        <h3>{% trans "Проекты" %}</h3>
+        {% if character == current_char %}
+        <table class="border">
+            {% for project in character.projects.all %}
+            {% with prev=character.projects.all|previous:forloop.counter0 next=character.projects.all|next:forloop.counter0%}
+            {% if not project.is_current %}
+            <tr>
+                <td>{{project.human_readable}}</td>
+                <td>{{project.percent_ready}}</td>
+                <td><a href="#" onclick=restart_project({{project.id}})>{% trans 'Вернуться к проекту' %}</a></td>
+                <td class="border">{% if prev and not prev.is_current %}<a href="#" onclick="setqueue({{project.id}},{{prev.priority|add:-1}})">/\</a>{% else %}_{% endif %}</td>
+                <td class="border">{% if next and not next.is_current %}<a href="#" onclick="setqueue({{project.id}},{{next.priority|add:1}})">\/</a>{% else %}_{% endif %}</td>
+                <td><a href="#" onclick=stop_project({{project.id}})>{% trans 'Забросить проект' %}</a></td>
+            </tr>
+            {% endif %}
+            {% endwith %}
+            {% endfor %}
+        </table>
+
+        {% endif %}
+        {% for form in forms %}
+        <strong>{{form.type.label}}</strong>
+        <form onclick=register_form({{character.id}},"{{form.type}}",this)>
+            {{form.form}}
+            <input type="submit" value="Начать проект">
+        </form>
+        {% endfor %}
+    </section>
+
+
+
+{% endblock %}

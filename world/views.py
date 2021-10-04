@@ -5,6 +5,7 @@ from rest_framework.response import Response
 from rest_framework.status import HTTP_200_OK, HTTP_404_NOT_FOUND, HTTP_400_BAD_REQUEST
 from rest_framework.permissions import IsAdminUser
 
+
 from .models import World, Cell, Pop
 from .serializers import WorldSerializer, CellSerializerFull, PopSerializerFull,CellSerializerShort
 from .logic import WorldGenerator, generate_world_background, put_resource_deposits
@@ -17,9 +18,10 @@ def index(request):
         world = World.objects.get(is_active=True)
         seri = WorldSerializer(world)
         pcdata = None
-        if request.user.is_authenticated and request.user.current_char is not None:
-            pcs = CharSerializerFull(request.user.current_char)
-            pcdata = pcs.data
+        if request.user.is_authenticated:
+            if request.user.current_char is not None:
+                pcs = CharSerializerFull(request.user.current_char)
+                pcdata = pcs.data
     except World.DoesNotExist:
         world = None
     return render(request,"worldtable.html",{'world':seri.data, 'PC':pcdata})

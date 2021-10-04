@@ -3,13 +3,41 @@
 
 {% block content %}
 {% if user.is_authenticated %}
-<h2>{{user.username}}</h2>
-<p><strong>API token:</strong></p>
-<p>{% trans "Этот токен используется для авторизации сторонних приложений." %}
-{% trans "Приложения должны запрашивать этот токен, а не логин с паролем" %}</p>
-<form action={% url 'reset_token' %}>
-    <input  value = "{{token.key}}" disabled>
-    <button type = "submit">{% trans "Сбросить токен" %}</button>
-</form>
+    <h2>{{user.username}}</h2>
+    <p><strong>API token:</strong></p>
+    <p>{% trans "Этот токен используется для авторизации сторонних приложений." %}
+    {% trans "Приложения должны запрашивать этот токен, а не логин с паролем" %}</p>
+    <form action={% url 'reset_token' %}>
+        <input  value = "{{token.key}}" disabled>
+        <button type = "submit">{% trans "Сбросить токен" %}</button>
+    </form>
+
+    {% if user.current_char %}
+    <section class="border">
+
+        {% with cc=user.current_char %}
+        <h3>{% trans "Текущий персонаж" %}</h3>
+        <table>
+            <tr>
+                <td class="border"><img src="{% url 'char_image' %}?gender={{cc.gender}}&race={{cc.primary_race}}&clothes={{cc.clothes}}"></img></td>
+                <td class="border"><a href="{% url 'char_profile' charid=cc.id %}">{{cc.name}}</a></td>
+            </tr>
+        </table>
+        {% endwith %}
+    </section>
+    {% endif %}
+
+    <section class="border">
+        <h3>{% trans "Персонажи династии" %}</h3>
+        <table class ="reltable">
+            {% for char in user.bloodline_chars.all %}
+                <tr>
+                    <td class="border"><img src="{% url 'char_image' %}?gender={{char.gender}}&race={{char.primary_race}}&clothes={{char.clothes}}"></img></td>
+                    <td class="border"><a href="{% url 'char_profile' charid=char.id %}">{{char.name}}</a></td>
+                </tr>
+            {% endfor %}
+        </table>
+    </section>
+
 {% endif %}
 {% endblock %}

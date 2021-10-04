@@ -6,3 +6,8 @@ born = [
     pgettext_lazy('m','родился'),
     pgettext_lazy('f','родился')
     ]
+
+dead = [
+    pgettext_lazy('m','умер'),
+    pgettext_lazy('f','умер')
+]

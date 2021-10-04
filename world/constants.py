@@ -62,6 +62,17 @@ class CITY_TYPE(models.TextChoices):
 
     __empty__ = 'No City'
 
+#Типы городов, создаваемые проектом постройки тайла
+#Гнездо Печали, очевидно, построить нельзя
+#Библиотека и Форт строятся отдельными проектами, работающими не от экономики, а от науки и военного дела
+CIVILIAN_CITIES = [
+    CITY_TYPE.GENERIC,
+    CITY_TYPE.MANA,
+    CITY_TYPE.FARM,
+    CITY_TYPE.FACTORY,
+    CITY_TYPE.MINE
+    ]
+
 
 class POP_RACE(models.TextChoices):
     HUMAN = 'HUM'

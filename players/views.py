@@ -23,13 +23,13 @@ from rest_framework.status import HTTP_200_OK, HTTP_404_NOT_FOUND, HTTP_400_BAD_
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 
-from .models import Player, Character, RenameRequest
-from .forms import SignupForm, CharPickForm, ProjectRelocateForm
+from .models import Player, Character, RenameRequest, Project
+from .forms import SignupForm, CharPickForm, ProjectForms
 from .tokens import account_activation_token
 from .constants import CHAR_DISPLAY, ALLOWED_RACES, GENDER, ALLOWED_EXP, CHAR_TAG_NAMES, PROJECTS
-from .logic import PCUtils, get_cell_projects
-from .permissions import IsCurrentChar
-from .serializers import CharSerializerFull
+from .logic import PCUtils
+from .permissions import HasCurrentChar
+from .serializers import CharSerializerFull, ProjectSrl
 from .projects import RelocateHelpers
 
 import os
@@ -117,8 +117,21 @@ def customise_interface(request):
 def char_profile(request, charid):
     character = get_object_or_404(Character, id=charid)
     #TODO: Find a better place for projects interface
-    relocate_form = ProjectRelocateForm() if character == request.user.current_char else None
-    return render (request, 'char_template.html', {'character':character, 'relocate_form': relocate_form})
+    return render (request, 'char_template.html', {'character':character})
+
+@login_required
+def char_projects(request, charid):
+    character = get_object_or_404(Character, id=charid)
+    if request.user.current_char is not None:
+        forms = []
+        ps = PCUtils.get_char_projects(request.user.current_char, character)
+        for p in ps:
+            f = ProjectForms.get(p, None)
+            if f is not None:
+                forms.append({'type':p, 'form':f()})
+        return render (request, 'char_project_template.html', {'character':character, 'forms':forms})
+    return render (request, 'char_project_template.html', {'character':character, 'forms':[]})
+
 
 def char_image(request):
     base_path = settings.BASE_DIR
@@ -233,9 +246,54 @@ class PlayerPage(DetailView):
         return context
 
 @api_view(['POST'])
-@permission_classes([IsAuthenticated, IsCurrentChar])
-def start_project(request,charid):
-    return Response({'status':'ok'},HTTP_200_OK)
+@permission_classes([IsAuthenticated,HasCurrentChar])
+def start_project(request):
+    try:
+        proj_id = int(request.query_params['project'])
+        project = request.user.current_char.projects.get(pk = proj_id)
+        project.is_current = True
+        project.save()
+        seri = ProjectSrl(project)
+        return Response({'status':'ok', 'data':seri.data},HTTP_200_OK)
+    except KeyError as ke:
+        return Response({'status': 'error','detail':str(ke)},HTTP_400_BAD_REQUEST)
+    except ValueError as ve:
+        return Response({'status': 'error','detail':str(ve)},HTTP_400_BAD_REQUEST)
+    except Project.DoesNotExist:
+        return Response({'status': 'error','detail':'Cannot find project'},HTTP_404_NOT_FOUND)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated,HasCurrentChar])
+def stop_project(request):
+    try:
+        proj_id = int(request.query_params['project'])
+        project = request.user.current_char.projects.get(pk = proj_id)
+        project.delete()
+        return Response({'status':'ok'},HTTP_200_OK)
+    except KeyError as ke:
+        return Response({'status': 'error','detail':str(ke)},HTTP_400_BAD_REQUEST)
+    except ValueError as ve:
+        return Response({'status': 'error','detail':str(ve)},HTTP_400_BAD_REQUEST)
+    except Project.DoesNotExist:
+        return Response({'status': 'error','detail':'Cannot find project'},HTTP_404_NOT_FOUND)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated,HasCurrentChar])
+def set_project_priority(request):
+    try:
+        proj_id = int(request.query_params['project'])
+        project = request.user.current_char.projects.get(pk = proj_id)
+        new_priority = int(request.query_params['priority'])
+        project.priority = new_priority
+        project.save()
+        return Response({'status':'ok'},HTTP_200_OK)
+    except KeyError as ke:
+        return Response({'status': 'error','detail':str(ke)},HTTP_400_BAD_REQUEST)
+    except ValueError as ve:
+        return Response({'status': 'error','detail':str(ve)},HTTP_400_BAD_REQUEST)
+    except Project.DoesNotExist:
+        return Response({'status': 'error','detail':'Cannot find project'},HTTP_404_NOT_FOUND)
 
 @api_view(['GET'])
 def get_char_info(request,charid):
@@ -251,10 +309,10 @@ def get_char_info(request,charid):
 @permission_classes([IsAuthenticated])
 def start_relocate(request):
     try:
-        char = requset.user.current_char
+        char = request.user.current_char
         if char is None:
             return Response({'status': 'error','detail':'Character not found'},HTTP_404_NOT_FOUND)
-        x, y = request.query_params['x'], request.query_params['y']
+        x, y = int(request.query_params['x']), int(request.query_params['y'])
         proj_args = {
             'target':{
                 'x':x,
@@ -263,26 +321,72 @@ def start_relocate(request):
             }
         if RelocateHelpers.can_relocate_to_coords(char,x,y):
             p, _ = char.projects.get_or_create(
-                type = PROJECTS.TYPES.RELOCATE,
-                arguments = json.dumps(proj_args),
-                is_current = True,
-                work_done =0,
-                work_required = 0
+                type = PROJECTS.TYPES.RELOCATE
             )
+            p.arguments = json.dumps(proj_args)
+            p.is_current = True
+            p.work_done = 0
+            p.work_required = -1
             p.save()
             return Response({'status': 'ok', 'data':{'project_id': p.id}})
         else:
-           return Response({'status': 'error','detail':"Can't move to location"},HTTP_404_NOT_FOUND)
+           return Response({'status': 'error','detail':"Can't move to location"},HTTP_200_OK)
     except KeyError as ke:
         return Response({'detail':str(ke)},HTTP_400_BAD_REQUEST)
+    except ValueError as ve:
+        return Response({'status': 'error','detail':str(ve)},HTTP_400_BAD_REQUEST)
 
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def start_character_project(request):
+    try:
+        char = request.user.current_char
+        if char is None:
+            return Response({'status': 'error','detail':'Player character not found'},HTTP_404_NOT_FOUND)
+        target_id =  int(request.query_params['target'])
+        project_type = request.query_params['project']
+        target = Character.objects.get(pk = target_id)
+        pid = PCUtils.start_char_project(request.user.current_char, target, project_type, request.data)
+        if pid is None:
+            return Response({'status': 'error','detail':'Cannot start this project for this character'},HTTP_200_OK)
+        return Response({'status': 'ok','data':{'project_id':pid}},HTTP_200_OK)
+    except KeyError as ke:
+        return Response({'status': 'error','detail':str(ke)},HTTP_400_BAD_REQUEST)
+    except ValueError as ve:
+        return Response({'status': 'error','detail':str(ve)},HTTP_400_BAD_REQUEST)
+    except Character.DoesNotExist:
+        return Response({'status': 'error','detail':'Target character not found'},HTTP_404_NOT_FOUND)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def start_cell_project(request):
+    try:
+        char = request.user.current_char
+        if char is None:
+            return Response({'status': 'error','detail':'Player character not found'},HTTP_404_NOT_FOUND)
+        x, y = int(request.query_params['x']), int(request.query_params['y'])
+        project_type = request.query_params['project']
+        pid = PCUtils.start_cell_project(request.user.current_char, x,y , project_type, request.data)
+        if pid is None:
+            return Response({'status': 'error','detail':'Cannot start this project for this cell'},HTTP_200_OK)
+        return Response({'status': 'ok','data':{'project_id':pid}},HTTP_200_OK)
+    except KeyError as ex:
+        return Response({'status': 'error','detail':str(ex)},HTTP_400_BAD_REQUEST)
+    except ValueError as ex:
+        return Response({'status': 'error','detail':str(ex)},HTTP_400_BAD_REQUEST)
+    except PCUtils.MissingData as ex:
+        return Response({'status': 'error','detail':str(ex)},HTTP_400_BAD_REQUEST)
+    except PCUtils.InvalidParameters as ex:
+        return Response({'status': 'error','detail':str(ex)},HTTP_200_OK)
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_projects_for_cell(request):
     try:
         x, y = request.query_params['x'], request.query_params['y']
-        data = get_cell_projects(request.user.current_char,x,y)
+        data = PCUtils.get_cell_projects(request.user.current_char,x,y)
         return Response({'status': 'ok', 'data':{'projects': data}})
     except KeyError as ke:
         return Response({'detail':str(ke)},HTTP_400_BAD_REQUEST)

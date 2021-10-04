@@ -4,11 +4,12 @@ from random import randint, choice, choices
 from .models import Character, Trait, CharTag, RenameRequest, Project
 from world.models import Pop, Cell
 from world.logic import get_active_world
-from world.constants import POP_RACE, MAIN_BIOME
+from world.constants import POP_RACE, MAIN_BIOME, CIVILIAN_CITIES
 from .namegens import hungarian
-from .constants import GENDER, CHAR_TAG_NAMES, EXP, PROJECTS, CHILDREN, HEALTH, BALANCE
+from .constants import GENDER, CHAR_TAG_NAMES, EXP, PROJECTS, CHILDREN, HEALTH, BALANCE, ALLOWED_EXP
 from .projects import ProjectProcessor, RelocateHelpers
 
+import json
 
 def add_racial_traits(char, mother = None, father = None):
     primary_traits  = Trait.objects.filter(name__contains = f'gene.{char.primary_race}.pri')
@@ -111,9 +112,24 @@ def character_birth(mother, father):
     child.location = mother.location
     child.add_parents(mother, father)
     add_racial_traits(child, mother, father)
+    add_bloodlines(child, mother, father)
 
+def add_bloodlines(child, mother, father):
+    pre_b = mother.bloodlines | father.bloodlines
+    bloodlines = pre_b.distinct()
+    for line in bloodlines:
+        child.tags.create(
+            name=CHAR_TAG_NAMES.BLOODLINE,
+            content = f'{line.id}'
+        )
 
 class PCUtils:
+    class MissingData (Exception):
+        pass
+
+    class InvalidParameters (Exception):
+        pass
+
     @classmethod
     def get_current_char(cls,player):
         try:
@@ -172,8 +188,277 @@ class PCUtils:
             rr.save()
         return char
 
+    @classmethod
+    def get_char_projects(cls,char, target):
+        if char.is_alive and target.is_alive:
+            result = []
+            char_can = get_available_projects(char)
+            if char.id == target.id:
+                result = [PROJECTS.TYPES.TEACH,PROJECTS.TYPES.STUDY]
+            else:
+                result = [PROJECTS.TYPES.MAKE_FRIEND]
+            return list(set(result) & set(char_can))
+        return []
+
+    @classmethod
+    def get_cell_projects(cls, char, x, y):
+        if char is None:
+            return []
+        if not char.is_alive:
+            return []
+        try:
+            cell = get_active_world()[x][y]
+            loc = char.location
+            dist = max(abs(loc['x']-cell.x), abs(loc['y']-cell.y))
+            char_can = get_available_projects(char)
+            result = []
+            if RelocateHelpers.can_relocate(char, cell):
+                result.append(PROJECTS.TYPES.RELOCATE)
+            if dist <= BALANCE.BASE_COMMUNICATION_RANGE:
+                population = cell.pop_set.count()
+                if population==0 and cell.main_biome!=MAIN_BIOME.WATER:
+                    result += [PROJECTS.TYPES.FORTIFY_CITY, PROJECTS.TYPES.BUILD_TILE]
+                elif population>0:
+                    result += [PROJECTS.TYPES.MAKE_FACTION,PROJECTS.TYPES.RENAME_TILE,
+                    PROJECTS.TYPES.IMPROVE_MANA,PROJECTS.TYPES.IMPROVE_FOOD, PROJECTS.TYPES.GATHER_SUPPORT]
 
 
+            return list(set(result) & set(char_can))
+        except Cell.DoesNotExist:
+            return []
+
+    @classmethod
+    def start_char_project(cls, char, target, project_type, data):
+        allowed_projects = PCUtils.get_char_projects(char, target)
+        if project_type not in allowed_projects:
+            raise cls.InvalidParameters(f"Your character ({char}) cannot start {project_type} project to target {target}.")
+
+        if project_type == PROJECTS.TYPES.TEACH:
+            project, _ = char.projects.get_or_create(
+                type = PROJECTS.TYPES.TEACH,
+                defaults = {
+                    'work_done':0,
+                    'work_required':0,
+                    'is_current':False
+                }
+            )
+            proj_args = dict()
+            proj_args['subject'] = data.get('subject', "")
+            if proj_args['subject'] not in ALLOWED_EXP:
+                raise cls.InvalidParameters(f"Subject {proj_args['subject']} is invalid. Valid subjects: {ALLOWED_EXP}.")
+            proj_args['pupils'] = data.get('pupils',[])
+            project.arguments_dict = proj_args
+            project.is_current = True
+            project.save()
+            return project.id
+        elif project_type == PROJECTS.TYPES.STUDY:
+            project, _ = char.projects.get_or_create(
+                type = PROJECTS.TYPES.STUDY,
+                defaults = {
+                    'work_done':0,
+                    'work_required':0,
+                    'is_current':False
+                }
+            )
+            proj_args = dict()
+            proj_args['subject'] = data.get('subject', "")
+            if proj_args['subject'] not in ALLOWED_EXP:
+                raise cls.InvalidParameters(f"Subject {proj_args['subject']} is invalid. Valid subjects: {ALLOWED_EXP}.")
+            proj_args['teacher'] = data.get('teacher',None)
+            project.arguments_dict = proj_args
+            project.is_current = True
+            project.save()
+            return project.id
+
+        elif project_type == PROJECTS.TYPES.MAKE_FRIEND:
+            if target in char.friends:
+                raise cls.InvalidParameters(f"Your character ({char}) and target ({target}) are already friends.") #если уже друзья, не надо начинать проект
+            proj_args = {'target': target.id}
+            project, created = char.projects.get_or_create(
+                type = PROJECTS.TYPES.MAKE_FRIEND,
+                arguments = json.dumps(proj_args),
+                defaults = {
+                    'work_done':0,
+                    'work_required':PROJECTS.WORK.BASE_NEED,
+                    'is_current':False
+                }
+            )
+            project.is_current = True
+            project.save()
+            return project.id
+    @classmethod
+    def start_cell_project(cls, char, x, y, project_type, data):
+        allowed_projects = PCUtils.get_cell_projects(char, x, y)
+
+        if project_type not in allowed_projects:
+            raise cls.InvalidParameters(f"Your character ({char}) cannot start {project_type} project to target ({x}x{y}).")
+
+        cell = get_active_world()[x][y]
+        proj_args = {'target': {'x':x,'y':y}}
+        if project_type == PROJECTS.TYPES.RELOCATE:
+            if not RelocateHelpers.can_relocate_to_coords(char,x,y):
+                raise cls.InvalidParameters(f"Your character ({char}) cannot relocate to target ({x}x{y}).")
+            project, created = char.projects.get_or_create( #get_or_create  чтобы обновлять существующий проект, вместо пложения нового
+                type = PROJECTS.TYPES.RELOCATE,
+                defaults = {
+                    'work_done':0,
+                    'work_required':-1,
+                    'is_current':False,
+                    'arguments':json.dumps(proj_args)
+                }
+            )
+            project.is_current = True
+            project.save()
+            return project.id
+
+        elif project_type == PROJECTS.TYPES.FORTIFY_CITY:
+            missing = []
+            pop_str = data.get('with_pop', None)
+            if pop_str is None:
+                missing.append('with_pop')
+            if len(missing)>0:
+                raise cls.MissingData(f"Request is missng POST parameters: {missing}.")
+
+            pop_id = int(pop_str)
+            player_cell = get_active_world()[char.location['x']][char.location['y']]
+            if not player_cell.pop_set.filter(pk = pop_id).exists():
+                raise cls.InvalidParameters(f"Your character ({char}) must be on the same cell with selected pop.")
+            project = char.projects.create(
+                type          = PROJECTS.TYPES.FORTIFY_CITY,
+                work_done     = 0,
+                work_required = PROJECTS.WORK.BASE_NEED,
+                is_current    = False
+
+            )
+            proj_args['with_pop'] = pop_id
+            proj_args['target'] = {'x':x,'y':y}
+            project.arguments_dict = proj_args
+            project.is_current = True
+            project.save()
+            return project.id
+
+        elif project_type == PROJECTS.TYPES.BUILD_TILE:
+            missing = []
+            pop_str = data.get('with_pop', None)
+            city_type = data.get('city_type', None)
+            if pop_str is None:
+                missing.append('with_pop')
+            if city_type is None:
+                missing.append('city_type')
+            if len(missing)>0:
+                raise cls.MissingData(f"Request is missng POST parameters: {missing}.")
+
+            if city_type not in CIVILIAN_CITIES:
+                raise cls.InvalidParameters(f"City type '{city_type}' cannot be built with this type of project")
+            pop_id = int(pop_str)
+            player_cell = get_active_world()[char.location['x']][char.location['y']]
+            if not player_cell.pop_set.filter(pk = pop_id).exists():
+                raise cls.InvalidParameters(f"Your character ({char}) must be on the same cell with selected pop.")
+            project = char.projects.create(
+                type          = PROJECTS.TYPES.BUILD_TILE,
+                work_done     = 0,
+                work_required = PROJECTS.WORK.BASE_NEED,
+                is_current    = False
+
+            )
+            proj_args['with_pop'] = pop_id
+            proj_args['target'] = {'x':x,'y':y}
+            project.arguments_dict = proj_args
+            project.is_current = True
+            project.save()
+            return project.id
+        elif project_type == PROJECTS.TYPES.MAKE_FACTION:
+            missing = []
+            pop_str = data.get('with_pop', None)
+            name = data.get('name', None)
+            if name is None:
+                missing.append('name')
+            if pop_str is None:
+                missing.append('with_pop')
+            if len(missing)>0:
+                raise cls.MissingData(f"Request is missng POST parameters: {missing}.")
+            pop_id = int(pop_str)
+            project = char.projects.create(
+                type          = PROJECTS.TYPES.MAKE_FACTION,
+                work_done     = 0,
+                work_required = PROJECTS.WORK.BASE_NEED,
+                is_current    = False
+
+            )
+            proj_args['with_pop'] = pop_id
+            proj_args['author'] = char.controller.id
+            proj_args['name'] = name
+            project.arguments_dict = proj_args
+            project.is_current = True
+            project.save()
+            return project.id
+        elif project_type == PROJECTS.TYPES.RENAME_TILE:
+            missing = []
+            name = data.get('name', None)
+            if name is None:
+                missing.append('name')
+            if len(missing)>0:
+                raise cls.MissingData(f"Request is missng POST parameters: {missing}.")
+            project = char.projects.create(
+                type          = PROJECTS.TYPES.RENAME_TILE,
+                work_done     = 0,
+                work_required = PROJECTS.WORK.BASE_NEED,
+                is_current    = False
+
+            )
+            proj_args['name'] = name
+            proj_args['author'] = char.controller.id
+            project.arguments_dict = proj_args
+            project.is_current = True
+            project.save()
+            return project.id
+        elif project_type == PROJECTS.TYPES.IMPROVE_MANA:
+            project = char.projects.create(
+                type          = PROJECTS.TYPES.IMPROVE_MANA,
+                work_done     = 0,
+                work_required = PROJECTS.WORK.BASE_NEED,
+                is_current    = False
+
+            )
+
+            project.is_current = True
+            project.save()
+            return project.id
+        elif project_type == PROJECTS.TYPES.IMPROVE_FOOD:
+            project = char.projects.create(
+                type          = PROJECTS.TYPES.IMPROVE_FOOD,
+                work_done     = 0,
+                work_required = PROJECTS.WORK.BASE_NEED,
+                is_current    = False
+
+            )
+
+            project.is_current = True
+            project.save()
+            return project.id
+        elif project_type == PROJECTS.TYPES.GATHER_SUPPORT:
+            missing = []
+            pop_str = data.get('with_pop', None)
+            if pop_str is None:
+                missing.append('with_pop')
+            if len(missing)>0:
+                raise cls.MissingData(f"Request is missng POST parameters: {missing}.")
+
+            pop_id = int(pop_str)
+            if not cell.pop_set.filter(pk = pop_id).exists():
+                raise cls.InvalidParameters(f"Selected pop must be on specified cell.")
+            project = char.projects.create(
+                type          = PROJECTS.TYPES.GATHER_SUPPORT,
+                work_done     = 0,
+                work_required = PROJECTS.WORK.BASE_NEED,
+                is_current    = False
+
+            )
+            proj_args['with_pop'] = pop_id
+            project.arguments_dict = proj_args
+            project.is_current = True
+            project.save()
+            return project.id
 
 def get_available_projects(char):
     if char is None:
@@ -191,7 +476,7 @@ def get_available_projects(char):
     elif not char.educated:
         return [PROJECTS.TYPES.MAKE_FRIEND, PROJECTS.TYPES.ADVENTURE, PROJECTS.TYPES.STUDY]
     else:
-        base = [PROJECTS.TYPES.MAKE_FRIEND, PROJECTS.TYPES.ADVENTURE, PROJECTS.TYPES.STUDY, PROJECTS.TYPES.RELOCATE]
+        base = [PROJECTS.TYPES.MAKE_FRIEND, PROJECTS.TYPES.ADVENTURE, PROJECTS.TYPES.STUDY, PROJECTS.TYPES.RELOCATE,PROJECTS.TYPES.TEACH]
         if char.traits.filter(name__startswith = 'exp.military').exists():
             base += PROJECTS.MILITARY
         if char.traits.filter(name__startswith = 'exp.politics').exists():
@@ -203,39 +488,11 @@ def get_available_projects(char):
         return base
 
 
-def get_cell_projects(char, x, y):
-    if char is None:
-        return []
-    if not char.is_alive:
-        return []
-    try:
-        cell = get_active_world().cell_set.get(x=x,y=y)
-        loc = char.location
-        dist = max(abs(loc['x']-cell.x), abs(loc['y']-cell.y))
-        char_can = get_available_projects(char)
-        result = []
-        if RelocateHelpers.can_relocate(char, cell):
-            result.append(PROJECTS.TYPES.RELOCATE)
-        if dist <= BALANCE.BASE_COMMUNICATION_RANGE:
-            population = cell.pop_set.count()
-            if population==0 and cell.main_biome!=MAIN_BIOME.WATER:
-                result += [PROJECTS.TYPES.FORTIFY_CITY, PROJECTS.TYPES.BUILD_TILE]
-            elif population>0:
-                result += [PROJECTS.TYPES.MAKE_FACTION,PROJECTS.TYPES.RENAME_TILE,
-                PROJECTS.TYPES.IMPROVE_MANA,PROJECTS.TYPES.IMPROVE_FOOD]
-
-
-        return list(set(result) & set(char_can))
-    except Cell.DoesNotExist:
-        return []
-
-def get_char_projects(char, target):
-    return []
 
 def roll_for_pregnancies():
     world_age = get_active_world().ticks_age
     min_age = world_age - CHILDREN.MIN_AGE
-    males = Character.objects.filter(gender = GENDER.FEMALE).exclude(birth_date__gt = min_age)
+    males = Character.objects.filter(gender = GENDER.MALE).exclude(birth_date__gt = min_age)
     for m in males:
         weights = []
         fs = list(get_available_females(m))
@@ -366,13 +623,6 @@ def process_all_projects():
     processor = ProjectProcessor()
     for p in pjs:
         processor.process(p)
-
-
-
-
-
-
-
 
 
 class PCProjectUtils:

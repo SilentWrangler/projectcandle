@@ -98,7 +98,18 @@ EXP_TO_TAG = {
     'economics':CHAR_TAG_NAMES.ECONOMIC_EXP,
     'science'  :CHAR_TAG_NAMES.SCIENCE_EXP,
     }
-
+ALLOWED_EXP_CHOICES =  [
+    ('politics', _("Политика")),
+    ('military',_("Военное дело")),
+    ('economics',_("Экономика")),
+    ('science',_("Наука"))
+    ]
+EXP_TO_HUMAN = {
+    'politics' :_("Политика"),
+    'military' :_("Военное дело"),
+    'economics':_("Экономика"),
+    'science'  :_("Наука")
+    }
 
 class UNITS:
     class SCALING(models.TextChoices):
@@ -147,6 +158,9 @@ class PROJECTS:
     MILITARY = [TYPES.CREATE_ARMY,TYPES.UPGRADE_ARMY,TYPES.DESTROY_ARMY,TYPES.FORTIFY_CITY]
     ECONOMICS = [TYPES.IMPROVE_MANA,TYPES.IMPROVE_FOOD,TYPES.BUILD_TILE]
     SCIENCE = []
+
+    TARGETS_CELL =  [TYPES.RELOCATE, TYPES.BUILD_TILE, TYPES.FORTIFY_CITY]
+    TARGETS_CHARACTER = [TYPES.MAKE_FRIEND]
 
     class WORK:
         BASE_NEED = 100

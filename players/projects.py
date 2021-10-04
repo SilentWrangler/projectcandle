@@ -3,8 +3,8 @@ from .constants import EXP, BALANCE
 from .models import Character, Player
 from world.logic import get_active_world
 from world.constants import MAIN_BIOME
-from world.models import Cell, CellRenameRequest
-import json
+from world.models import Cell
+
 
 class ProjectProcessor:
     processors = dict()
@@ -38,11 +38,14 @@ def calc_exp(char, subject, teacher_id = None , on_purpose = False):
     teacher_lvl_diff = 0
     if teacher_id is not None:
         try:
-            teacher = Character.objects.get(pk=teacher_id)
+            teacher = Character.objects.get(pk=int(teacher_id))
             if teacher.current_project is not None:
                 if teacher.current_project.name == p.TYPES.TEACH: #учитель должен учить
-                    kwargs = json.loads(teacher.current_project.arguments)
-                    if char.id in kwargs['pupils'] and subject == kwargs['subject']:
+                    kwargs = teacher.current_project.arguments_dict
+                    pupils = []
+                    if len(kwargs['pupils'])>0:
+                        pupils = [int(i) for i in kwargs['pupils'].split(',')]
+                    if char.id in pupils and subject == kwargs['subject']:
                         teacher_lvl_diff = max( teacher.level(subject) - lvl, 0)
         except Character.DoesNotExist:
             pass
@@ -91,26 +94,28 @@ def give_exp(char,subject,exp):
     if prev_exp>=lvlup and level<EXP.TRAIT_LVL_MAX:
         prev_exp-=lvlup
         char.level_up()
-    char.set_exp(prev_exp)
+    char.set_exp(subject,prev_exp)
 
 # study
 @processor(p.TYPES.STUDY)
 def process_study(project):
-    kwargs = json.loads(project.arguments)
+    kwargs = project.arguments_dict
     subject = kwargs.get('subject', None)
     teacher_id = kwargs.get('teacher', None)
+    if teacher_id=='':
+        teacher_id=None
     exp = calc_exp(project.character, subject, teacher_id, True)
-    give_exp(project.char, subject, exp)
+    give_exp(project.character, subject, exp)
 
 #--------------------------
 
 #teach
 @processor(p.TYPES.TEACH)
 def process_teach(project):
-    kwargs = json.loads(project.arguments)
+    kwargs = project.arguments_dict
     subject = kwargs.get('subject', None)
-    exp = calc_exp(project.char, subject)
-    give_exp(project.char, subject, exp)
+    exp = calc_exp(project.character, subject)
+    give_exp(project.character, subject, exp)
 #-------------------------------------
 
 #relocate
@@ -124,7 +129,7 @@ class RelocateHelpers:
         result = target.main_biome != MAIN_BIOME.WATER
         loc = char.location
         dist = max(abs(loc['x']-target.x), abs(loc['y']-target.y))
-        result = result and dist<RelocateHelpers.calculate_range(char)
+        result = result and dist<=RelocateHelpers.calculate_range(char)
         return result
 
     @classmethod
@@ -138,9 +143,10 @@ class RelocateHelpers:
 
 @processor(p.TYPES.RELOCATE)
 def process_relocate(project):
-    kwargs = json.loads(project.arguments)
+    kwargs = project.arguments_dict
     target = kwargs.get('target')
     project.character.location = target
+    project.character.start_next_project()
     project.delete()
 
 
@@ -148,24 +154,25 @@ def process_relocate(project):
 
 @processor(p.TYPES.ADVENTURE)
 def process_adventure(project):
-    kwargs = json.loads(project.arguments)
+    kwargs = project.arguments_dict
     exp = kwargs.get("exp")
     friends = kwargs.get('friends',[])
     enemies = kwargs.get('enemies',[])
     for subject in exp:
-        give_exp(project.char, subject, exp[subject])
+        give_exp(project.character, subject, exp[subject])
     for friend in friends:
         target = Character.objects.get(pk=friend)
-        if target in project.char.enemies:
-            project.char.end_enmity(target)
+        if target in project.character.enemies:
+            project.character.end_enmity(target)
         else:
-            project.char.add_friendship(target)
+            project.character.add_friendship(target)
     for enemy in enemies:
         target = Character.objects.get(pk=friend)
-        if target in project.char.friends:
-            project.char.remove_friendship(target)
+        if target in project.character.friends:
+            project.character.remove_friendship(target)
         else:
-            project.char.add_enmity(target)
+            project.character.add_enmity(target)
+    project.character.start_next_project()
     project.delete()
 
 #--------------------------------
@@ -173,36 +180,27 @@ def process_adventure(project):
 
 @processor(p.TYPES.MAKE_FRIEND)
 def process_make_friend(project):
-    kwargs = json.loads(project.arguments)
-    exp = calc_exp(project.char, 'politics')
-    give_exp(project.char, 'politics', exp)
-    done = calc_power(project.char, 'politics')
+
+    target = project.target
+    loc = project.character.location
+    loc_t = target.location
+    dist = max(abs(loc['x']-loc_t['x']), abs(loc['y']-loc_t['y']))
+    if dist>BALANCE.BASE_COMMUNICATION_RANGE:
+        project.is_current = False
+        project.save()
+        return #Если слишком далеко, отключить проект
+    exp = calc_exp(project.character, 'politics')
+    give_exp(project.character, 'politics', exp)
+    done = calc_power(project.character, 'politics')
     project.work_done += done
     if project.work_done < project.work_required:
         project.save()
     else:
-        target_id = kwargs.get('target')
-        target = Character.objects.get(pk=target_id)
-        project.char.end_enmity(target)
-        project.char.add_friendship(target)
+        project.character.end_enmity(target)
+        project.character.add_friendship(target)
+        project.character.start_next_project()
         project.delete()
 
-@processor(p.TYPES.RENAME_TILE)
-def process_rename(project):
-    kwargs = json.loads(project.arguments)
-    exp = calc_exp(project.char, 'politics')
-    give_exp(project.char, 'politics', exp)
-    done = calc_power(project.char, 'politics')
-    project.work_done += done
-    if project.work_done < project.work_required:
-        project.save()
-    else:
-        target_id = kwargs.get('target')
-        name = kwargs.get('name')
-        author_id = kwargs.get('author')
-        target = Cell.objects.get(pk=target_id)
-        author = Player.objects.get(pk = author_id)
-        rr = CellRenameRequest(cell = target, player = author, name = name)
-        rr.save()
+
 
 

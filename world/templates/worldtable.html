@@ -9,6 +9,7 @@
 {% if PC %}
 {{ PC|json_script:"PC" }}
 {% endif %}
+<input type="hidden" id="auth" value="{{token}}">
 <!-- TODO: make canvas draggable instead of huge -->
 <p></p>
 <div>
@@ -20,7 +21,9 @@
             <button type="button" id="scale_plus" class='map-scale-button fancyplus'></button>
 
         </div>
+        {% if current_char %}
         <a id="PCloc" href = "#">Найти персонажа</a>
+        {% endif %}
         <div class="worldmap-map-container" id="map-container">
             <div class = "cellinfo" id="celldata">
                 <p>

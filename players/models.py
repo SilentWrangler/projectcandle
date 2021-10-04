@@ -1,5 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+from django.urls import reverse_lazy
+from django.utils.safestring import mark_safe
 # Create your models here.
 
 import json
@@ -8,7 +10,7 @@ from .managers import CustomUserManager
 from world.constants import POP_RACE
 from world.strings import month_names
 from world.logic import get_active_world
-from .constants import GENDER, UNIQUE_TAGS, CHAR_TAG_NAMES, PROJECTS, EXP_TO_TAG
+from .constants import GENDER, UNIQUE_TAGS, CHAR_TAG_NAMES, PROJECTS, EXP_TO_TAG, EXP_TO_HUMAN
 
 
 from django.utils.text import format_lazy
@@ -84,6 +86,20 @@ class Character(models.Model):
         born = pgettext_lazy(self.gender,"родился").capitalize())
 
     @property
+    def death_human_readable(self):
+        if self.death is None:
+            return None
+        if self.death>=0:
+            months = (self.death % 12)
+            years = self.death // 12
+        else:
+            months = 11 - (self.death%12)
+            years = self.death//12
+        return format_lazy( '{born}: {years}, {month}',
+        years=years, month = month_names[months],
+        born = pgettext_lazy(self.gender,"умер").capitalize())
+
+    @property
     def race_human_readable(self):
         return pgettext_lazy(f'char-{self.gender}-{self.secondary_race}',self.primary_race)
 
@@ -134,6 +150,11 @@ class Character(models.Model):
             return self.projects.get(is_current=True)
         except Project.DoesNotExist:
             return None
+
+    def start_next_project(self):
+        first = self.projects.exclude(is_current=True).first()
+        first.is_current = True
+        first.save();
 
     @property
     def educated(self):
@@ -280,16 +301,16 @@ class Character(models.Model):
     def end_enmity(self, other): # :)
         try:
             t = other.tags.get(
-                tags__content = f'{self.id}',
-                tags__name = CHAR_TAG_NAMES.ENEMY_OF
+                content = f'{self.id}',
+                name = CHAR_TAG_NAMES.ENEMY_OF
             )
             t.delete()
         except CharTag.DoesNotExist:
             pass
         try:
             t = self.tags.get(
-            tags__content = f'{other.id}',
-            tags__name = CHAR_TAG_NAMES.ENEMY_OF
+            content = f'{other.id}',
+            name = CHAR_TAG_NAMES.ENEMY_OF
             )
             t.delete()
         except CharTag.DoesNotExist:
@@ -336,7 +357,7 @@ class Character(models.Model):
             return None
 
     @pregnancy.setter
-    def set_pregnancy(self, value):
+    def pregnancy(self, value):
         try:
             todel = self.tags.get(
                 name = CHAR_TAG_NAMES.PREGNANCY
@@ -468,6 +489,7 @@ class Project(models.Model):
     work_done = models.IntegerField()
     is_current = models.BooleanField()
     arguments = models.CharField(max_length = 300)
+    priority = models.IntegerField(default = 0)
     def save(self, *args, **kwargs):
         if self.is_current:
             try:
@@ -479,7 +501,56 @@ class Project(models.Model):
                 pass
         super(Project, self).save(*args, **kwargs)
 
+    @property
+    def target(self):
+        kwargs = json.loads(self.arguments)
+        target =  kwargs.get('target', None)
+        if target is None:
+            return None
+        if self.type in PROJECTS.TARGETS_CELL:
+            return get_active_world()[int(target['x'])][int(target['y'])]
+        if self.type in PROJECTS.TARGETS_CHARACTER:
+            try:
+                target = int(target)
+                target = Character.objects.get(pk=target)
+                return target
+            except ValueError:
+                return None
+            except Character.DoesNotExist:
+                return None
 
+    @property
+    def percent_ready(self):
+        if self.work_required==0:
+            return 'Бесконечный проект'
+        elif self.work_required==-1:
+            return 'Мгновенный прoект'
+        else:
+            return f'{(self.work_done/self.work_required):.0%}'
 
+    @property
+    def human_readable(self):
+        kwargs = json.loads(self.arguments)
+        if self.type == PROJECTS.TYPES.RELOCATE:
+            x, y = self.target.x, self.target.y
+            return f'{self.get_type_display()} ({x}x{y})'
+        elif self.type == PROJECTS.TYPES.STUDY or self.type == PROJECTS.TYPES.TEACH:
+            subject = EXP_TO_HUMAN[ kwargs['subject'] ]
+            return f'{self.get_type_display()} ({subject})'
+        elif self.type == PROJECTS.TYPES.MAKE_FRIEND:
+            return mark_safe(f"{self.get_type_display()} (<a href={reverse_lazy('char_profile', args = [self.target.id])}>{self.target.name}</a>)")
+        return f'{self.get_type_display()} ({kwargs})'
 
+    @property
+    def arguments_dict(self):
+        return json.loads(self.arguments)
+
+    @arguments_dict.setter
+    def arguments_dict(self, value):
+        if not isinstance(value, dict):
+            raise ValueError('arguments_dict must be a dict')
+        self.arguments = json.dumps(value)
+
+    class Meta:
+        ordering = ["-is_current","priority"]
 

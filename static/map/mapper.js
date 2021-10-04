@@ -7,6 +7,7 @@ const min_scale = 0.5; //0.025 for big
 const max_scale = 4; // 0.5 for big
 const scale_step = 0.0005;
 
+const authtoken = document.getElementById('auth').value;
 
 var ImageIndexes = {};
 
@@ -92,7 +93,8 @@ Aliases.projects = {
     'RENAME_TILE': gettext('Переименовать город'),
     'FACT_CREATE': gettext('Создать фракцию'),
     'CELL_MANA': gettext('Повысить доходы маны'),
-    'CELL_FOOD': gettext('Повысить сбор пищи')
+    'CELL_FOOD': gettext('Повысить сбор пищи'),
+    'POP_SUPPORT': gettext('Заполучить народную поддрежку')
 
 
 }
@@ -113,6 +115,20 @@ function httpGetAsync(theUrl, callback)
     }
     xmlHttp.open("GET", theUrl, true); // true for asynchronous
     xmlHttp.send(null);
+}
+
+
+function httpPostAsync(theUrl, callback, data = null)
+{
+    var xmlHttp = new XMLHttpRequest();
+
+    xmlHttp.onreadystatechange = function() {
+        if (xmlHttp.readyState == 4 && xmlHttp.status == 200)
+            callback(xmlHttp.responseText);
+    }
+    xmlHttp.open("POST", theUrl, true); // true for asynchronous
+    xmlHttp.setRequestHeader('Authorization', `Token ${authtoken}`)
+    xmlHttp.send(data);
 }
 //
 // Asset loader
@@ -277,12 +293,14 @@ MapPainter.tick = function (elapsed) {
 
 
 locatePC = function(){
-    camera = MapPainter.camera;
-    loc = MapPainter.PC.location;
-    camloc = camera.cellToScreen(loc.x,loc.y)
-    camera.x = camloc[0] - camera.width/2;
-    camera.y = camloc[1] - camera.height/2;
-    MapPainter.render();
+    if (MapPainter.PC){
+        camera = MapPainter.camera;
+        loc = MapPainter.PC.location;
+        camloc = camera.cellToScreen(loc.x,loc.y)
+        camera.x = camloc[0] - camera.width/2;
+        camera.y = camloc[1] - camera.height/2;
+        MapPainter.render();
+    }
 }
 
 
@@ -295,8 +313,10 @@ MapPainter.init = function(){
     this.ctx = canvas.getContext('2d');
     this.dimensions = {"x":canvas.width,"y":canvas.height};
     var worldJSON = document.getElementById('world').innerHTML;
-    var PC_JSON  = document.getElementById('PC').innerHTML;
-    this.PC = JSON.parse(PC_JSON);
+    var PC_JSON  = document.getElementById('PC');
+    if (PC_JSON!=null){
+        this.PC = JSON.parse(PC_JSON.innerHTML);
+    }
     this.cell_data = JSON.parse(worldJSON);
     var map = {'cols':this.cell_data.width,'rows':this.cell_data.height,'tsize':tile_size}
     this.camera = new Camera(map, canvas.width, canvas.height);
@@ -307,8 +327,10 @@ MapPainter.init = function(){
     canvas.addEventListener("mousedown",canvasMouseDownHandler);
     canvas.addEventListener("mouseup",canvasMouseUpHandler);
     canvas.addEventListener("mousemove",canvasMouseMoveHandler);
-    canvas.addEventListener("contextmenu",canvasContextHandler);
-    locatePC();
+    if (this.PC){
+        canvas.addEventListener("contextmenu",canvasContextHandler);
+        locatePC();
+    }
 
 }
 
@@ -385,8 +407,12 @@ MapPainter.render = function(){
 
             var x = (c - startCol) * (tile_size*scale)+ offsetX;
             var y = (r - startRow) * (tile_size*scale)+ offsetY;
-            var loc = MapPainter.PC.location;
-            var draw_player = c==loc.x && r == loc.y;
+            var draw_player = false;
+            if (MapPainter.PC){
+                var loc = MapPainter.PC.location;
+                draw_player = c==loc.x && r == loc.y;
+            }
+
             renderCell(cell,x,y, draw_player);
 
         }
@@ -407,7 +433,10 @@ MapPainter.load = function(){
 window.onload = function (){
     var context = document.getElementById('map').getContext('2d');
     MapPainter.run(context);
-    document.getElementById('PCloc').onclick = (e) =>{locatePC()}
+    pcloc = document.getElementById('PCloc');
+    if (pcloc){
+        pcloc.onclick = (e) =>{locatePC()}
+    }
 }
 
 window.onresize = function(){
@@ -531,12 +560,16 @@ display_celldata = function(response){
              }
          }
         cell_info_pops.innerHTML += "</table>";
-        cell_info_chars = document.getElementById('celldata-info-chars');
-        cell_info_chars.innerHTML = '';
-        cell.characters.forEach((char)=>{
-            cell_info_chars.innerHTML+=`<tr><a href="/characters/${char.id}">${char.name}</a></tr>`
-        });
+
     }
+    cell_info_chars = document.getElementById('celldata-info-chars');
+
+    cell_info_chars.innerHTML = '';
+
+
+    cell.characters.forEach((char)=>{
+        cell_info_chars.innerHTML+=`<tr><a href="/characters/${char.id}">${char.name}</a></tr>`
+    });
 
 
 }
@@ -652,19 +685,24 @@ load_options = function(response){
     list = menu.firstElementChild;
 
     list.innerHTML = "";
-    idx = 0
+    idx = 0;
     if (options.length>0){
         options.forEach((i) =>{
             list.innerHTML += `<li><a id ="map-context-option${idx}"href="#">${Aliases.projects[i]}</a></li>`
-            item = document.getElementById(`map-context-option${idx}`);
+            idx++;
+
+        })
+        idx = 0;
+        options.forEach((i) =>{
+            var item = document.getElementById(`map-context-option${idx}`);
             switch (i){
                 case 'RELOCATE':
-                    item.onclick =option_relocate;
+                    item.addEventListener("click",option_relocate);
                     break;
                 default:
-                    item.onclick = default_option;
+                    item.addEventListener("click",default_option);
             }
-
+            idx++;
         })
     }
     else{
@@ -677,8 +715,8 @@ load_options = function(response){
 option_relocate = function(event){
 
     if (coords){
-        var url = `/projects/api/cellprojects?x=${coords[0]}&y=${coords[1]}`
-        httpGetAsync(url,relocate_response);
+        var url = `/projects/api/start_cell_project?x=${coords[0]}&y=${coords[1]}&project=RELOCATE`
+        httpPostAsync(url,relocate_response);
     }
 }
 

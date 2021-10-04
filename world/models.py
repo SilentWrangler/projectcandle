@@ -39,10 +39,20 @@ class World(models.Model):
         super(World, self).save(*args, **kwargs)
     @property
     def ticks_human_readable(self):
-        months = 11 - (self.ticks_age%12)
+        months = 11 - (self.ticks_age%12) if self.ticks_age <0 else self.ticks_age%12
         years = self.ticks_age//12
         return format_lazy( '{years}, {month}',
         years=years, month = month_names[months])
+
+    def __getitem__(self, value):
+        class Column:
+            def __init__(column, x):
+                column.queryset = self.cell_set.filter(x=x)
+
+            def __getitem__(column, y):
+                return column.queryset.get(y=y)
+
+        return Column(value)
 
 
 class Cell(models.Model):
@@ -101,16 +111,61 @@ class Pop(models.Model):
         tag, created = self.tags.get_or_create(name = POP_TAG_NAMES.GROWTH, defaults = {'content': '0'})
         return int(tag.content)
     @growth.setter
-    def set_growth(self, value):
+    def growth(self, value):
         assert isinstance(value, int)
         tag, created = self.tags.get_or_create(name = POP_TAG_NAMES.GROWTH, defaults = {'content': '0'})
         tag.content = str(value)
         tag.save()
 
+    @property
+    def faction(self):
+        tag = None
+        try:
+            tag = self.tags.get(name = POP_TAG_NAMES.FACTION)
+            result = Faction.objects.get(pk=int(tag.content))
+            return result
+        except PopTag.DoesNotExist:
+            return None
+        except Faction.DoesNotexist:
+           tag.delete()
+           return None
+
+    @faction.setter
+    def faction(self, value):
+        if value is None:
+            try:
+                tag = self.tags.get(name = POP_TAG_NAMES.FACTION)
+                tag.delete()
+            except PopTag.DoesNotExist:
+                pass
+        else:
+            assert isinstance(value, Faction)
+            tag, created = self.tags.get_or_create(name = POP_TAG_NAMES.GROWTH)
+            tag.content = f'{value.id}'
+            tag.save()
+
 
 
 class Faction(models.Model):
     name = models.CharField(max_length = 100, blank = True)
+
+    @property
+    def pops(self):
+        return Pop.objects.filter(
+            tags__name = POP_TAG_NAMES.FACTION,
+            tags__content = f'{self.id}'
+        )
+
+class FactionMember(models.Model):
+    faction = models.ForeignKey('Faction', on_delete=models.CASCADE, related_name = "members")
+    character = models.ForeignKey('players.Character', on_delete=models.CASCADE, related_name = "factions")
+    is_leader = models.BooleanField()
+    can_build = models.BooleanField()
+    can_use_army = models.BooleanField()
+    can_recruit = models.BooleanField()
+    title_name = models.CharField(max_length = 100, blank = True)
+
+
 
 @receiver(models.signals.post_save, sender=Faction)
 def default_name(sender, instance, created, **kwargs):
