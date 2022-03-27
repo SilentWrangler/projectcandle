@@ -4,6 +4,8 @@ from django.dispatch import receiver
 from .constants import RESOURCE_TYPE, MAIN_BIOME, BIOME_MOD, CITY_TYPE, POP_RACE, UNIQUE_TAGS, CELL_TAG_NAMES, POP_TAG_NAMES
 from .strings import month_names
 
+
+
 from django.utils.text import format_lazy
 # Create your models here.
 
@@ -91,6 +93,16 @@ class Cell(models.Model):
         tag.content = value
         tag.save()
 
+
+    @property
+    def factions(self):
+        faction_tags = PopTag.objects.filter(
+            pop__location = self,
+            name = POP_TAG_NAMES.FACTION
+        )
+        faction_ids = [int(tag.content) for tag in faction_tags]
+        return Faction.objects.filter(id__in = faction_ids)
+
     def __repr__(self):
         return f'<Cell ({self.x};{self.y}) world_id={self.world.id}>'
 
@@ -143,6 +155,20 @@ class Pop(models.Model):
             tag, created = self.tags.get_or_create(name = POP_TAG_NAMES.GROWTH)
             tag.content = f'{value.id}'
             tag.save()
+
+    @property
+    def supported_character(self):
+        from players.models import Character
+        tag = None
+        try:
+            tag = self.tags.get(name = POP_TAG_NAMES.FACTION)
+            result = Character.objects.get(pk=int(tag.content))
+            return result
+        except PopTag.DoesNotExist:
+            return None
+        except Character.DoesNotexist:
+           tag.delete()
+           return None
 
 
 

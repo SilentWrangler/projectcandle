@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-03-15 10:42+0300\n"
+"POT-Creation-Date: 2021-10-04 09:20+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -19,6 +19,100 @@ msgstr ""
 "Plural-Forms: nplurals=4; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
 "%10<=4 && (n%100<12 || n%100>14) ? 1 : n%10==0 || (n%10>=5 && n%10<=9) || (n"
 "%100>=11 && n%100<=14)? 2 : 3);\n"
+
+#: forum/templates/forum/category_list.html:5 templates/base.html:50
+msgid "Форум"
+msgstr ""
+
+#: forum/templates/forum/category_list.html:12 forum/templates/showcat.html:19
+msgid "Добавить пост"
+msgstr ""
+
+#: forum/templates/showcat.html:13
+msgid "Посты отстутсвуют"
+msgstr ""
+
+#: players/constants.py:102 players/constants.py:108
+msgid "Политика"
+msgstr ""
+
+#: players/constants.py:103 players/constants.py:109
+msgid "Военное дело"
+msgstr ""
+
+#: players/constants.py:104 players/constants.py:110
+msgid "Экономика"
+msgstr ""
+
+#: players/constants.py:105 players/constants.py:111
+msgid "Наука"
+msgstr ""
+
+#: players/constants.py:134
+msgid "Учиться"
+msgstr ""
+
+#: players/constants.py:135
+msgid "Обучать"
+msgstr ""
+
+#: players/constants.py:136
+msgid "Переехать"
+msgstr ""
+
+#: players/constants.py:137
+msgid "Отправиться в приключение"
+msgstr ""
+
+#: players/constants.py:140
+msgid "Завести друга"
+msgstr ""
+
+#: players/constants.py:141
+msgid "Создать фракцию"
+msgstr ""
+
+#: players/constants.py:142
+msgid "Переименовать город"
+msgstr ""
+
+#: players/constants.py:143
+msgid "Заполучить народную поддрежку"
+msgstr ""
+
+#: players/constants.py:146
+msgid "Создать армию"
+msgstr ""
+
+#: players/constants.py:147
+msgid "Усилить армию"
+msgstr ""
+
+#: players/constants.py:148
+msgid "Уничтожить армию"
+msgstr ""
+
+#: players/constants.py:149
+msgid "Построить фортификации"
+msgstr ""
+
+#: players/constants.py:152
+msgid "Повысить доходы маны"
+msgstr ""
+
+#: players/constants.py:153
+msgid "Повысить сбор пищи"
+msgstr ""
+
+#: players/constants.py:154
+#, fuzzy
+#| msgid "Сбросить токен"
+msgid "Построить поселение"
+msgstr "Сбросить токен"
+
+#: players/forms.py:49
+msgid "Pick Character"
+msgstr ""
 
 #: players/managers.py:15
 msgid "The Email must be set"
@@ -42,6 +136,16 @@ msgctxt "f"
 msgid "родился"
 msgstr "родилась"
 
+#: players/strings.py:11
+msgctxt "m"
+msgid "умер"
+msgstr "умер"
+
+#: players/strings.py:12
+msgctxt "f"
+msgid "умер"
+msgstr "умерла"
+
 #: players/templates/account_activation_email.html:2
 #, python-format
 msgid ""
@@ -64,8 +168,55 @@ msgid ""
 "почту."
 msgstr ""
 
-#: players/templates/char_template.html:11
+#: players/templates/char_maker_template.html:31 templates/base.html:32
+msgid "Создать персонажа"
+msgstr ""
+
+#: players/templates/char_project_template.html:25
+#: players/templates/char_template.html:78
+msgid "Проекты"
+msgstr ""
+
+#: players/templates/char_project_template.html:27
+#: players/templates/char_template.html:80
+msgid "Текущий проект"
+msgstr ""
+
+#: players/templates/char_project_template.html:36
+#: players/templates/char_template.html:89
+msgid "Вернуться к проекту"
+msgstr ""
+
+#: players/templates/char_template.html:12
+msgid "Отношения"
+msgstr ""
+
+#: players/templates/char_template.html:13
+msgid "Друзья"
+msgstr ""
+
+#: players/templates/char_template.html:22
+msgid "Враги"
+msgstr ""
+
+#: players/templates/char_template.html:31
+msgid "Родители"
+msgstr ""
+
+#: players/templates/char_template.html:40
+msgid "Дети"
+msgstr ""
+
+#: players/templates/char_template.html:65
+msgid "Династии"
+msgstr ""
+
+#: players/templates/char_template.html:99
 msgid "Черты"
+msgstr ""
+
+#: players/templates/char_template.html:112
+msgid "Запросить переименование"
 msgstr ""
 
 #: players/templates/custom_interface.html:5
@@ -82,6 +233,10 @@ msgstr ""
 msgid "Цвет текста"
 msgstr ""
 
+#: players/templates/pick_new_char.html:12 templates/base.html:31
+msgid "Выбрать персонажа"
+msgstr ""
+
 #: players/templates/profile.html:8
 msgid "Этот токен используется для авторизации сторонних приложений."
 msgstr "Этот токен используется для авторизации сторонних приложений."
@@ -94,39 +249,55 @@ msgstr "Приложения должны запрашивать этот ток
 msgid "Сбросить токен"
 msgstr "Сбросить токен"
 
-#: templates/base.html:21
+#: players/templates/profile.html:19 templates/players/player_detail.html:10
+msgid "Текущий персонаж"
+msgstr ""
+
+#: players/templates/profile.html:31 templates/players/player_detail.html:21
+msgid "Персонажи династии"
+msgstr ""
+
+#: players/views.py:200
+msgid "Хорошая попытка, но нет."
+msgstr ""
+
+#: templates/base.html:22
 msgid "Меню"
 msgstr "Меню"
 
-#: templates/base.html:25
-msgid "Сменить персонажа"
-msgstr ""
-
 #: templates/base.html:27
-msgid "Настройка интерфейса"
+msgid "Сменить персонажа (текущий станет NPC!)"
 msgstr ""
 
-#: templates/base.html:32
-msgid "Лор"
+#: templates/base.html:28
+msgid "Создать персонажа (текущий станет NPC!)"
 msgstr ""
 
 #: templates/base.html:37
-msgid "Игра"
-msgstr ""
-
-#: templates/base.html:44
-msgid "Выйти"
-msgstr ""
-
-#: templates/base.html:52
 msgid "Администрирование"
 msgstr ""
 
-#: templates/base.html:59 templates/signup.html:19
+#: templates/base.html:39
+msgid "Настройка интерфейса"
+msgstr ""
+
+#: templates/base.html:45
+msgid "Лор"
+msgstr ""
+
+#: templates/base.html:55
+msgid "Игра"
+msgstr ""
+
+#: templates/base.html:62
+msgid "Выйти"
+msgstr ""
+
+#: templates/base.html:71 templates/signup.html:19
 msgid "Зарегистрироваться"
 msgstr ""
 
-#: templates/base.html:62 templates/registration/login.html:19
+#: templates/base.html:74 templates/registration/login.html:19
 msgid "Войти"
 msgstr ""
 
@@ -136,6 +307,18 @@ msgstr ""
 
 #: templates/logout.html:5
 msgid "Войти снова?"
+msgstr ""
+
+#: templates/players/renamerequest_detail.html:5
+msgid "Запрос от: "
+msgstr ""
+
+#: templates/players/renamerequest_list.html:5
+msgid "Запросы на переименование"
+msgstr ""
+
+#: templates/players/renamerequest_list.html:13
+msgid "Запросы на переименование отсутствуют"
 msgstr ""
 
 #: templates/registration/login.html:4

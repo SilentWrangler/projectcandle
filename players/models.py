@@ -10,6 +10,7 @@ from .managers import CustomUserManager
 from world.constants import POP_RACE
 from world.strings import month_names
 from world.logic import get_active_world
+from world.models import Faction, Pop
 from .constants import GENDER, UNIQUE_TAGS, CHAR_TAG_NAMES, PROJECTS, EXP_TO_TAG, EXP_TO_HUMAN
 
 
@@ -152,9 +153,12 @@ class Character(models.Model):
             return None
 
     def start_next_project(self):
-        first = self.projects.exclude(is_current=True).first()
-        first.is_current = True
-        first.save();
+        try:
+            first = self.projects.exclude(is_current=True).first()
+            first.is_current = True
+            first.save();
+        except Project.DoesNotExist:
+            pass
 
     @property
     def educated(self):
@@ -518,7 +522,25 @@ class Project(models.Model):
                 return None
             except Character.DoesNotExist:
                 return None
-
+        if self.type in PROJECTS.TARGETS_VARIABLE:
+            try:
+                target_type = kwargs.get('target_type', None)
+                if target_type==PROJECTS.TARGET_TYPES.FACTION:
+                    target = int(target)
+                    target = Faction.objects.get(pk=target)
+                    return target
+                if target_type==PROJECTS.TARGET_TYPES.CHARACTER:
+                    target = int(target)
+                    target = Character.objects.get(pk=target)
+                    return target
+                if target_type == PROJECTS.TARGET_TYPES.POP:
+                    target = int(target)
+                    target = Pop.objects.get(pk=target)
+                    return target
+            except ValueError:
+                return None
+            except (Character.DoesNotExist,  Faction.DoesNotExist, Pop.DoesNotExist):
+                return None
     @property
     def percent_ready(self):
         if self.work_required==0:

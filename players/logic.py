@@ -1,8 +1,8 @@
 from background_task import background
 from django.core.mail import send_mail
-from random import randint, choice, choices
+from random import randint, choice, choices, sample
 from .models import Character, Trait, CharTag, RenameRequest, Project
-from world.models import Pop, Cell
+from world.models import Pop, Cell, Faction
 from world.logic import get_active_world
 from world.constants import POP_RACE, MAIN_BIOME, CIVILIAN_CITIES
 from .namegens import hungarian
@@ -312,13 +312,9 @@ class PCUtils:
             return project.id
 
         elif project_type == PROJECTS.TYPES.FORTIFY_CITY:
-            missing = []
+            required = ['with_pop']
+            cls._check_missing(required, data)
             pop_str = data.get('with_pop', None)
-            if pop_str is None:
-                missing.append('with_pop')
-            if len(missing)>0:
-                raise cls.MissingData(f"Request is missng POST parameters: {missing}.")
-
             pop_id = int(pop_str)
             player_cell = get_active_world()[char.location['x']][char.location['y']]
             if not player_cell.pop_set.filter(pk = pop_id).exists():
@@ -338,22 +334,21 @@ class PCUtils:
             return project.id
 
         elif project_type == PROJECTS.TYPES.BUILD_TILE:
-            missing = []
+            required = ['with_pop', 'city_type']
+            cls._check_missing(required, data)
+
             pop_str = data.get('with_pop', None)
             city_type = data.get('city_type', None)
-            if pop_str is None:
-                missing.append('with_pop')
-            if city_type is None:
-                missing.append('city_type')
-            if len(missing)>0:
-                raise cls.MissingData(f"Request is missng POST parameters: {missing}.")
 
             if city_type not in CIVILIAN_CITIES:
                 raise cls.InvalidParameters(f"City type '{city_type}' cannot be built with this type of project")
+
             pop_id = int(pop_str)
+
             player_cell = get_active_world()[char.location['x']][char.location['y']]
             if not player_cell.pop_set.filter(pk = pop_id).exists():
                 raise cls.InvalidParameters(f"Your character ({char}) must be on the same cell with selected pop.")
+
             project = char.projects.create(
                 type          = PROJECTS.TYPES.BUILD_TILE,
                 work_done     = 0,
@@ -368,16 +363,13 @@ class PCUtils:
             project.save()
             return project.id
         elif project_type == PROJECTS.TYPES.MAKE_FACTION:
-            missing = []
+            required = ['with_pop','name']
+            cls._check_missing(required, data)
+
             pop_str = data.get('with_pop', None)
             name = data.get('name', None)
-            if name is None:
-                missing.append('name')
-            if pop_str is None:
-                missing.append('with_pop')
-            if len(missing)>0:
-                raise cls.MissingData(f"Request is missng POST parameters: {missing}.")
             pop_id = int(pop_str)
+
             project = char.projects.create(
                 type          = PROJECTS.TYPES.MAKE_FACTION,
                 work_done     = 0,
@@ -393,12 +385,11 @@ class PCUtils:
             project.save()
             return project.id
         elif project_type == PROJECTS.TYPES.RENAME_TILE:
-            missing = []
+            required = ['name']
+            cls._check_missing(required, data)
+
             name = data.get('name', None)
-            if name is None:
-                missing.append('name')
-            if len(missing)>0:
-                raise cls.MissingData(f"Request is missng POST parameters: {missing}.")
+
             project = char.projects.create(
                 type          = PROJECTS.TYPES.RENAME_TILE,
                 work_done     = 0,
@@ -439,14 +430,50 @@ class PCUtils:
         elif project_type == PROJECTS.TYPES.GATHER_SUPPORT:
             missing = []
             pop_str = data.get('with_pop', None)
+            target_type = data.get('target_type', None)
+            target = data.get('target',None)
+            allowed_types = [PROJECTS.TARGET_TYPES.CHARACTER,PROJECTS.TARGET_TYPES.FACTION]
             if pop_str is None:
                 missing.append('with_pop')
+            if target_type is None:
+                missing.append('target_type')
+            if target is None:
+                missing.append('target')
             if len(missing)>0:
                 raise cls.MissingData(f"Request is missng POST parameters: {missing}.")
 
             pop_id = int(pop_str)
             if not cell.pop_set.filter(pk = pop_id).exists():
                 raise cls.InvalidParameters(f"Selected pop must be on specified cell.")
+
+            if target_type not in allowed_types:
+                raise cls.InvalidParameters(f"This projest does not allow target type '{target_type}'. Allowed types: {allowed_types}")
+
+            if target_type==PROJECTS.TARGET_TYPES.CHARACTER:
+                try:
+                    target_id = int(target)
+                    proj_args['target'] = target_id
+                    target_char = Character.objects.get(id = target_id)
+                    dist = max(abs(x-target_char.location['x']), abs(y-target_char.location['y']))
+                    if not target_char.is_alive:
+                        raise cls.InvalidParameters(f"Character {target_char} is dead.")
+                    if dist>BALANCE.BASE_COMMUNICATION_RANGE:
+                        raise cls.InvalidParameters(f"Character {target_char} is too far.")
+                except Character.DoesNotexist:
+                    raise cls.InvalidParameters(f"Character {target_id} does not exist")
+            elif target_type==PROJECTS.TARGET_TYPES.FACTION:
+                try:
+                    target_id = int(target)
+                    proj_args['target'] = target_id
+                    faction = Faction.objects.get(id = target_id)
+                    member = faction.members.filter(character = char)
+                    if not member:
+                        raise cls.InvalidParameters(f"Your character {char} is not a member of {faction}.")
+                    if not member.first().can_recruit:
+                        raise cls.InvalidParameters(f"Your character {char} cannot recruit for {faction}.")
+                except Faction.DoesNotExist:
+                    raise cls.InvalidParameters(f"Faction {target_id} does not exist")
+
             project = char.projects.create(
                 type          = PROJECTS.TYPES.GATHER_SUPPORT,
                 work_done     = 0,
@@ -459,6 +486,25 @@ class PCUtils:
             project.is_current = True
             project.save()
             return project.id
+
+    @classmethod
+    def save_trait_in_bloodline(cls,player, trait):
+        if player.bloodline_traits.count>=BALANCE.MAX_BLOOD_TRAITS:
+            raise cls.InvalidParameters(f"You already reached maximum amount of traits, remove one")
+        player.bloodline_traits.add(trait)
+
+    @classmethod
+    def remove_trait_in_bloodline(cls,player, trait):
+        player.bloodline_traits.remove(trait)
+
+    @classmethod
+    def _check_missing(cls, needed, data):
+        missing = []
+        for arg in needed:
+            if data.get(arg, None) is None:
+                missing.append(arg)
+        if len(missing)>0:
+            raise cls.MissingData(f"Request is missng POST parameters: {missing}.")
 
 def get_available_projects(char):
     if char is None:
@@ -493,7 +539,8 @@ def roll_for_pregnancies():
     world_age = get_active_world().ticks_age
     min_age = world_age - CHILDREN.MIN_AGE
     males = Character.objects.filter(gender = GENDER.MALE).exclude(birth_date__gt = min_age)
-    for m in males:
+    mlist = sample(list(males),111) #Пощадим процессор
+    for m in mlist:
         weights = []
         fs = list(get_available_females(m))
         for f in fs:
@@ -614,7 +661,7 @@ def cleanup_dead():
     )
     for corpse in dead:
         corpse.pregnancy = None
-        corpse.projects.delete()
+        corpse.projects.all().delete()
 
 
 

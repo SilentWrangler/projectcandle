@@ -571,6 +571,13 @@ display_celldata = function(response){
         cell_info_chars.innerHTML+=`<tr><a href="/characters/${char.id}">${char.name}</a></tr>`
     });
 
+    cell_info_facts = document.getElementById('celldata-info-factions');
+    cell_info_facts.innerHTML = '';
+
+    cell.factions.for_each((faction)=>{
+        cell_info_facts.innerHTML+=`<tr><a href="#">${faction.name}</a></tr>`
+    });
+
 
 }
 
@@ -730,3 +737,6 @@ relocate_response = function(response) {
     }
 
 }
+
+diplay_pop_races = function(response){}
+

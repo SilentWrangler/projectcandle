@@ -79,6 +79,7 @@ TEMPLATES = [
                 'django.template.context_processors.media',
                 'world.context_processors.active_world',
                 'players.context_processors.active_character',
+                'players.context_processors.api_auth_token',
             ],
         },
     },
@@ -174,7 +175,6 @@ MEDIA_URL = '/media/'
 #list of modules contatining do_time_step() function
 TIMESTEP_MODULES = [
     'world.logic',
-    'players.logic',
     ]
 
 

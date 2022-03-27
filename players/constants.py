@@ -159,9 +159,15 @@ class PROJECTS:
     ECONOMICS = [TYPES.IMPROVE_MANA,TYPES.IMPROVE_FOOD,TYPES.BUILD_TILE]
     SCIENCE = []
 
+    class TARGET_TYPES(models.TextChoices):
+        FACTION = 'faction', _("Фракция")
+        POP = 'pop', _("Поселение")
+        CELL = 'cell', _("Клетка")
+        CHARACTER = 'character',_("Персонаж")
+
     TARGETS_CELL =  [TYPES.RELOCATE, TYPES.BUILD_TILE, TYPES.FORTIFY_CITY]
     TARGETS_CHARACTER = [TYPES.MAKE_FRIEND]
-
+    TARGETS_VARIABLE = [TYPES.GATHER_SUPPORT]
     class WORK:
         BASE_NEED = 100
 
@@ -175,7 +181,7 @@ class PROJECTS:
 
 class BALANCE:
     BASE_COMMUNICATION_RANGE = 5 #Расстояние выполнения проектов
-
+    MAX_BLOOD_TRAITS = 3
 
 
 class CHILDREN:
