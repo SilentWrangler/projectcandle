@@ -4,7 +4,7 @@ from .models import World, Cell, Pop
 from django.db import transaction
 from django.utils import timezone
 from random import randint,choice
-from background_task import background
+#from background_task import background
 
 import json
 
@@ -264,7 +264,7 @@ class WorldGenerator:
         return json.dumps(self, default=lambda o: o.__dict__,
         sort_keys=True, indent=4)
 
-@background(queue='worldgen')
+#@background(queue='worldgen')
 def generate_world_background(**kwargs):
     generator = WorldGenerator(**kwargs)
     generator.generate_world()
@@ -290,7 +290,7 @@ def pick_resource(main,mod):
     drop_list = table[main][mod]
     return choice(drop_list)
 
-@background(queue='worldgen')
+#@background(queue='worldgen')
 def put_resource_deposits(world_id):
     with transaction.atomic():
         cells = Cell.objects.filter(world_id = world_id)

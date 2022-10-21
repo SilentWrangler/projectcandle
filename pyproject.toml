@@ -1,0 +1,23 @@
+[tool.poetry]
+name = "projectcandle"
+version = "0.1.0"
+description = ""
+authors = ["SilentWrangler"]
+
+[tool.poetry.dependencies]
+python = ">=3.8,<4.0"
+django = "^4.1.2"
+sphynx = "^0.0.3"
+gunicorn = "^20.1.0"
+python-dotenv = "^0.21.0"
+django-precise-bbcode = "^1.2.15"
+django-rest-framework = "^0.1.0"
+mysql = "^0.0.3"
+mysql-connector = "^2.2.9"
+pynames = "^0.2.4"
+
+[tool.poetry.dev-dependencies]
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

@@ -47,7 +47,7 @@ INSTALLED_APPS = [
     'forum',
     'precise_bbcode',
     'rest_framework',
-    'background_task',
+   # 'background_task',
     'rest_framework.authtoken',
 ]
 

@@ -1,4 +1,4 @@
-from background_task import background
+#from background_task import background
 from django.core.mail import send_mail
 from random import randint, choice, choices, sample
 from .models import Character, Trait, CharTag, RenameRequest, Project
