@@ -30,7 +30,7 @@ SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
 DEBUG = True
 
 ALLOWED_HOSTS = ['silentwrangler.pythonanywhere.com',
- 'portal.worldofcandle.club', 'localhost' ]
+ 'worldofcandle.club','portal.worldofcandle.club' , 'localhost' ]
 
 
 # Application definition
@@ -169,7 +169,11 @@ STATIC_URL = '/static/'
 MEDIA_ROOT = os.path.join(BASE_DIR,'media/')
 MEDIA_URL = '/media/'
 
+#CSRF
 
+CSRF_TRUSTED_ORIGINS = ['https://silentwrangler.pythonanywhere.com',
+ 'https://*.worldofcandle.club' , 'https://localhost' ]
+CSRF_COOKIE_DOMAIN = '.worldofcandle.club'
 #Candle-specific
 
 #list of modules contatining do_time_step() function
