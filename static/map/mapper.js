@@ -573,10 +573,11 @@ display_celldata = function(response){
 
     cell_info_facts = document.getElementById('celldata-info-factions');
     cell_info_facts.innerHTML = '';
-
-    cell.factions.for_each((faction)=>{
-        cell_info_facts.innerHTML+=`<tr><a href="#">${faction.name}</a></tr>`
-    });
+	if (cell.factions.length>0){
+		cell.factions.for_each((faction)=>{
+			cell_info_facts.innerHTML+=`<tr><a href="#">${faction.name}</a></tr>`
+		});
+	}
 
 
 }
