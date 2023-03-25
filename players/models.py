@@ -419,7 +419,7 @@ class Character(models.Model):
             return None
     
     @tied_pop.setter
-    def tied_pop_set(self,value):
+    def tied_pop(self,value):
         try:
             todel = self.tags.get(
                 name = CHAR_TAG_NAMES.TIED_POP
