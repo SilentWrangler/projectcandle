@@ -122,7 +122,7 @@ class WorldGenerator:
         elif index%16<=12:
             return POP_RACE.GOBLIN
         else:
-            return POP_RACE.ORC
+            return POP_RACE.DWARF
 
 
     def generate_world(self, printDebug = False):
