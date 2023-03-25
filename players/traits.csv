@@ -24,7 +24,7 @@ gene.ELF.sec.fast_recovery,Быстрое восстановление
 gene.ELF.sec.long_lived,Долгожительство
 gene.DWA.pri.travelers_intuition,Дорожная интуиция
 gene.DWA.pri.muse_blessed,Близость к музе
-gene.DWA.sec.inspiratioin_flashes,Вспышки вдохновения
+gene.DWA.sec.inspiratioin_flash,Вспышки вдохновения
 gene.GOB.pri.attention,Внимательность
 gene.GOB.pri.boosted_logic,Логический ум
 gene.GOB.sec.hypermnesia,Гипермнезия

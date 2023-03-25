@@ -410,6 +410,31 @@ class Character(models.Model):
     def is_spouse_of(self,other):
         return False
 
+    @property
+    def tied_pop(self):
+        try:
+            tag = self.tags.get(name = CHAR_TAG_NAMES.TIED_POP)
+            return Pop.objects.get(id = int(tag.content))
+        except CharTag.DoesNotExist:
+            return None
+    
+    @tied_pop.setter
+    def tied_pop_set(self,value):
+        try:
+            todel = self.tags.get(
+                name = CHAR_TAG_NAMES.TIED_POP
+                )
+            todel.delete()
+        except CharTag.DoesNotExist:
+            pass
+        if value is not None:
+            t = CharTag(
+                name = CHAR_TAG_NAMES.TIED_POP,
+                character = self,
+                content = f'{value.id}'
+                )
+            t.save()
+    
     #-----------------------------------------------------------------
     #Time
     @property

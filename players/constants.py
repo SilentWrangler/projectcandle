@@ -68,6 +68,8 @@ class CHAR_TAG_NAMES(models.TextChoices):
     SPOUSE = "spouse"
     CHILD_OF = "child"
     PREGNANCY = "pregnancy"
+    #NPC
+    TIED_POP = "tied_pop"
 
 class UNIQUE_TAGS:
     ONE_PER_PLAYER = [CHAR_TAG_NAMES.CONTROLLED]
@@ -80,6 +82,7 @@ class UNIQUE_TAGS:
         CHAR_TAG_NAMES.SCIENCE_EXP,
         CHAR_TAG_NAMES.DEATH,
         CHAR_TAG_NAMES.PREGNANCY,
+        CHAR_TAG_NAMES.TIED_POP,
         ]
     NAME_AND_CONTENT = [
         CHAR_TAG_NAMES.FRIEND_WITH,

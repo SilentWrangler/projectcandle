@@ -42,7 +42,8 @@ class Command(BaseCommand):
                 self.count = 0
                 print(f'Creating NPCs ({race}): {self.count}', end = '\r')
             for pop in pops:
-                create_character_outta_nowhere(pop.location, minage, maxage)
+                c = create_character_outta_nowhere(pop.location, minage, maxage)
+                c.tied_pop = pop
                 if self.verb:
                     self.count += 1
                     print(f'Creating NPCs ({race}): {self.count}', end = '\r')
