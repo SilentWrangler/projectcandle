@@ -1,14 +1,15 @@
-from players.models import Character
-from .constants import WORLD_GEN, MAIN_BIOME, BIOME_MOD, POP_RACE, CITY_TYPE, BALANCE
-from .constants import RESOURCE_TYPE as rt
-from .models import World, Cell, Pop
+import json
+from random import randint, choice
+
 from django.db import transaction
 from django.db.models import Count
 from django.utils import timezone
-from random import randint,choice
-#from background_task import background
 
-import json
+from .constants import WORLD_GEN, MAIN_BIOME, BIOME_MOD, POP_RACE, CITY_TYPE, BALANCE
+from .models import World, Cell, Pop
+
+
+# from background_task import background
 
 
 class WorldGenerator:
