@@ -2,6 +2,7 @@ from .constants import WORLD_GEN, MAIN_BIOME, BIOME_MOD, POP_RACE, CITY_TYPE, BA
 from .constants import RESOURCE_TYPE as rt
 from .models import World, Cell, Pop
 from django.db import transaction
+from django.db.models import Count
 from django.utils import timezone
 from random import randint,choice
 #from background_task import background
@@ -350,7 +351,9 @@ def get_supported_population(cell):
 
 
 def get_populated_cells(world):
-    return Cell.objects.filter(pop_set__count__gt=0, world=world)
+    return Cell.objects\
+        .annotate(pop_count=Count('pop'))\
+        .filter(pop_count__gt=0, world=world)
 
 def get_active_world():
     return World.objects.get(is_active=True)
