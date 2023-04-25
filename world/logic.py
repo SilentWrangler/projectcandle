@@ -140,6 +140,7 @@ class WorldGenerator:
             if printDebug: print('Creating Water cells...')
             self.cells = [[Cell(x=i,y=j,
             main_biome = MAIN_BIOME.WATER,
+            biome_mod = BIOME_MOD.NONE,
             world = world) for j in range(
                 self.height)] for i in range(
                 self.width)] #flood the world
