@@ -349,17 +349,20 @@ def get_supported_population(cell):
     return min(get_cell_housing(cell),cell_produced_food(cell))
 
 
+def get_populated_cells(world):
+    return world.cell_set.filter(pop_set__count__gt = 0)
 
 def get_active_world():
     return World.objects.get(is_active=True)
 
-def process_population():
-    pass
+def process_population(world):
+    print(get_populated_cells(world).count())
 
 
 def do_time_step():
-    process_population()
     world = get_active_world()
+    process_population(world)
+
     world.ticks_age += 1
     world.save()
     #TODO: all the pop stuff
