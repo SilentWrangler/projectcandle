@@ -134,7 +134,8 @@ class BALANCE:
         CITY_TYPE.LIBRARY: [1, 1],
         CITY_TYPE.FORT: [0, 0],
         CITY_TYPE.FACTORY: [0, 0],
-        CITY_TYPE.MINE: [1, 0]
+        CITY_TYPE.MINE: [1, 0],
+        '': [2]
     }
 
     HOUSING = {
