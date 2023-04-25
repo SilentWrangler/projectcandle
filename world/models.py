@@ -105,10 +105,10 @@ class Cell(models.Model):
         )
         faction_ids = [int(tag.content) for tag in faction_tags]
         return Faction.objects.filter(id__in=faction_ids)
-	@property
-	def boosts(self):
-		boost_tags = self.tags.filter(name=CELL_TAG_NAMES.BOOST)
-		return boost_tags
+    @property
+    def boosts(self):
+        boost_tags = self.tags.filter(name=CELL_TAG_NAMES.BOOST)
+        return boost_tags
 
     def __repr__(self):
         return f'<Cell ({self.x};{self.y}) world_id={self.world.id}>'
@@ -180,18 +180,18 @@ class Pop(models.Model):
             tag.delete()
             return None
 
-	@property
-	def tied_character(self):
-		from players.models import CharTag
-		from players.constants import CHAR_TAG_NAMES
-		try:
-			tag = CharTag.objects.get(
-				name=CHAR_TAG_NAMES.TIED_POP,
-				content=f'{self.id}'
-			)
-			return tag.character
-		except CharTag.DoesNotExist:
-			return None
+    @property
+    def tied_character(self):
+        from players.models import CharTag
+        from players.constants import CHAR_TAG_NAMES
+        try:
+            tag = CharTag.objects.get(
+                name=CHAR_TAG_NAMES.TIED_POP,
+                content=f'{self.id}'
+            )
+            return tag.character
+        except CharTag.DoesNotExist:
+            return None
 
 
 class Faction(models.Model):
