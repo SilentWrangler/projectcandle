@@ -43,7 +43,7 @@ Aliases = {}
 Aliases.biomes = {
 
     "WTR": {
-        "":gettext("Море"),
+        "NON":gettext("Море"),
     },
     "PLN": {
         "NON":gettext("Плодородные поля"),
