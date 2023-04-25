@@ -291,12 +291,12 @@ def put_resource_deposits(world_id):
 
 def food_value(x,y, world_id):
     try:
-        cell = Cell.objects.get(world_pk=world_id,x=x,y=y)
+        cell = Cell.objects.get(world_id=world_id,x=x,y=y)
         base_table = BALANCE.BASE_BIOME_FOOD
         multiplier_table = BALANCE.CITY_TYPE_FOOD_MOD
 
         def get_multiplier(city_type,tier):
-            if city_type is None:
+            if city_type == '':
                 return 2
             elif city_type == CITY_TYPE.SORROW_LAIR:
                 return 0
@@ -331,11 +331,12 @@ def get_total_workforce(cell):
     for x in range(max(0,cell.x-1),min(world.width+1,cell.x+2)):
         for y in range(max(0,cell.y-1),min(world.height+1,cell.y+2)):
             s+=get_workforce(world[x][y])
+    return s
 
 
 def get_food_production(cell):
     result = BALANCE.BASE_FOOD_PRODUCTION
-    b = 0
+    b = 1
     for boost in cell.boosts:
         if boost['resource']=='FOOD':
             b = max(b, boost['power'])
