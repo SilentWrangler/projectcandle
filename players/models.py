@@ -464,6 +464,12 @@ class Character(models.Model):
             content = f'{world_age}'
             )
         t.save()
+        if self.tied_pop is not None:
+            from players.logic import create_character_outta_nowhere
+            successor = create_character_outta_nowhere(self.tied_pop.location)
+            successor.tied_pop = self.tied_pop
+            self.tied_pop = None
+
 
     def __str__(self):
         return f'Character ({self.id}): {self.name}'

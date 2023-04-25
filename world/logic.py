@@ -1,3 +1,4 @@
+from players.models import Character
 from .constants import WORLD_GEN, MAIN_BIOME, BIOME_MOD, POP_RACE, CITY_TYPE, BALANCE
 from .constants import RESOURCE_TYPE as rt
 from .models import World, Cell, Pop
@@ -358,6 +359,34 @@ def get_populated_cells(world):
 
 def get_active_world():
     return World.objects.get(is_active=True)
+
+def modify_growth(cell):
+    support = get_supported_population(cell)
+    current = cell.pop_set.count()
+    mod = (support - current) * BALANCE.POP_GROWTH_MODIFIER
+    if mod<0:
+        for pop in cell.pop_set:
+            pop.growth = pop.growth + mod
+            if pop.growth <= BALANCE.POP_DEATH_THRESHOLD:
+                pop.tied_character.tied_pop = None
+                pop.tied_character.die()
+                pop.delete()
+    else:
+        pop = choice(list(cell.pop_set))
+        pop.growth = pop.growth + mod
+        if pop.growth >= BALANCE.GROWTH_THRESHOLD:
+            new_pop = Pop(
+                race = pop.race,
+                location = pop.location
+            )
+            new_pop.save()
+            from players.logic import create_character_outta_nowhere
+            representative = create_character_outta_nowhere(
+                pop.location
+            )
+            representative.tied_pop = new_pop
+
+
 
 def process_population(world):
     print(get_populated_cells(world).count())
