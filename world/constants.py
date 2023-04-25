@@ -144,7 +144,8 @@ class BALANCE:
         CITY_TYPE.LIBRARY: [3, 5],
         CITY_TYPE.FORT: [3, 5],
         CITY_TYPE.FACTORY: [3, 5],
-        CITY_TYPE.MINE: [3, 5]
+        CITY_TYPE.MINE: [3, 5],
+        '': [2]
     }
 
     RESOURCE_DISTRIBUTION = {
