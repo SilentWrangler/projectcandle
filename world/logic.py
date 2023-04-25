@@ -350,7 +350,7 @@ def get_supported_population(cell):
 
 
 def get_populated_cells(world):
-    return world.cell_set.filter(pop_set__count__gt = 0)
+    return world.cell_set.filter(pop__count__gt = 0)
 
 def get_active_world():
     return World.objects.get(is_active=True)
