@@ -418,7 +418,7 @@ def check_for_migration(cell):
     chars = get_tied_characters(cell)
     building_in_progress = False
     for character in chars:
-        if character.current_project.type == PROJECTS.TYPES.BUILD_TILE:
+        if character.current_project is not None and character.current_project.type == PROJECTS.TYPES.BUILD_TILE:
             building_in_progress = True
             break
     if pop_count/get_food_production(cell) >= BALANCE.AUTO_EXPAND_FOOD_TRIGGER:
