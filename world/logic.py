@@ -367,14 +367,14 @@ def modify_growth(cell):
     current = cell.pop_set.count()
     mod = (support - current) * BALANCE.POP_GROWTH_MODIFIER
     if mod<0:
-        for pop in cell.pop_set:
+        for pop in cell.pop_set.all():
             pop.growth = pop.growth + mod
             if pop.growth <= BALANCE.POP_DEATH_THRESHOLD:
                 pop.tied_character.tied_pop = None
                 pop.tied_character.die()
                 pop.delete()
     else:
-        pop = choice(list(cell.pop_set))
+        pop = choice(list(cell.pop_set.all()))
         pop.growth = pop.growth + mod
         if pop.growth >= BALANCE.GROWTH_THRESHOLD:
             new_pop = Pop(
@@ -390,7 +390,7 @@ def modify_growth(cell):
 
 def get_tied_characters(cell):
     result = []
-    for pop in cell.pop_set:
+    for pop in cell.pop_set.all():
         result.append(pop.tied_character)
     return result
 
