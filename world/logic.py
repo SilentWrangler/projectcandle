@@ -388,10 +388,86 @@ def modify_growth(cell):
             )
             representative.tied_pop = new_pop
 
+def get_tied_characters(cell):
+    result = []
+    for pop in cell.pop_set:
+        result.append(pop.tied_character)
+    return result
+
+
+def get_expansion_candidates(cell):
+    area = Cell.objects.filter(
+        world=cell.world,
+        x__gte=cell.x-1, y__gte=cell.y-1,
+        x__lte=cell.x+1, y__lte=cell.y+1,
+        city_tier=0
+    ).exclude(main_biome=MAIN_BIOME.WATER)
+    return area
+
+def get_max_fertility(cell):
+    potential = list(get_expansion_candidates(cell))
+    scores = [food_value(c.x, c.y, c.world.id) for c in potential]
+    target = max(scores)
+    ps = zip(scores, potential)
+    pre_result = filter(lambda x: x[0] == target, ps)
+    return [x[1] for x in pre_result]
+
+def check_for_migration(cell):
+    from players.constants import PROJECTS
+    pop_count = cell.pop_set.count()
+    chars = get_tied_characters(cell)
+    building_in_progress = False
+    for character in chars:
+        if character.current_project.type == PROJECTS.TYPES.BUILD_TILE:
+            building_in_progress = True
+            break
+    if pop_count/get_food_production(cell) >= BALANCE.AUTO_EXPAND_FOOD_TRIGGER:
+        if not building_in_progress:
+            try_build_farm(cell, chars)
+    if pop_count/get_cell_housing(cell) >= BALANCE.AUTO_EXPAND_HOUSING_TRIGGER:
+        if not building_in_progress:
+            try_build_house(cell, chars)
 
 
 def process_population(world):
-    print(get_populated_cells(world).count())
+    populated_cells = get_populated_cells(world)
+    for cell in populated_cells:
+        modify_growth(cell)
+        check_for_migration(cell)
+
+
+def try_build_farm(cell, chars):
+    from players.logic import PCUtils
+    character = choice(chars)
+    farm = choice(get_max_fertility(cell))
+    from players.constants import PROJECTS
+    if PROJECTS.TYPES.BUILD_TILE in PCUtils.get_cell_projects(character, farm.x, farm.y):
+        PCUtils.start_cell_project(
+            character,
+            farm.x, farm.y,
+            PROJECTS.TYPES.BUILD_TILE,
+            {
+                'with_pop': character.tied_pop.id,
+                'city_type': CITY_TYPE.FARM
+            }
+        )
+
+
+def try_build_house(cell, chars):
+    from players.logic import PCUtils
+    character = choice(chars)
+    house = choice(list(get_expansion_candidates(cell)))
+    from players.constants import PROJECTS
+    if PROJECTS.TYPES.BUILD_TILE in PCUtils.get_cell_projects(character, house.x, house.y):
+        PCUtils.start_cell_project(
+            character,
+            house.x, house.y,
+            PROJECTS.TYPES.BUILD_TILE,
+            {
+                'with_pop': character.tied_pop.id,
+                'city_type': CITY_TYPE.GENERIC
+            }
+        )
 
 
 def do_time_step():
@@ -400,5 +476,5 @@ def do_time_step():
 
     world.ticks_age += 1
     world.save()
-    #TODO: all the pop stuff
+
 
