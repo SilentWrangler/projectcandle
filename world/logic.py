@@ -366,6 +366,7 @@ def modify_growth(cell):
     support = get_supported_population(cell)
     current = cell.pop_set.count()
     mod = (support - current) * BALANCE.POP_GROWTH_MODIFIER
+    print(f'{cell} growth mod: {mod}')
     if mod<0:
         for pop in cell.pop_set.all():
             pop.growth = pop.growth + mod
