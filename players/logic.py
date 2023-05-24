@@ -678,8 +678,8 @@ class PCProjectUtils:
 
 def do_time_step():
     process_all_projects()
-    process_pregancies()
-    roll_for_pregnancies()
+    #process_pregancies()
+    #roll_for_pregnancies()
     roll_for_death()
     cleanup_dead()
     #TODO: character health stuff

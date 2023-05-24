@@ -258,6 +258,7 @@ class WorldGenerator:
                         cell.save()
                         pop = Pop(race=race, location=cell)
                         pop.save()
+                        pop.create_tags()
                         if printDebug: print(f'Spawned {pop_count}/{pop_max}', end = '\r')
                     else:
                         fail_count+=1
@@ -383,6 +384,7 @@ def modify_growth(cell):
                 location = pop.location
             )
             new_pop.save()
+            new_pop.create_tags()
             from players.logic import create_character_outta_nowhere
             representative = create_character_outta_nowhere(
                 pop.location

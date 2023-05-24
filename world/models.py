@@ -127,6 +127,9 @@ class Pop(models.Model):
         max_length=3
     )
 
+    def create_tags(self):
+        self.tags.get_or_create(name=POP_TAG_NAMES.GROWTH, defaults={'content': '0'})
+
     @property
     def growth(self):
         tag, created = self.tags.get_or_create(name=POP_TAG_NAMES.GROWTH, defaults={'content': '0'})
