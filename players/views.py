@@ -245,6 +245,20 @@ class PlayerPage(DetailView):
         context = super().get_context_data(**kwargs)
         return context
 
+class ProjectPopupView(View):
+    template_name = 'project_popup_template.html'
+
+    def get(self,request):
+        form = ProjectForms[request.GET.get("project")]
+        target = {
+            'x': request.GET.get("x"),
+            'y': request.GET.get("y")
+        }
+        return render(request,self.template_name, {'form': form(request.user), 'target': target})
+    def post(self,request,*args, **kwargs):
+        return start_cell_project(request)
+
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated,HasCurrentChar])
 def start_project(request):
@@ -347,7 +361,7 @@ def start_character_project(request):
             return Response({'status': 'error','detail':'Player character not found'},HTTP_404_NOT_FOUND)
         target_id =  int(request.query_params['target'])
         project_type = request.query_params['project']
-        target = Character.objects.get(pk = target_id)
+        target = Character.objects.get(id = target_id)
         pid = PCUtils.start_char_project(request.user.current_char, target, project_type, request.data)
         if pid is None:
             return Response({'status': 'error','detail':'Cannot start this project for this character'},HTTP_200_OK)

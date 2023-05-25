@@ -29,7 +29,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         with transaction.atomic():
-            with open(options['filename']) as file:
+            with open(options['filename'],'r',encoding='utf-8') as file:
                 traits = []
                 for line in file.readlines():
                     name, verbose = line.split(',')

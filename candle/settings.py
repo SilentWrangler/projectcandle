@@ -11,6 +11,8 @@ https://docs.djangoproject.com/en/3.0/ref/settings/
 """
 
 import os
+
+import django.db.models
 from dotenv import load_dotenv
 
 
@@ -104,7 +106,10 @@ DATABASES = {
         },
     }
 }
+
+DEFAULT_AUTO_FIELD = django.db.models.BigAutoField
 #Email
+
 
 
 EMAIL_BACKEND = "anymail.backends.sendinblue.EmailBackend"
@@ -179,8 +184,13 @@ CSRF_COOKIE_DOMAIN = '.worldofcandle.club'
 #list of modules contatining do_time_step() function
 TIMESTEP_MODULES = [
     'world.logic',
+    'players.logic'
     ]
 
+PROJECT_PROCESSORS =[
+    'players.projects',
+    'world.projects'
+]
 
 
 

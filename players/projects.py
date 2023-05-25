@@ -15,6 +15,12 @@ class ProjectProcessor:
             pass
         ProjectProcessor.processors.get(project.type, default)(project)
 
+    @classmethod
+    def detect_processors(cls):
+        from importlib import import_module
+        from candle.settings import PROJECT_PROCESSORS
+        for module in PROJECT_PROCESSORS:
+            import_module(module)
 
 def processor(project_type):
     def decorator(func):

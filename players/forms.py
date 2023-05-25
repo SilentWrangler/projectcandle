@@ -6,6 +6,8 @@ from .models import Player, Character
 from .logic import PCUtils
 from .constants import PROJECTS as p
 from .constants import ALLOWED_EXP_CHOICES
+from world.models import Cell
+from world.constants import CITY_TYPE
 
 class MultipleValueWidget(forms.TextInput):
     def value_from_datadict(self, data, files, name):
@@ -17,7 +19,7 @@ class MultipleValueField(forms.Field):
 
 def clean_char_id(x):
     try:
-        Character.objects.get(pk = int(x))
+        Character.objects.get(id = int(x))
     except ValueError:
         raise ValidationError("Неверный id: {}".format(repr(x)))
     except Character.DoesNotExist:
@@ -75,3 +77,31 @@ class ProjectTeachForm(forms.Form):
 class ProjectFriendForm(forms.Form):
     pass
 
+@project_form(p.TYPES.BUILD_TILE)
+class BuildForm(forms.Form):
+    city_type = forms.ChoiceField(choices=CITY_TYPE.choices)
+    with_pop = forms.ModelChoiceField(
+        queryset=Character.objects.none(),
+        label = _("Pick Pop"),
+        widget=forms.RadioSelect
+    )
+
+    def __init__(self, player, *args, **kwargs):
+        super(BuildForm, self).__init__(*args, **kwargs)
+        character = player.current_char
+        loc = character.location
+        self.fields['with_pop'].queryset = Cell.objects.get(x=loc['x'],y=loc['y']).pop_set.all()
+
+@project_form(p.TYPES.FORTIFY_CITY)
+class FortifyForm(forms.Form):
+    with_pop = forms.ModelChoiceField(
+        queryset=Character.objects.none(),
+        label = _("Pick Pop"),
+        widget=forms.RadioSelect
+    )
+
+    def __init__(self, player, *args, **kwargs):
+        super(FortifyForm, self).__init__(*args, **kwargs)
+        character = player.current_char
+        loc = character.location
+        self.fields['with_pop'].queryset = Cell.objects.get(x=loc['x'],y=loc['y']).pop_set.all()

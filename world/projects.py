@@ -118,6 +118,10 @@ def process_fortify(project):
         pop.location = target
         target.city_type = CITY_TYPE.FORT
         target.city_tier = 1
+        pop.tied_character.location = target
+        project.character.location = target
+        pop.save()
+        target.save()
         project.character.start_next_project()
         project.delete()
 
@@ -128,7 +132,7 @@ def process_build(project):
     loc = project.character.location
     pop_id = int(kwargs.get('with_pop'))
     city_type = kwargs.get('city_type', None)
-    pop = Pop.objects.get(pop_id)
+    pop = Pop.objects.get(id=pop_id)
     dist = max(abs(loc['x']-pop.location.x), abs(loc['y']-pop.location.y))
     if dist>BALANCE.BASE_COMMUNICATION_RANGE:
         project.character.start_next_project()
@@ -143,6 +147,10 @@ def process_build(project):
         pop.location = target
         target.city_type = city_type
         target.city_tier = 1
+        pop.tied_character.location = target
+        project.character.location = target
+        pop.save()
+        target.save()
         project.character.start_next_project()
         project.delete()
 

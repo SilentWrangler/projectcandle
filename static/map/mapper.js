@@ -340,7 +340,6 @@ MapPainter.render = function(){
 
     var renderCell = function(cell,xPos,yPos, draw_player = false){
 
-
         var ii = ImageIndexes.main_biome[cell.main_biome]; //Draw main biome underneath
         var xSor = 0;
         var ySor = Math.floor(ii/atlas_cols)*tile_size;
@@ -708,7 +707,7 @@ load_options = function(response){
                     item.addEventListener("click",option_relocate);
                     break;
                 default:
-                    item.addEventListener("click",default_option);
+                    item.addEventListener("click",generate_popup_option(i));
             }
             idx++;
         })
@@ -727,6 +726,16 @@ option_relocate = function(event){
         httpPostAsync(url,relocate_response);
     }
 }
+
+generate_popup_option = function(option){
+    return function(event){
+        if (coords){
+            var url = `/projects/popup?x=${coords[0]}&y=${coords[1]}&project=${option}`
+            window.open(url)
+        }
+    }
+}
+
 
 relocate_response = function(response) {
     json_resp = JSON.parse(response)

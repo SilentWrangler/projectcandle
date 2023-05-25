@@ -195,7 +195,8 @@ class Pop(models.Model):
             return tag.character
         except CharTag.DoesNotExist:
             return None
-
+    def __str__(self):
+        return f'{self.race} ({self.id}) ({self.tied_character.name})'
 
 class Faction(models.Model):
     name = models.CharField(max_length=100, blank=True)

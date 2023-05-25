@@ -155,6 +155,8 @@ class Character(models.Model):
     def start_next_project(self):
         try:
             first = self.projects.exclude(is_current=True).first()
+            if first is None:
+                return
             first.is_current = True
             first.save();
         except Project.DoesNotExist:

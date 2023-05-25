@@ -30,4 +30,5 @@ urlpatterns = [
     path('projects/api/restart',views.start_project, name = 'projects_api_restart'),
     path('projects/api/stop',views.stop_project, name = 'projects_api_stop'),
     path('projects/api/set_priority',views.set_project_priority, name = 'projects_api_set_priority'),
+    path('projects/popup', views.ProjectPopupView.as_view(), name='project_popup')
     ]

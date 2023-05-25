@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<form method="post">
+    {% csrf_token %}
+    <input type="hidden" name="target" value="{{target}}">
+    {{form}}
+    <input type="submit" value="Начать проект">
+</form>
+</body>
+</html>

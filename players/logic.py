@@ -358,6 +358,7 @@ class PCUtils:
             )
             proj_args['with_pop'] = pop_id
             proj_args['target'] = {'x':x,'y':y}
+            proj_args['city_type'] = city_type
             project.arguments_dict = proj_args
             project.is_current = True
             project.save()
@@ -667,6 +668,7 @@ def cleanup_dead():
 
 def process_all_projects():
     pjs = Project.objects.filter(is_current=True)
+    ProjectProcessor.detect_processors()
     processor = ProjectProcessor()
     for p in pjs:
         processor.process(p)
