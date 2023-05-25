@@ -107,7 +107,7 @@ DATABASES = {
     }
 }
 
-DEFAULT_AUTO_FIELD = django.db.models.BigAutoField
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 #Email
 
 
@@ -171,7 +171,7 @@ LOCALE_PATHS = [
 STATIC_ROOT = os.path.join(BASE_DIR,'static/')
 STATIC_URL = '/static/'
 
-MEDIA_ROOT = os.path.join(BASE_DIR,'media/')
+MEDIA_ROOT = '/usr/share/candle/media/'
 MEDIA_URL = '/media/'
 
 #CSRF
@@ -184,7 +184,7 @@ CSRF_COOKIE_DOMAIN = '.worldofcandle.club'
 #list of modules contatining do_time_step() function
 TIMESTEP_MODULES = [
     'world.logic',
-    'players.logic'
+    'players.logic',
     ]
 
 PROJECT_PROCESSORS =[
