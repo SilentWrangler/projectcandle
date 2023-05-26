@@ -112,10 +112,11 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
 
-EMAIL_BACKEND = "anymail.backends.sendinblue.EmailBackend"
-ANYMAIL = {
-    "SENDINBLUE_API_KEY": os.getenv('SENDINBLUE_API_KEY'),
-}
+
+#EMAIL_BACKEND = "anymail.backends.sendinblue.EmailBackend"
+#ANYMAIL = {
+#    "SENDINBLUE_API_KEY": os.getenv('SENDINBLUE_API_KEY'),
+#}
 
 
 DEFAULT_FROM_EMAIL = 'noreply@worldofcandle.club'
