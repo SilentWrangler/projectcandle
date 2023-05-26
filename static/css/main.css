@@ -234,6 +234,26 @@ WHY DO THEY ALL HAVE TO BE GODDAMN SPECIAL SNOWFLAKES?!
 
 }
 
+aside.frontpage{
+    width: 20%;
+    float: right;
+    display: inline;
+    margin: 5px;
+}
+
+section.frontpage {
+  width: 20%;
+  float: left;
+  display: inline;
+  margin: 5px;
+}
+
+.frontpage.news{
+  width: 57%;
+  display: inline-block;
+  margin: 5px;
+}
+
 .frontpage.header{
     text-align: center;
 }
