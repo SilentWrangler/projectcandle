@@ -17,7 +17,7 @@ def make_post(request):
             try:
                 post = form.save(commit = False)
                 post.author = request.user
-                post.frontpage = form.data.get('frontpage', False) #Для неадминской формы
+                post.frontpage = form.data.get('frontpage', False) == "on"#Для неадминской формы
                 post.last_edit_reason = form.data.get('last_edit_reason', '')
                 assert not post.frontpage or request.user.is_staff, "Frontpage posts are admin restricted"
                 post.save()

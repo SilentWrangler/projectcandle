@@ -23,6 +23,7 @@ from rest_framework.status import HTTP_200_OK, HTTP_404_NOT_FOUND, HTTP_400_BAD_
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 
+from forum.models import Post
 from .models import Player, Character, RenameRequest, Project
 from .forms import SignupForm, CharPickForm, ProjectForms
 from .tokens import account_activation_token
@@ -90,7 +91,8 @@ def asnt(request):
     return render(request,'account_activation_sent.html')
 
 def home(request):
-    return render(request,'base.html')
+    frontpage = Post.objects.filter(frontpage=True)[:5]
+    return render(request,'home.html',{'frontpage':frontpage})
 
 def placeholder(request):
     return render(request,'base.html')

@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block content %}
+
+<div class="frontpage">
+    <table>
+        <tr>
+            <td><h1 class="frontpage header">Новости Кэндл</h1></td>
+        </tr>
+    {% for p in frontpage %}
+        <tr>
+            <td><h3 class="frontpage header">{{p.headline}}</h3></td>
+        </tr>
+        <tr>
+            <td>{{p.post_time}} {{p.author.username}}</td>
+        </tr>
+        <tr>
+            <td>{{p.content.rendered|truncatechars_html:100}}</td>
+        </tr>
+        <tr>
+            <td>
+                <a href="{% url 'showpost' pk=p.id %}">
+                    Ответы: {{p.replies.count}}
+                </a>
+            </td>
+        </tr>
+    {% endfor %}
+    </table>
+</div>
+{% endblock %}

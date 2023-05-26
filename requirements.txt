@@ -17,6 +17,7 @@ django-haystack==3.0
 django-infinite-scroll-pagination==1.1.0
 django-precise-bbcode==1.2.13
 djangorestframework==3.11.1
+django-rest-swagger >=2.2.0
 docutils==0.16
 idna==2.10
 imagesize==1.2.0
