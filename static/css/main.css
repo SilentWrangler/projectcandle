@@ -261,3 +261,7 @@ section.frontpage {
 .frontpage table{
     width:100%;
 }
+
+.post-form.big-input{
+    width: 90%;
+}

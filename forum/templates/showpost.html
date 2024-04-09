@@ -93,7 +93,7 @@
     {% endfor %}
     </table>
     {% if form %}
-    <form action="{% url 'reply' pk=post.id %}" method="POST">
+    <form action="{% url 'reply' pk=post.id %}" method="POST" class="post-form">
         {% csrf_token %}
         {{form}}
         <input type="submit" value="Ответить">
