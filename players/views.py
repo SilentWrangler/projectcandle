@@ -284,7 +284,7 @@ def stop_project(request):
     try:
         proj_id = int(request.query_params['project'])
         project = request.user.current_char.projects.get(pk = proj_id)
-        project.delete()
+        project.end()
         return Response({'status':'ok'},HTTP_200_OK)
     except KeyError as ke:
         return Response({'status': 'error','detail':str(ke)},HTTP_400_BAD_REQUEST)

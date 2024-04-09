@@ -146,15 +146,18 @@ class Character(models.Model):
             return "stone_age"
     #PROJECTS AND EXP
     @property
+    def active_projects(self):
+        return self.projects.get(is_active=True)
+    @property
     def current_project(self):
         try:
-            return self.projects.get(is_current=True)
+            return self.active_projects.get(is_current=True)
         except Project.DoesNotExist:
             return None
 
     def start_next_project(self):
         try:
-            first = self.projects.exclude(is_current=True).first()
+            first = self.active_projects.exclude(is_current=True).first()
             if first is None:
                 return
             first.is_current = True
@@ -527,7 +530,15 @@ class Project(models.Model):
     is_current = models.BooleanField()
     arguments = models.CharField(max_length = 300)
     priority = models.IntegerField(default = 0)
+
+    is_active = models.BooleanField(default = True)
+
+    def end(self):
+        self.is_active = False
+        self.save()
+
     def save(self, *args, **kwargs):
+        self.is_current = self.is_current and self.is_active
         if self.is_current:
             try:
                 temp = Project.objects.get(is_current=True, character = self.character)

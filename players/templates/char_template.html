@@ -81,7 +81,7 @@
         {% endif %}
         {% if character == current_char %}
         <table class="border">
-            {% for project in character.projects.all %}
+            {% for project in character.active_projects %}
             {% with prev=character.projects.all|previous:forloop.counter0 next=character.projects.all|next:forloop.counter0%}
             {% if not project.is_current %}
             <tr>

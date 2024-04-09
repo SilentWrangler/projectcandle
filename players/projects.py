@@ -153,7 +153,7 @@ def process_relocate(project):
     target = kwargs.get('target')
     project.character.location = target
     project.character.start_next_project()
-    project.delete()
+    project.end()
 
 
 #-----------------------------
@@ -179,7 +179,7 @@ def process_adventure(project):
         else:
             project.character.add_enmity(target)
     project.character.start_next_project()
-    project.delete()
+    project.end()
 
 #--------------------------------
 
@@ -205,7 +205,7 @@ def process_make_friend(project):
         project.character.end_enmity(target)
         project.character.add_friendship(target)
         project.character.start_next_project()
-        project.delete()
+        project.end()
 
 
 

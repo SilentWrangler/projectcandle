@@ -29,7 +29,7 @@ def process_rename(project):
         rr = CellRenameRequest(cell = target, player = author, name = name)
         rr.save()
         project.character.start_next_project()
-        project.delete()
+        project.end()
 
 @processor(p.TYPES.MAKE_FACTION)
 def process_make_faction(project):
@@ -69,7 +69,7 @@ def process_make_faction(project):
             title_name = ''
             )
         project.character.start_next_project()
-        project.delete()
+        project.end()
 
 @processor(p.TYPES.GATHER_SUPPORT)
 def process_gather_support(project):
@@ -95,7 +95,7 @@ def process_gather_support(project):
         elif target_type == p.TARGET_TYPES.CHARACTER:
             pop.supported_character = target
         project.character.start_next_project()
-        project.delete()
+        project.end()
 
 @processor(p.TYPES.FORTIFY_CITY)
 def process_fortify(project):
@@ -123,7 +123,7 @@ def process_fortify(project):
         pop.save()
         target.save()
         project.character.start_next_project()
-        project.delete()
+        project.end()
 
 @processor(p.TYPES.BUILD_TILE)
 def process_build(project):
@@ -152,5 +152,5 @@ def process_build(project):
         pop.save()
         target.save()
         project.character.start_next_project()
-        project.delete()
+        project.end()
 
