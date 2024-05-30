@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     'rest_framework',
    # 'background_task',
     'rest_framework.authtoken',
+    'ai'
 ]
 
 MIDDLEWARE = [
