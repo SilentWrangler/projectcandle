@@ -20,6 +20,7 @@ keras = "^3.3.3"
 torch = "^2.3.0"
 numpy = "^1.26.4"
 gymnasium = "^0.29.1"
+pettingzoo = "^1.24.3"
 
 [tool.poetry.dev-dependencies]
 
