@@ -38,6 +38,12 @@ def calc_power(char, subject):
     return result
 
 
+def calc_pop_work_power(char, subject):
+    result = p.WORK.POP_WORK_BONUS
+    lvl = char.level(subject)
+    result += p.WORK.POP_EXP_BOOST * lvl
+    return result
+
 def calc_exp(char, subject, teacher_id = None , on_purpose = False):
     lvl = char.level(subject) # Дабы не лезть в БД лишние разы
     teacher_buff = 0

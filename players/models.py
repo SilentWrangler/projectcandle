@@ -10,7 +10,7 @@ from .managers import CustomUserManager
 from world.constants import POP_RACE
 from world.strings import month_names
 from world.logic import get_active_world
-from world.models import Faction, Pop
+from world.models import Faction, Pop, PopTag
 from .constants import GENDER, UNIQUE_TAGS, CHAR_TAG_NAMES, PROJECTS, EXP_TO_TAG, EXP_TO_HUMAN
 
 
@@ -439,9 +439,21 @@ class Character(models.Model):
                 content = f'{value.id}'
                 )
             t.save()
-    
-    #-----------------------------------------------------------------
-    #Time
+    #
+    # END OF RELATIONS
+    # ---------------------------------------------------------------
+
+    # Politics
+    # ---------------------------------------------------------------
+    @property
+    def supporters(self):
+        tags = PopTag.objects.filter(name=POP_TAG_NAMES.SUPPORTED_CHARACTER, content=str(self.id))
+        pops = Pop.objects.filter(id__in = models.Subquery(tags.values("pop")))
+        return pops
+    # ---------------------------------------------------------------
+    # END OF POLITICS
+
+    # Time
     @property
     def age(self):
          world_age = get_active_world().ticks_age

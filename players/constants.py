@@ -144,6 +144,8 @@ class PROJECTS:
         MAKE_FACTION = 'FACT_CREATE', _('Создать фракцию')
         RENAME_TILE = 'RENAME_TILE', _('Переименовать город')
         GATHER_SUPPORT = 'POP_SUPPORT', _('Заполучить народную поддрежку')
+        INVITE_TO_FACTION = 'FACT_INVITE', _('Пригласить во фракцию')
+        JOIN_FACTION = 'FACT_JOIN', _('Присоединиться к фракции')
 
         #military
         CREATE_ARMY = 'ARMY_CREATE', _('Создать армию')
@@ -155,11 +157,11 @@ class PROJECTS:
         IMPROVE_MANA = 'CELL_MANA', _('Повысить доходы маны')
         IMPROVE_FOOD = 'CELL_FOOD', _('Повысить сбор пищи')
         BUILD_TILE = 'CELL_BUILD', _('Построить поселение')
+        UPGRADE_TILE = 'CELL_UPGRADE', _('Развить поселение')
 
-
-    POLITICS = [TYPES.MAKE_FRIEND,TYPES.MAKE_FACTION,TYPES.RENAME_TILE,TYPES.GATHER_SUPPORT]
-    MILITARY = [TYPES.CREATE_ARMY,TYPES.UPGRADE_ARMY,TYPES.DESTROY_ARMY,TYPES.FORTIFY_CITY]
-    ECONOMICS = [TYPES.IMPROVE_MANA,TYPES.IMPROVE_FOOD,TYPES.BUILD_TILE]
+    POLITICS = [TYPES.MAKE_FRIEND, TYPES.MAKE_FACTION, TYPES.RENAME_TILE, TYPES.GATHER_SUPPORT]
+    MILITARY = [TYPES.CREATE_ARMY, TYPES.UPGRADE_ARMY, TYPES.DESTROY_ARMY, TYPES.FORTIFY_CITY]
+    ECONOMICS = [TYPES.IMPROVE_MANA, TYPES.IMPROVE_FOOD, TYPES.BUILD_TILE, TYPES.UPGRADE_TILE]
     SCIENCE = []
 
     class TARGET_TYPES(models.TextChoices):
@@ -181,10 +183,15 @@ class PROJECTS:
 
         EXP_LEVEL_BUFF = 5
 
+        POP_WORK_BONUS = 20
+        POP_EXP_BOOST = 10
+
 
 class BALANCE:
-    BASE_COMMUNICATION_RANGE = 5 #Расстояние выполнения проектов
+    BASE_COMMUNICATION_RANGE = 5  # Расстояние выполнения проектов
     MAX_BLOOD_TRAITS = 3
+    BASE_JOIN_CHANCE = 0.4
+    FRIEND_JOIN_BOOST = 0.4
 
 
 class CHILDREN:

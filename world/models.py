@@ -174,7 +174,7 @@ class Pop(models.Model):
         from players.models import Character
         tag = None
         try:
-            tag = self.tags.get(name=POP_TAG_NAMES.FACTION)
+            tag = self.tags.get(name=POP_TAG_NAMES.SUPPORTED_CHARACTER)
             result = Character.objects.get(pk=int(tag.content))
             return result
         except PopTag.DoesNotExist:

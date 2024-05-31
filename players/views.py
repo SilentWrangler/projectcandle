@@ -24,6 +24,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 
 from forum.models import Post
+from world.models import Faction
 from .models import Player, Character, RenameRequest, Project
 from .forms import SignupForm, CharPickForm, ProjectForms
 from .tokens import account_activation_token
@@ -374,6 +375,12 @@ def start_character_project(request):
         return Response({'status': 'error','detail':str(ve)},HTTP_400_BAD_REQUEST)
     except Character.DoesNotExist:
         return Response({'status': 'error','detail':'Target character not found'},HTTP_404_NOT_FOUND)
+    except Faction.DoesNotExist:
+        return Response({'status': 'error', 'detail': 'Target faction not found'}, HTTP_404_NOT_FOUND)
+    except PCUtils.MissingData as ex:
+        return Response({'status': 'error','detail':str(ex)},HTTP_400_BAD_REQUEST)
+    except PCUtils.InvalidParameters as ex:
+        return Response({'status': 'error','detail':str(ex)},HTTP_200_OK)
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])

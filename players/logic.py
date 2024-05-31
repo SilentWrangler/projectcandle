@@ -4,9 +4,9 @@ from random import randint, choice, choices, sample
 from .models import Character, Trait, CharTag, RenameRequest, Project
 from world.models import Pop, Cell, Faction
 from world.logic import get_active_world
-from world.constants import POP_RACE, MAIN_BIOME, CIVILIAN_CITIES
+from world.constants import POP_RACE, MAIN_BIOME, CIVILIAN_CITIES, BALANCE as WORLD_BALANCE
 from .namegens import hungarian
-from .constants import GENDER, CHAR_TAG_NAMES, EXP, PROJECTS, CHILDREN, HEALTH, BALANCE, ALLOWED_EXP
+from .constants import GENDER, CHAR_TAG_NAMES, EXP, PROJECTS, CHILDREN, HEALTH, BALANCE as PLAYER_BALANCE, ALLOWED_EXP
 from .projects import ProjectProcessor, RelocateHelpers
 
 import json
@@ -189,7 +189,7 @@ class PCUtils:
         return char
 
     @classmethod
-    def get_char_projects(cls,char, target):
+    def get_char_projects(cls,char: Character, target: Character):
         if char.is_alive and target.is_alive:
             result = []
             char_can = get_available_projects(char)
@@ -197,6 +197,11 @@ class PCUtils:
                 result = [PROJECTS.TYPES.TEACH,PROJECTS.TYPES.STUDY]
             else:
                 result = [PROJECTS.TYPES.MAKE_FRIEND]
+                for faction in char.factions:
+                    if faction.can_recruit or faction.is_leader:
+                        result += [PROJECTS.TYPES.INVITE_TO_FACTION]
+                        break
+
             return list(set(result) & set(char_can))
         return []
 
@@ -214,13 +219,15 @@ class PCUtils:
             result = []
             if RelocateHelpers.can_relocate(char, cell):
                 result.append(PROJECTS.TYPES.RELOCATE)
-            if dist <= BALANCE.BASE_COMMUNICATION_RANGE:
+            if dist <= PLAYER_BALANCE.BASE_COMMUNICATION_RANGE:
                 population = cell.pop_set.count()
                 if population==0 and cell.main_biome!=MAIN_BIOME.WATER:
                     result += [PROJECTS.TYPES.FORTIFY_CITY, PROJECTS.TYPES.BUILD_TILE]
                 elif population>0:
                     result += [PROJECTS.TYPES.MAKE_FACTION,PROJECTS.TYPES.RENAME_TILE,
-                    PROJECTS.TYPES.IMPROVE_MANA,PROJECTS.TYPES.IMPROVE_FOOD, PROJECTS.TYPES.GATHER_SUPPORT]
+                    PROJECTS.TYPES.IMPROVE_MANA, PROJECTS.TYPES.IMPROVE_FOOD, PROJECTS.TYPES.GATHER_SUPPORT]
+                    if cell.city_tier<WORLD_BALANCE.MAX_LEVELS[cell.city_type]:
+                        result.append(PROJECTS.TYPES.UPGRADE_TILE)
 
 
             return list(set(result) & set(char_can))
@@ -286,6 +293,30 @@ class PCUtils:
             project.is_current = True
             project.save()
             return project.id
+        elif project_type == PROJECTS.TYPES.INVITE_TO_FACTION:
+            required = ['faction']
+            cls._check_missing(required,data)
+            faction = Faction.objects.get(id=int(data['faction']))
+            if not faction.members.exists(character=char):
+                raise PCUtils.InvalidParameters('Cannot invite to a faction character is not a member of')
+            membership = faction.members.get(character=char)
+            if not (membership.is_leader or membership.can_recruit):
+                raise PCUtils.InvalidParameters("This character doesn't have a right to invite others to this faction")
+            proj_args = {'target':target.id,'faction':faction.id}
+            project, created = char.projects.get_or_create(
+                type = PROJECTS.TYPES.INVITE_TO_FACTION,
+                arguments=json.dumps(proj_args),
+                defaults ={
+                    'work_done':0,
+                    'work_required':-1,
+                    'is_current':False,
+                    'arguments':json.dumps(proj_args)
+                }
+            )
+            project.is_current = True
+            project.save()
+            return project.id
+
     @classmethod
     def start_cell_project(cls, char, x, y, project_type, data):
         allowed_projects = PCUtils.get_cell_projects(char, x, y)
@@ -458,7 +489,7 @@ class PCUtils:
                     dist = max(abs(x-target_char.location['x']), abs(y-target_char.location['y']))
                     if not target_char.is_alive:
                         raise cls.InvalidParameters(f"Character {target_char} is dead.")
-                    if dist>BALANCE.BASE_COMMUNICATION_RANGE:
+                    if dist>PLAYER_BALANCE.BASE_COMMUNICATION_RANGE:
                         raise cls.InvalidParameters(f"Character {target_char} is too far.")
                 except Character.DoesNotexist:
                     raise cls.InvalidParameters(f"Character {target_id} does not exist")
@@ -487,10 +518,20 @@ class PCUtils:
             project.is_current = True
             project.save()
             return project.id
+        elif project_type == PROJECTS.TYPES.UPGRADE_TILE:
+            project = char.projects.create(
+                type=PROJECTS.TYPES.UPGRADE_TILE,
+                work_done=0,
+                work_required= WORLD_BALANCE.UPGRADE_COSTS[cell.city_type][cell.city_tier-1],
+                is_current=True
+            )
+            project.save()
+            return project.id
+
 
     @classmethod
     def save_trait_in_bloodline(cls,player, trait):
-        if player.bloodline_traits.count>=BALANCE.MAX_BLOOD_TRAITS:
+        if player.bloodline_traits.count>=PLAYER_BALANCE.MAX_BLOOD_TRAITS:
             raise cls.InvalidParameters(f"You already reached maximum amount of traits, remove one")
         player.bloodline_traits.add(trait)
 
@@ -523,7 +564,7 @@ def get_available_projects(char):
     elif not char.educated:
         return [PROJECTS.TYPES.MAKE_FRIEND, PROJECTS.TYPES.ADVENTURE, PROJECTS.TYPES.STUDY]
     else:
-        base = [PROJECTS.TYPES.MAKE_FRIEND, PROJECTS.TYPES.ADVENTURE, PROJECTS.TYPES.STUDY, PROJECTS.TYPES.RELOCATE,PROJECTS.TYPES.TEACH]
+        base = [PROJECTS.TYPES.MAKE_FRIEND, PROJECTS.TYPES.ADVENTURE, PROJECTS.TYPES.STUDY, PROJECTS.TYPES.RELOCATE, PROJECTS.TYPES.TEACH]
         if char.traits.filter(name__startswith = 'exp.military').exists():
             base += PROJECTS.MILITARY
         if char.traits.filter(name__startswith = 'exp.politics').exists():

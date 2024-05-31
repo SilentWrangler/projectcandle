@@ -149,6 +149,25 @@ class BALANCE:
         '': [2]
     }
 
+    MAX_LEVELS = {
+        CITY_TYPE.GENERIC: 5,
+        CITY_TYPE.MANA: 2,
+        CITY_TYPE.FARM: 2,
+        CITY_TYPE.LIBRARY: 2,
+        CITY_TYPE.FORT: 2,
+        CITY_TYPE.MINE: 2
+    }
+
+    UPGRADE_COSTS = {
+        CITY_TYPE.GENERIC: [200, 400, 700, 1100],
+        CITY_TYPE.MANA: [750],
+        CITY_TYPE.FARM: [750],
+        CITY_TYPE.LIBRARY: [750],
+        CITY_TYPE.FORT: [900],
+        CITY_TYPE.FACTORY: [900],
+        CITY_TYPE.MINE: [750],
+    }
+
     RESOURCE_DISTRIBUTION = {
         MAIN_BIOME.PLAIN: {
             '': [RESOURCE_TYPE.IRON, RESOURCE_TYPE.QUARTZ, RESOURCE_TYPE.WYVERNS],
@@ -177,3 +196,4 @@ class BALANCE:
 
     AUTO_EXPAND_FOOD_TRIGGER = 0.8
     AUTO_EXPAND_HOUSING_TRIGGER = 0.9
+
