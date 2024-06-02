@@ -54,13 +54,15 @@ def process_make_faction(project):
         author_id = int(kwargs.get('author'))
         pop_id = int(kwargs.get('with_pop'))
         pop = Pop.objects.get(pop_id)
-        author = Player.objects.get(pk = author_id)
+
         faction = Faction(name = 'Faction')
         faction.save()
         pop.faction = faction
-        #prepare rename
-        rr = FactionRenameRequest(faction = faction, player = author, name = name)
-        rr.save()
+        # prepare rename if character was controlled by player
+        if author_id!=-1:
+            author = Player.objects.get(pk=author_id)
+            rr = FactionRenameRequest(faction = faction, player = author, name = name)
+            rr.save()
 
         #make creator a leader
         faction.members.create(
@@ -174,7 +176,8 @@ def supporters_within_range(target_location, character):
         location__x__gte=min_x,
         location__x__lte=max_x,
         location__y__gte=min_y,
-        location__y__lte=max_y
+        location__y__lte=max_y,
+        location__world__is_active=True
     )
     for pop in pops_in_range:
         if pop in character.supporters:

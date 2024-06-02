@@ -410,7 +410,7 @@ class PCUtils:
 
             )
             proj_args['with_pop'] = pop_id
-            proj_args['author'] = char.controller.id
+            proj_args['author'] = -1 if char.controller is None else char.controller.id
             proj_args['name'] = name
             project.arguments_dict = proj_args
             project.is_current = True
@@ -472,7 +472,7 @@ class PCUtils:
             if target is None:
                 missing.append('target')
             if len(missing)>0:
-                raise cls.MissingData(f"Request is missng POST parameters: {missing}.")
+                raise cls.MissingData(f"Request is missing POST parameters: {missing}.")
 
             pop_id = int(pop_str)
             if not cell.pop_set.filter(pk = pop_id).exists():

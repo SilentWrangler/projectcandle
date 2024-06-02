@@ -32,6 +32,8 @@ class EXP:
 
     MINIMUM_EXP_GAINED = 5 #Если дебафы перевешивают бафы
 
+    SCIENCE_BUFF_PER_LEVEL = 0.15
+
 class CHAR_DISPLAY:
     clothes = {'stone_age':'stone_age.png'}
     race = {
@@ -49,6 +51,7 @@ class CHAR_DISPLAY:
 
 
 class CHAR_TAG_NAMES(models.TextChoices):
+    WORLD = "world"
     #player
     BLOODLINE = "bloodline"
     CONTROLLED = "controlled_by"

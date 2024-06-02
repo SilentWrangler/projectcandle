@@ -84,8 +84,12 @@ def calc_exp(char, subject, teacher_id = None , on_purpose = False):
     elif age>=EXP.OLD_DEBUFF_START:
         age_buff = EXP.TOO_OLD_EXP_MOD
 
-    total_exp = EXP.NORMAL_EXP_GAIN + teacher_buff + bloodline_buff + age_buff
+    total_exp_pre_multi_buffs = EXP.NORMAL_EXP_GAIN + teacher_buff + bloodline_buff + age_buff
 
+    extra_exp_multiplier = (EXP.SCIENCE_BUFF_PER_LEVEL * char.level('science'))
+
+    multi_buffs = int(extra_exp_multiplier * total_exp_pre_science)
+    total_exp = total_exp_multi_buffs + multi_buffs
     if not on_purpose:
         total_exp = int(total_exp / 2)
 

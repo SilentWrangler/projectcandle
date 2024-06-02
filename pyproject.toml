@@ -16,11 +16,11 @@ mysql = "^0.0.3"
 mysql-connector = "^2.2.9"
 pynames = "^0.2.4"
 setuptools = "^65.5.0"
-keras = "^3.3.3"
 torch = "^2.3.0"
 numpy = "^1.26.4"
 gymnasium = "^0.29.1"
 pettingzoo = "^1.24.3"
+stable-baselines3 = "^2.3.2"
 
 [tool.poetry.dev-dependencies]
 

@@ -10,7 +10,7 @@ from .managers import CustomUserManager
 from world.constants import POP_RACE
 from world.strings import month_names
 from world.logic import get_active_world
-from world.models import Faction, Pop, PopTag
+from world.models import Faction, Pop, PopTag, World
 from .constants import GENDER, UNIQUE_TAGS, CHAR_TAG_NAMES, PROJECTS, EXP_TO_TAG, EXP_TO_HUMAN
 
 
@@ -73,6 +73,22 @@ class Character(models.Model):
         choices = GENDER.choices,
         max_length = 1
     )
+
+    @property
+    def world(self):
+        try:
+            tag = self.tags.get(name=CHAR_TAG_NAMES.WORLD)
+        except CharTag.DoesNotExist:
+            tag = self.tags.create(name=CHAR_TAG_NAMES.WORLD,
+                                   content=get_active_world().id)
+            tag.save()
+        finally:
+            return World.objects.get(id=int(tag.content))
+
+    @world.setter
+    def world(self,world):
+        tag, _ = self.tags.get_or_create(name=CHAR_TAG_NAMES.WORLD)
+        tag.content = str(world.id)
 
     @property
     def birth_date_human_readable(self):
@@ -147,7 +163,7 @@ class Character(models.Model):
     #PROJECTS AND EXP
     @property
     def active_projects(self):
-        return self.projects.get(is_active=True)
+        return self.projects.filter(is_active=True)
     @property
     def current_project(self):
         try:
@@ -447,6 +463,7 @@ class Character(models.Model):
     # ---------------------------------------------------------------
     @property
     def supporters(self):
+        from world.constants import POP_TAG_NAMES
         tags = PopTag.objects.filter(name=POP_TAG_NAMES.SUPPORTED_CHARACTER, content=str(self.id))
         pops = Pop.objects.filter(id__in = models.Subquery(tags.values("pop")))
         return pops
