@@ -292,9 +292,12 @@ class CandleAiEnvironment(ParallelEnv):
 
         x, y = int(action[1][1]), int(action[1][2])
         ptype = int(action[0][0])
+        rewards = [0, 5, 7, 7, 7, 7, 10, 9, 15]
         try:
             if ptype == 0:
-                return 5
+                current = 0 if character.current_project is None else\
+                    project_type_to_number(character.current_project.type)
+                return rewards[current]
             elif ptype == 1:
                 subjects = ['economics','politics','military','science']
                 PCUtils.start_char_project(
@@ -306,7 +309,7 @@ class CandleAiEnvironment(ParallelEnv):
                     }
 
                 )
-                return 5
+                return rewards[ptype]
             elif ptype == 2:
                 target = Character.objects.get(id=int(action[1][0]))
                 PCUtils.start_char_project(
@@ -315,7 +318,7 @@ class CandleAiEnvironment(ParallelEnv):
                     PROJECTS.TYPES.MAKE_FRIEND,
                     {}
                 )
-                return 5
+                return rewards[ptype]
             elif ptype == 3:
                 PCUtils.start_cell_project(
                     character,
@@ -326,7 +329,7 @@ class CandleAiEnvironment(ParallelEnv):
                         'name': 'AI Faction'
                     }
                 )
-                return 5
+                return rewards[ptype]
             elif ptype == 4:
                 target = Character.objects.get(id=int(action[1][0]))
                 PCUtils.start_char_project(
@@ -337,7 +340,7 @@ class CandleAiEnvironment(ParallelEnv):
                         'faction': int(action[2][2])
                     }
                 )
-                return 5
+                return rewards[ptype]
             elif ptype == 5:
                 target_types = [PROJECTS.TARGET_TYPES.CHARACTER,PROJECTS.TARGET_TYPES.FACTION]
                 ttype = target_types[int(action[0][1])]
@@ -356,7 +359,7 @@ class CandleAiEnvironment(ParallelEnv):
                         'with_pop': int(action[2][0])
                     }
                 )
-                return 5
+                return rewards[ptype]
             elif ptype == 6:
                 PCUtils.start_cell_project(
                     character,
@@ -366,7 +369,7 @@ class CandleAiEnvironment(ParallelEnv):
                         'with_pop': int(action[2][0])
                     }
                 )
-                return 5
+                return rewards[ptype]
             elif ptype == 7:
                 PCUtils.start_cell_project(
                     character,
@@ -377,7 +380,7 @@ class CandleAiEnvironment(ParallelEnv):
                         'city_type': CIVILIAN_CITIES[int(action[2][1])],
                     }
                 )
-                return 5
+                return rewards[ptype]
             elif ptype == 8:
                 PCUtils.start_cell_project(
                     character,
@@ -385,7 +388,7 @@ class CandleAiEnvironment(ParallelEnv):
                     PROJECTS.TYPES.UPGRADE_TILE,
                     {}
                 )
-                return 5
+                return rewards[ptype]
         except Exception:
             return -10
 
