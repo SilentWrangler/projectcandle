@@ -109,7 +109,7 @@ def give_exp(char,subject,exp):
     prev_exp += exp
     if prev_exp>=lvlup and level<EXP.TRAIT_LVL_MAX:
         prev_exp-=lvlup
-        char.level_up()
+        char.level_up(subject)
     char.set_exp(subject,prev_exp)
 
 # study
