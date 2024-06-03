@@ -9,7 +9,7 @@ LEARNING_WORLD_HEIGHT = WORLD_GEN.HEIGHT//4
 
 class MEGABOX_COORDS:
 
-    SHAPE = (50,13,8)
+    SHAPE = (25,13,8)
     class MAP:
         ROW_START = 0
         COLUMN_START = 4

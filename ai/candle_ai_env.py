@@ -19,6 +19,9 @@ from candle.settings import TIMESTEP_MODULES
 
 from copy import copy
 from importlib import import_module
+
+from random import randint
+
 class CandleAiEnvironment(ParallelEnv):
     metadata = {
         "name": "candle_ai_v0",
@@ -216,6 +219,8 @@ class CandleAiEnvironment(ParallelEnv):
 
         pop_idx = 0
         for pop in pops_in_range:
+            if randint(MEGABOX_COORDS.SHAPE[0]) <= pop_idx:
+                continue
             _, j, k = MEGABOX_COORDS.POP.ID
             observation[pop_idx][j][k] = pop.id
             _, j, k = MEGABOX_COORDS.POP.RACE
@@ -250,6 +255,9 @@ class CandleAiEnvironment(ParallelEnv):
                 abs(other.location['x']-character.location['x']),
                 abs(other.location['y']-character.location['y'])
             ) <= 5:
+                if randint(MEGABOX_COORDS.SHAPE[0]) <= other_idx: # this is so stupid but I really need memory
+                    continue
+
                 _, j, k = MEGABOX_COORDS.OTHERS.ID
                 observation[other_idx][j][k] = other.id
                 for k in range(4):
@@ -273,7 +281,7 @@ class CandleAiEnvironment(ParallelEnv):
                         observation[other_idx][j][k] = 1
                         break
 
-            other_idx += 1
+                other_idx += 1
 
         return observation
 
