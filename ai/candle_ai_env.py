@@ -55,7 +55,7 @@ class CandleAiEnvironment(ParallelEnv):
             self.possible_agents.append(str(i))
             temp_dict[str(i)] = Box(
                 shape=MEGABOX_COORDS.SHAPE,
-                dtype=int,
+                dtype=float,
                 low=MEGABOX_LOW,
                 high=MEGABOX_HIGH
             )
@@ -151,7 +151,7 @@ class CandleAiEnvironment(ParallelEnv):
 
         skills = ['politics', 'economics', 'military', 'science']
 
-        observation = np.zeros(MEGABOX_COORDS.SHAPE, dtype=int)
+        observation = np.zeros(MEGABOX_COORDS.SHAPE, dtype=float)
 
         j = MEGABOX_COORDS.MAP.ROW_START
         k = MEGABOX_COORDS.MAP.COLUMN_START
