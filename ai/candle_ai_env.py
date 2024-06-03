@@ -59,7 +59,7 @@ class CandleAiEnvironment(ParallelEnv):
                 low=MEGABOX_LOW,
                 high=MEGABOX_HIGH
             )
-            temp_dict_2[str(i)] = Box(shape=(3,3),dtype=int,
+            temp_dict_2[str(i)] = Box(shape=(3,3),dtype=float,
                                       low=np.array([
                                         [0, 0, 0],
                                         [0, 0, 0],
@@ -290,8 +290,8 @@ class CandleAiEnvironment(ParallelEnv):
             return 0
         character = Character.objects.get(id=self.agent_0_id + actor)
 
-        x, y = action[1][1], action[1][2]
-        ptype = action[0][0]
+        x, y = int(action[1][1]), int(action[1][2])
+        ptype = int(action[0][0])
         try:
             if ptype == 0:
                 return 5
@@ -302,13 +302,13 @@ class CandleAiEnvironment(ParallelEnv):
                     character,
                     PROJECTS.TYPES.STUDY,
                     {
-                        'subject': subjects[action[0][2]]
+                        'subject': subjects[int(action[0][2])]
                     }
 
                 )
                 return 5
             elif ptype == 2:
-                target = Character.objects.get(id=action[1][0])
+                target = Character.objects.get(id=int(action[1][0]))
                 PCUtils.start_char_project(
                     character,
                     target,
@@ -322,30 +322,30 @@ class CandleAiEnvironment(ParallelEnv):
                     x,y,
                     PROJECTS.TYPES.MAKE_FACTION,
                     {
-                        'with_pop': action[2][0],
+                        'with_pop': int(action[2][0]),
                         'name': 'AI Faction'
                     }
                 )
                 return 5
             elif ptype == 4:
-                target = Character.objects.get(id=action[1][0])
+                target = Character.objects.get(id=int(action[1][0]))
                 PCUtils.start_char_project(
                     character,
                     target,
                     PROJECTS.TYPES.INVITE_TO_FACTION,
                     {
-                        'faction': action[2][2]
+                        'faction': int(action[2][2])
                     }
                 )
                 return 5
             elif ptype == 5:
                 target_types = [PROJECTS.TARGET_TYPES.CHARACTER,PROJECTS.TARGET_TYPES.FACTION]
-                ttype = target_types[action[0][1]]
+                ttype = target_types[int(action[0][1])]
                 target = None
                 if ttype == PROJECTS.TARGET_TYPES.CHARACTER:
-                    target = Character.objects.get(id=action[1][0])
+                    target = Character.objects.get(id=int(action[1][0]))
                 if ttype == PROJECTS.TARGET_TYPES.FACTION:
-                    target = Faction.objects.get(id=action[1][0])
+                    target = Faction.objects.get(id=int(action[1][0]))
                 PCUtils.start_cell_project(
                     character,
                     x,y,
@@ -353,7 +353,7 @@ class CandleAiEnvironment(ParallelEnv):
                     {
                         'target_type':ttype,
                         'target': target.id,
-                        'with_pop': action[2][0]
+                        'with_pop': int(action[2][0])
                     }
                 )
                 return 5
@@ -363,7 +363,7 @@ class CandleAiEnvironment(ParallelEnv):
                     x,y,
                     PROJECTS.TYPES.FORTIFY_CITY,
                     {
-                        'with_pop': action[2][0]
+                        'with_pop': int(action[2][0])
                     }
                 )
                 return 5
@@ -373,8 +373,8 @@ class CandleAiEnvironment(ParallelEnv):
                     x,y,
                     PROJECTS.TYPES.BUILD_TILE,
                     {
-                        'with_pop': action[2][0],
-                        'city_type': CIVILIAN_CITIES[action[2][1]],
+                        'with_pop': int(action[2][0]),
+                        'city_type': CIVILIAN_CITIES[int(action[2][1])],
                     }
                 )
                 return 5
