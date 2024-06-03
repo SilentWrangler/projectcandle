@@ -89,7 +89,7 @@ def calc_exp(char, subject, teacher_id = None , on_purpose = False):
     extra_exp_multiplier = (EXP.SCIENCE_BUFF_PER_LEVEL * char.level('science'))
 
     multi_buffs = int(extra_exp_multiplier * total_exp_pre_multi_buffs)
-    total_exp = total_exp_multi_buffs + multi_buffs
+    total_exp = total_exp_pre_multi_buffs + multi_buffs
     if not on_purpose:
         total_exp = int(total_exp / 2)
 
