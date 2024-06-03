@@ -426,10 +426,12 @@ def check_for_migration(cell):
             break
     if pop_count/get_food_production(cell) >= BALANCE.AUTO_EXPAND_FOOD_TRIGGER:
         if not building_in_progress:
-            try_build_farm(cell, chars)
+            pass
+            # try_build_farm(cell, chars)
     if pop_count/get_cell_housing(cell) >= BALANCE.AUTO_EXPAND_HOUSING_TRIGGER:
         if not building_in_progress:
-            try_build_house(cell, chars)
+            pass
+            # try_build_house(cell, chars)
 
 
 def process_population(world):
