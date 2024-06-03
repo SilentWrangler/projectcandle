@@ -10,8 +10,10 @@ from world.constants import (WORLD_GEN, MAIN_BIOME, BIOME_MOD,
 from world.models import World, Pop
 
 from players.models import Character
-from players.constants import CHAR_TAG_NAMES, PROJECTS
+from players.constants import CHAR_TAG_NAMES, PROJECTS, BALANCE as PLAYER_BALANCE
 from players.logic import PCUtils, create_character_outta_nowhere
+
+from ai.constants import MEGABOX_COORDS, MEGABOX_HIGH, MEGABOX_LOW
 
 from candle.settings import TIMESTEP_MODULES
 
@@ -23,11 +25,11 @@ class CandleAiEnvironment(ParallelEnv):
     }
     LENGTH_LIMIT = 1200
     def __init__(self):
-
         # Generate a smaller world
+        width, height = WORLD_GEN.WIDTH//4, WORLD_GEN.HEIGHT//4
         self.generator = WorldGenerator(
-            width=WORLD_GEN.WIDTH//4,
-            height=WORLD_GEN.HEIGHT//4,
+            width=width,
+            height=height,
             eruptions=WORLD_GEN.ERUPTIONS//16,
             eruption_power=WORLD_GEN.ERUPTION_POWER//16,
             forest_cells=WORLD_GEN.FOREST_CELLS//16,
@@ -35,11 +37,11 @@ class CandleAiEnvironment(ParallelEnv):
             city_number=20,
             pops_per_city=2
         )
-        self.wid = self.generator.generate_world()
-        world = World.objects.get(id=self.wid)
-        world.is_active = True
-        world.save()
-        self.create_characters(self.wid)
+        #self.wid = self.generator.generate_world()
+        #world = World.objects.get(id=self.wid)
+        #world.is_active = True
+        #world.save()
+        #self.create_characters(self.wid)
         self.possible_agents = []
         self.agent_0_id = None
         self.timestep = None
@@ -48,60 +50,27 @@ class CandleAiEnvironment(ParallelEnv):
         temp_dict_2 = {}
         for i in range(40):
             self.possible_agents.append(str(i))
-            temp_dict[str(i)] = Dict({
-                'map':MultiDiscrete(np.array([[[4, 6, 10, 7] for i in range(11)] for j in range(11)]),
-                                    start=np.array([[[-1, -1, -1, -1] for i in range(11)] for j in range(11)])),
-                'self':Dict({
-                    'id': Box(low=-1, high=100000,  shape=(1,), dtype=int),
-                    'skill_levels': Tuple((Discrete(6),Discrete(6),Discrete(6),Discrete(6))),
-                    'skill_exp': Box(low=0, high=20000, shape=(4,),dtype=int),
-                    'coords':  Box(low=0, high=1000, shape=(2,), dtype=int),
-                    'race': Tuple((Text(3), Text(3))),
-                    'current_project': Discrete(9),
-                    'work_required': Box(low=-2, high=20000,  shape=(1,),dtype=int),
-                    'work_done': Box(low=-2, high=20000,  shape=(1,),dtype=int),
-                    'factions': Sequence(Box(low=-1, high=100000,  shape=(1,), dtype=int))
-                }),
-                'others': Sequence(
-                    Dict({
-                        'id': Box(low=-1, high=100000,  shape=(1,), dtype=int),
-                        'skill_levels': Tuple((Discrete(6),Discrete(6),Discrete(6),Discrete(6))),
-                        'coords': Box(low=0, high=1000,shape=(2,), dtype=int),
-                        'race': Tuple((Text(3), Text(3))),
-                        'is_friend': Discrete(2),
-                        'has_shared_faction': Discrete(2)
-                    })
-                ),
-                'pops': Sequence(
-                    Dict({
-                        'id': Box(low=-1, high=100000,  shape=(1,), dtype=int),
-                        'race': Text(3),
-                        'supports_you': Discrete(2),
-                        'coords': Box(low=0, high=1000, shape=(2,), dtype=int),
-                        'growth': Box(
-                            low = WORLD_BALANCE.POP_DEATH_THRESHOLD-50,
-                            high = WORLD_BALANCE.GROWTH_THRESHOLD+50,
-                            shape=(1,), dtype=int),
-                    })
-                )
-            })
-            temp_dict_2[str(i)]=Dict({
-                'project_type': Discrete(9),  # For prototype, only 8 project types are available + continue current project
-                'target': Dict({
-                    'character':Box(low=-1, high=100000,  shape=(1,), dtype=int), #target IDs, -1 = not applicable
-                    'pop': Box(low=-1, high=100000, shape=(1,), dtype=int),
-                    'faction': Box(low=-1, high=100000, shape=(1,), dtype=int),
-                    'cell': Box(low=-1, high=1000, shape=(2,), dtype=int) #cell coords
-                }),
-                'target_type': Discrete(2),  # Gather support specific argument
-                'with_pop': Box(low=-1, high=100000, shape=(1,), dtype=int),
-                'city_type': Discrete(5),  # build_tile specific
-                'faction': Box(low=-1, high=100000, shape=(1,), dtype=int),  # invite specific
-                'subject': Discrete(4)  # study specific
+            temp_dict[str(i)] = Box(
+                shape=MEGABOX_COORDS.SHAPE,
+                dtype=int,
+                low=MEGABOX_LOW,
+                high=MEGABOX_HIGH
+            )
+            temp_dict_2[str(i)] = Box(shape=(3,3),dtype=int,
+                                      low=np.array([
+                                        [0, 0, 0],
+                                        [0, 0, 0],
+                                        [0, 0, 0]
+                                        ]),
+                                      high=np.array([
+                                        [8, 1, 3],
+                                        [100000, width, height],
+                                        [100000, 4, 100000]
+                                        ]))
 
-            })
         self.observation_spaces = Dict(temp_dict)
         self.action_spaces = Dict(temp_dict_2)
+        self.render_mode = 'ascii'
 
     def reset(self, seed=None, options=None):
         self.wid = self.generator.generate_world()
@@ -171,52 +140,65 @@ class CandleAiEnvironment(ParallelEnv):
     def is_terminated(self,actor):
         character = Character.objects.get(id=self.agent_0_id + actor)
         return character.death is not None
+
     def generate_observation(self, actor):
         character = Character.objects.get(id=self.agent_0_id+actor)
         world = World.objects.get(id=self.wid)
         c_x, c_y = character.location['x'], character.location['y']
-        map = []
 
-        for y in range(c_y-5, c_y+6):
-            row = []
-            for x in range(c_x-5, c_x+6):
-                if x<0 or y<0 or x>=world.width or y>=world.height:
-                    row.append([-1,-1,-1,-1]) # invalid tile
+        skills = ['politics', 'economics', 'military', 'science']
+
+        observation = np.zeros(MEGABOX_COORDS.SHAPE, dtype=int)
+
+        j = MEGABOX_COORDS.MAP.ROW_START
+        k = MEGABOX_COORDS.MAP.COLUMN_START
+        for y_shift in range(MEGABOX_COORDS.MAP.SIZE):
+            for x_shift in range(MEGABOX_COORDS.MAP.SIZE):
+                x = c_x - 5 + x_shift
+                y = c_y - 5 + y_shift
+                if x < 0 or y < 0 or x >= world.width or y >= world.height:
+                    for i in range(MEGABOX_COORDS.MAP.DEPTH):
+                        observation[i][j+y_shift][k+x_shift] = -1
                 else:
                     cell = world[x][y]
-                    row.append([
-                        main_biome_to_number(cell.main_biome),
-                        biome_mod_to_number(cell.biome_mod),
-                        city_type_to_number(cell.city_type),
-                        cell.city_tier
-                    ])
-            map.append(row)
-        observation = {
-            'map': map,
-            'self':{
-                'id': character.id,
-                'skill_levels': (
-                    character.level('politics'),
-                    character.level('economics'),
-                    character.level('military'),
-                    character.level('science')
-                ),
-                'skill_exp':[
-                    character.get_exp('politics'),
-                    character.get_exp('economics'),
-                    character.get_exp('military'),
-                    character.get_exp('science')
-                ],
-                'coords':(character.location['x'],character.location['y']),
-                'race':(character.primary_race, character.secondary_race),
-                'current_project': 0 if character.current_project is None else project_type_to_number(character.current_project.type),
-                'work_required': -2 if character.current_project is None else character.current_project.work_required,
-                'work_done': -2 if character.current_project is None else character.current_project.work_done,
-                'factions': [f.faction.id for f in character.factions.all()]
-            },
-            'others':[],
-            'pops':[]
-        }
+
+                    observation[k+x_shift][j+y_shift][4] = main_biome_to_number(cell.main_biome)
+                    observation[k+x_shift][j+y_shift][5] = biome_mod_to_number(cell.biome_mod)
+                    observation[k+x_shift][j+y_shift][6] = city_type_to_number(cell.city_type)
+                    observation[k+x_shift][j+y_shift][7] = cell.city_tier
+        i, j, k = MEGABOX_COORDS.CHAR.ID
+        observation[i][j][k] = character.id
+
+        for k in range(4):
+            i, j, _ = MEGABOX_COORDS.CHAR.SKILL_LEVELS_START
+            observation[i][j][k] = character.level(skills[k])
+            i, j, _ = MEGABOX_COORDS.CHAR.SKILL_EXP_START
+            observation[i][j][k] = character.get_exp(skills[k])
+        i, j, k = MEGABOX_COORDS.CHAR.X
+        observation[i][j][k] = character.location['x']
+        i, j, k = MEGABOX_COORDS.CHAR.Y
+        observation[i][j][k] = character.location['y']
+        i, j, k = MEGABOX_COORDS.CHAR.PRIMARY_RACE
+        observation[i][j][k] = race_to_number(character.primary_race)
+        i, j, k = MEGABOX_COORDS.CHAR.SECONDARY_RACE
+        observation[i][j][k] = race_to_number(character.secondary_race)
+        i, j, k = MEGABOX_COORDS.CHAR.PROJECT_TYPE
+        observation[i][j][k] = 0 if character.current_project is None else\
+            project_type_to_number(character.current_project.type)
+        i, j, k = MEGABOX_COORDS.CHAR.WORK_REQUIRED
+        observation[i][j][k] = -2 if character.current_project is None else\
+            character.current_project.work_required
+
+        i, j, k = MEGABOX_COORDS.CHAR.WORK_DONE
+        observation[i][j][k] = -2 if character.current_project is None else\
+            character.current_project.work_done
+
+        faction_idx = 0
+        _, j, k = MEGABOX_COORDS.FACTIONS
+        for f in character.factions.all():
+            observation[faction_idx][j][k] = f.faction.id
+            faction_idx += 1
+
 
         min_x = max(0,c_x-5)
         max_x = min(world.width,c_x+5)
@@ -231,63 +213,77 @@ class CandleAiEnvironment(ParallelEnv):
             location__world=world
         )
 
+
+        pop_idx = 0
         for pop in pops_in_range:
-            pop_dict = {
-                'id': pop.id,
-                'race': pop.race,
-                'supports_you': 0,
-                'coords': (pop.location.x, pop.location.y),
-                'growth': (pop.growth,)
-            }
+            _, j, k = MEGABOX_COORDS.POP.ID
+            observation[pop_idx][j][k] = pop.id
+            _, j, k = MEGABOX_COORDS.POP.RACE
+            observation[pop_idx][j][k] = race_to_number(pop.race)
+            _, j, k = MEGABOX_COORDS.POP.GROWTH
+            observation[pop_idx][j][k] = pop.growth
+            _, j, k = MEGABOX_COORDS.POP.X
+            observation[pop_idx][j][k] = pop.location.x
+            _, j, k = MEGABOX_COORDS.POP.Y
+            observation[pop_idx][j][k] = pop.location.y
+
+            _, j, k = MEGABOX_COORDS.POP.SUPPORTS_YOU
             if pop in character.supporters:
-                pop_dict['supports_you'] = 1
+                observation[pop_idx][j][k] = 1
                 continue
             for faction in character.factions.all():
                 if not (faction.can_build or faction.is_leader):
                     continue
                 else:
                     if pop.faction == faction.faction:
-                        pop_dict['supports_you'] = 1
-            observation['pops'].append(pop_dict)
+                        observation[pop_idx][j][k] = 1
+            pop_idx += 1
 
         others = Character.objects.filter(
             tags__name=CHAR_TAG_NAMES.WORLD,
             tags__content=str(self.wid)
         )
 
+        other_idx = 0
         for other in others:
             if max(
                 abs(other.location['x']-character.location['x']),
                 abs(other.location['y']-character.location['y'])
-            )<=5:
-                other_dict={
-                    'id': other.id,
-                    'skill_levels': (
-                        other.level('politics'),
-                        other.level('economics'),
-                        other.level('military'),
-                        other.level('science')
-                    ),
-                    'coords': (other.location['x'], other.location['y']),
-                    'race': (other.primary_race, other.secondary_race),
-                    'is_friend': 1 if other.is_friend_of(character) else 0,
-                    'has_shared_faction': 0
-                }
+            ) <= 5:
+                _, j, k = MEGABOX_COORDS.OTHERS.ID
+                observation[other_idx][j][k] = other.id
+                for k in range(4):
+                    _, j, _ = MEGABOX_COORDS.OTHERS.SKILL_LEVELS_START
+                    observation[i][j][k] = other.level(skills[k])
+                _, j, k = MEGABOX_COORDS.OTHERS.X
+                observation[other_idx][j][k] = other.location['x']
+                _, j, k = MEGABOX_COORDS.OTHERS.Y
+                observation[other_idx][j][k] = other.location['y']
+                _, j, k = MEGABOX_COORDS.OTHERS.PRIMARY_RACE
+                observation[other_idx][j][k] = race_to_number(other.primary_race)
+                _, j, k = MEGABOX_COORDS.OTHERS.SECONDARY_RACE
+                observation[other_idx][j][k] = race_to_number(other.secondary_race)
+                _, j, k = MEGABOX_COORDS.OTHERS.IS_FRIEND
+                observation[other_idx][j][k] = 1 if other.is_friend_of(character) else 0
+
+                _, j, k = MEGABOX_COORDS.OTHERS.HAS_SHARED_FACTION
+
                 for faction in other.factions:
                     if character.factions.filter(faction=faction.faction).exists():
-                        other_dict['has_shared_faction'] = 1
+                        observation[other_idx][j][k] = 1
                         break
-                observation['others'].append(other_dict)
 
+            other_idx += 1
 
         return observation
 
     def process_action(self, actor, action):
+        if action is None:
+            return 0
         character = Character.objects.get(id=self.agent_0_id + actor)
 
-
-        x, y = action['target']['cell']
-        ptype = action['project_type']
+        x, y = action[1][1], action[1][2]
+        ptype = action[0][0]
         try:
             if ptype == 0:
                 return 5
@@ -298,13 +294,13 @@ class CandleAiEnvironment(ParallelEnv):
                     character,
                     PROJECTS.TYPES.STUDY,
                     {
-                        'subject': subjects[action['subject']]
+                        'subject': subjects[action[0][2]]
                     }
 
                 )
                 return 5
             elif ptype == 2:
-                target = Character.objects.get(id=action['target']['character'][0])
+                target = Character.objects.get(id=action[1][0])
                 PCUtils.start_char_project(
                     character,
                     target,
@@ -318,30 +314,30 @@ class CandleAiEnvironment(ParallelEnv):
                     x,y,
                     PROJECTS.TYPES.MAKE_FACTION,
                     {
-                        'with_pop': action['with_pop'][0],
+                        'with_pop': action[2][0],
                         'name': 'AI Faction'
                     }
                 )
                 return 5
             elif ptype == 4:
-                target = Character.objects.get(id=action['target']['character'][0])
+                target = Character.objects.get(id=action[1][0])
                 PCUtils.start_char_project(
                     character,
                     target,
                     PROJECTS.TYPES.INVITE_TO_FACTION,
                     {
-                        'faction': action['faction'][0]
+                        'faction': action[2][2]
                     }
                 )
                 return 5
             elif ptype == 5:
                 target_types = [PROJECTS.TARGET_TYPES.CHARACTER,PROJECTS.TARGET_TYPES.FACTION]
-                ttype = target_types[action['target_type']]
+                ttype = target_types[action[0][1]]
                 target = None
                 if ttype == PROJECTS.TARGET_TYPES.CHARACTER:
-                    target = Character.objects.get(id=action['target']['character'][0])
+                    target = Character.objects.get(id=action[1][0])
                 if ttype == PROJECTS.TARGET_TYPES.FACTION:
-                    target = Faction.objects.get(id=action['target']['faction'][0])
+                    target = Faction.objects.get(id=action[1][0])
                 PCUtils.start_cell_project(
                     character,
                     x,y,
@@ -349,7 +345,7 @@ class CandleAiEnvironment(ParallelEnv):
                     {
                         'target_type':ttype,
                         'target': target.id,
-                        'with_pop': action['with_pop'][0]
+                        'with_pop': action[2][0]
                     }
                 )
                 return 5
@@ -359,7 +355,7 @@ class CandleAiEnvironment(ParallelEnv):
                     x,y,
                     PROJECTS.TYPES.FORTIFY_CITY,
                     {
-                        'with_pop': action['with_pop'][0]
+                        'with_pop': action[2][0]
                     }
                 )
                 return 5
@@ -369,10 +365,11 @@ class CandleAiEnvironment(ParallelEnv):
                     x,y,
                     PROJECTS.TYPES.BUILD_TILE,
                     {
-                        'with_pop': action['with_pop'][0],
-                        'city_type': CIVILIAN_CITIES[action['city_type']],
+                        'with_pop': action[2][0],
+                        'city_type': CIVILIAN_CITIES[action[2][1]],
                     }
                 )
+                return 5
             elif ptype == 8:
                 PCUtils.start_cell_project(
                     character,
@@ -456,21 +453,37 @@ def city_type_to_number(text):
         return 7
     elif text==CITY_TYPE.SORROW_LAIR:
         return 8
+    else:
+        return 0
 
 def project_type_to_number(text):
-    if text==PROJECTS.TYPES.STUDY:
+    if text == PROJECTS.TYPES.STUDY:
         return 1
-    elif text==PROJECTS.TYPES.MAKE_FRIEND:
+    elif text == PROJECTS.TYPES.MAKE_FRIEND:
         return 2
-    elif text==PROJECTS.TYPES.MAKE_FACTION:
+    elif text == PROJECTS.TYPES.MAKE_FACTION:
         return 3
-    elif text==PROJECTS.TYPES.INVITE_TO_FACTION:
+    elif text == PROJECTS.TYPES.INVITE_TO_FACTION:
         return 4
-    elif text==PROJECTS.TYPES.GATHER_SUPPORT:
+    elif text == PROJECTS.TYPES.GATHER_SUPPORT:
         return 5
-    elif text==PROJECTS.TYPES.FORTIFY_CITY:
+    elif text == PROJECTS.TYPES.FORTIFY_CITY:
         return 6
-    elif text==PROJECTS.TYPES.BUILD_TILE:
+    elif text == PROJECTS.TYPES.BUILD_TILE:
         return 7
-    elif text==PROJECTS.TYPES.UPGRADE_TILE:
+    elif text == PROJECTS.TYPES.UPGRADE_TILE:
         return 8
+
+def race_to_number(text):
+    if text == POP_RACE.ELF:
+        return 0
+    elif text == POP_RACE.ORC:
+        return 1
+    elif text == POP_RACE.DWARF:
+        return 2
+    elif text == POP_RACE.HUMAN:
+        return 3
+    elif text == POP_RACE.GOBLIN:
+        return 4
+    elif text == POP_RACE.FEY:
+        return 5
