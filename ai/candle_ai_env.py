@@ -93,6 +93,7 @@ class CandleAiEnvironment(ParallelEnv):
         return observations, infos
     def step(self, actions):
 
+        print(f"===== Starting step {self.timestep}")
         rewards = {}
         for actor in actions:
             rewards[actor] = self.process_action(int(actor), actions[actor])
@@ -107,6 +108,7 @@ class CandleAiEnvironment(ParallelEnv):
         for modname in TIMESTEP_MODULES:
             mod = import_module(modname)
             mod.do_time_step()
+        print(f"===== Finished step {self.timestep}")
         self.timestep += 1
         infos = {a: {} for a in self.agents}
 
@@ -243,7 +245,7 @@ class CandleAiEnvironment(ParallelEnv):
                     if pop.faction == faction.faction:
                         observation[pop_idx][j][k] = 1
             pop_idx += 1
-
+        print(f'Actor {actor}: observed {pop_idx} characters')
         others = Character.objects.filter(
             tags__name=CHAR_TAG_NAMES.WORLD,
             tags__content=str(self.wid)
@@ -282,6 +284,7 @@ class CandleAiEnvironment(ParallelEnv):
                         break
 
                 other_idx += 1
+                print(f'Actor {actor}: observed {other_idx} characters')
 
         return observation
 
