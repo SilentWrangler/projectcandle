@@ -118,10 +118,10 @@ class AgentSave:
 
 
 
-def train(steps: int = 10):
+def train(steps: int = 50, n_episodes = 5):
 
     learning_rate = 0.01
-    n_episodes = 5
+
     start_epsilon = 1.0
     epsilon_decay = start_epsilon / (n_episodes / 2)  # reduce the exploration over time
     final_epsilon = 0.1
