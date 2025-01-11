@@ -20,6 +20,8 @@ from ai.constants import MEGABOX_COORDS, MEGABOX_HIGH, MEGABOX_LOW
 from ai.actions import AI_ACTIONS, process_ai_action
 from ai.targeting import RandomViableTargeting
 
+
+
 from candle.settings import TIMESTEP_MODULES
 
 from copy import copy
@@ -67,7 +69,10 @@ class CandleAiEnvironment(Env):
         #call_command('dbbackup')
 
     def reset(self, seed=None, options=None):
+        from ai.timestep import register_special_ai, unregister_special_ai
         # call_command('dbrestore','--noinput')
+        if self.agent_0_id is not None:
+            unregister_special_ai(self.agent_0_id)
         self.timestep = 0
         self.faction_count = 0
         self.wid = self.generator.generate_world()
@@ -78,6 +83,7 @@ class CandleAiEnvironment(Env):
         #print(f"World id: {self.wid}")
 
         self.create_characters(self.wid)
+        register_special_ai(self.agent_0_id)
 
         return self._get_obs() , {}
 
@@ -136,144 +142,7 @@ class CandleAiEnvironment(Env):
     def _get_obs(self):
         character = Character.objects.get(id=self.agent_0_id)
         world = World.objects.get(id=self.wid)
-        c_x, c_y = character.location['x'], character.location['y']
-
-        skills = ['politics', 'economics', 'military', 'science']
-
-        observation = np.zeros(MEGABOX_COORDS.SHAPE, dtype=float)
-
-        j = MEGABOX_COORDS.MAP.ROW_START
-        k = MEGABOX_COORDS.MAP.COLUMN_START
-        for y_shift in range(MEGABOX_COORDS.MAP.SIZE):
-            for x_shift in range(MEGABOX_COORDS.MAP.SIZE):
-                x = c_x - 5 + x_shift
-                y = c_y - 5 + y_shift
-                if x < 0 or y < 0 or x >= world.width or y >= world.height:
-                    for i in range(MEGABOX_COORDS.MAP.DEPTH):
-                        observation[i][j+y_shift][k+x_shift] = -1
-                else:
-                    cell = world[x][y]
-
-                    observation[k+x_shift][j+y_shift][4] = main_biome_to_number(cell.main_biome)
-                    observation[k+x_shift][j+y_shift][5] = biome_mod_to_number(cell.biome_mod)
-                    observation[k+x_shift][j+y_shift][6] = city_type_to_number(cell.city_type)
-                    observation[k+x_shift][j+y_shift][7] = cell.city_tier
-        i, j, k = MEGABOX_COORDS.CHAR.ID
-        observation[i][j][k] = character.id
-
-        for k in range(4):
-            i, j, _ = MEGABOX_COORDS.CHAR.SKILL_LEVELS_START
-            observation[i][j][k] = character.level(skills[k])
-            i, j, _ = MEGABOX_COORDS.CHAR.SKILL_EXP_START
-            observation[i][j][k] = character.get_exp(skills[k])
-        i, j, k = MEGABOX_COORDS.CHAR.X
-        observation[i][j][k] = character.location['x']
-        i, j, k = MEGABOX_COORDS.CHAR.Y
-        observation[i][j][k] = character.location['y']
-        i, j, k = MEGABOX_COORDS.CHAR.PRIMARY_RACE
-        observation[i][j][k] = race_to_number(character.primary_race)
-        i, j, k = MEGABOX_COORDS.CHAR.SECONDARY_RACE
-        observation[i][j][k] = race_to_number(character.secondary_race)
-        i, j, k = MEGABOX_COORDS.CHAR.PROJECT_TYPE
-        observation[i][j][k] = 0 if character.current_project is None else\
-            project_type_to_number(character.current_project.type)
-        i, j, k = MEGABOX_COORDS.CHAR.WORK_REQUIRED
-        observation[i][j][k] = -2 if character.current_project is None else\
-            character.current_project.work_required
-
-        i, j, k = MEGABOX_COORDS.CHAR.WORK_DONE
-        observation[i][j][k] = -2 if character.current_project is None else\
-            character.current_project.work_done
-
-        faction_idx = 0
-        _, j, k = MEGABOX_COORDS.FACTIONS
-        for f in character.factions.all():
-            observation[faction_idx][j][k] = f.faction.id
-            faction_idx += 1
-
-
-        min_x = max(0,c_x-5)
-        max_x = min(world.width,c_x+5)
-        min_y = max(0,c_y-5)
-        max_y = min(world.height,c_x+5)
-
-        pops_in_range = Pop.objects.filter(
-            location__x__gte=min_x,
-            location__x__lte=max_x,
-            location__y__gte=min_y,
-            location__y__lte=max_y,
-            location__world=world
-        )
-
-
-        pop_idx = 0
-        for pop in pops_in_range:
-            if randrange(0,MEGABOX_COORDS.SHAPE[0]) <= pop_idx:
-                continue
-            _, j, k = MEGABOX_COORDS.POP.ID
-            observation[pop_idx][j][k] = pop.id
-            _, j, k = MEGABOX_COORDS.POP.RACE
-            observation[pop_idx][j][k] = race_to_number(pop.race)
-            _, j, k = MEGABOX_COORDS.POP.GROWTH
-            observation[pop_idx][j][k] = pop.growth
-            _, j, k = MEGABOX_COORDS.POP.X
-            observation[pop_idx][j][k] = pop.location.x
-            _, j, k = MEGABOX_COORDS.POP.Y
-            observation[pop_idx][j][k] = pop.location.y
-
-            _, j, k = MEGABOX_COORDS.POP.SUPPORTS_YOU
-            if pop in character.supporters:
-                observation[pop_idx][j][k] = 1
-                continue
-            for faction in character.factions.all():
-                if not (faction.can_build or faction.is_leader):
-                    continue
-                else:
-                    if pop.faction == faction.faction:
-                        observation[pop_idx][j][k] = 1
-            pop_idx += 1
-        #print(f'Actor observed {pop_idx} pops')
-        others = Character.objects.filter(
-            tags__name=CHAR_TAG_NAMES.WORLD,
-            tags__content=str(self.wid)
-        )
-
-        other_idx = 0
-        for other in others:
-            if max(
-                abs(other.location['x']-character.location['x']),
-                abs(other.location['y']-character.location['y'])
-            ) <= 5:
-                if randrange(0, MEGABOX_COORDS.SHAPE[0]) <= other_idx: # this is so stupid but I really need memory
-                    continue
-
-                _, j, k = MEGABOX_COORDS.OTHERS.ID
-                observation[other_idx][j][k] = other.id
-                for k in range(4):
-                    _, j, _ = MEGABOX_COORDS.OTHERS.SKILL_LEVELS_START
-                    observation[i][j][k] = other.level(skills[k])
-                _, j, k = MEGABOX_COORDS.OTHERS.X
-                observation[other_idx][j][k] = other.location['x']
-                _, j, k = MEGABOX_COORDS.OTHERS.Y
-                observation[other_idx][j][k] = other.location['y']
-                _, j, k = MEGABOX_COORDS.OTHERS.PRIMARY_RACE
-                observation[other_idx][j][k] = race_to_number(other.primary_race)
-                _, j, k = MEGABOX_COORDS.OTHERS.SECONDARY_RACE
-                observation[other_idx][j][k] = race_to_number(other.secondary_race)
-                _, j, k = MEGABOX_COORDS.OTHERS.IS_FRIEND
-                observation[other_idx][j][k] = 1 if other.is_friend_of(character) else 0
-
-                _, j, k = MEGABOX_COORDS.OTHERS.HAS_SHARED_FACTION
-
-                for faction in other.factions.all():
-                    if character.factions.filter(faction=faction.faction).exists():
-                        observation[other_idx][j][k] = 1
-                        break
-
-                other_idx += 1
-        #print(f'Actor observed {other_idx} characters')
-
-        return observation
+        return create_observation(character,world)
 
 
     def calculate_reward(self):
@@ -309,6 +178,144 @@ class CandleAiEnvironment(Env):
                 reward += self.recursive_tile_reward(world,new_x,new_y, visited)
         return reward
 
+
+def create_observation(character,world):
+    c_x, c_y = character.location['x'], character.location['y']
+
+    skills = ['politics', 'economics', 'military', 'science']
+
+    observation = np.zeros(MEGABOX_COORDS.SHAPE, dtype=float)
+
+    j = MEGABOX_COORDS.MAP.ROW_START
+    k = MEGABOX_COORDS.MAP.COLUMN_START
+    for y_shift in range(MEGABOX_COORDS.MAP.SIZE):
+        for x_shift in range(MEGABOX_COORDS.MAP.SIZE):
+            x = c_x - 5 + x_shift
+            y = c_y - 5 + y_shift
+            if x < 0 or y < 0 or x >= world.width or y >= world.height:
+                for i in range(MEGABOX_COORDS.MAP.DEPTH):
+                    observation[i][j + y_shift][k + x_shift] = -1
+            else:
+                cell = world[x][y]
+
+                observation[k + x_shift][j + y_shift][4] = main_biome_to_number(cell.main_biome)
+                observation[k + x_shift][j + y_shift][5] = biome_mod_to_number(cell.biome_mod)
+                observation[k + x_shift][j + y_shift][6] = city_type_to_number(cell.city_type)
+                observation[k + x_shift][j + y_shift][7] = cell.city_tier
+    i, j, k = MEGABOX_COORDS.CHAR.ID
+    observation[i][j][k] = character.id
+
+    for k in range(4):
+        i, j, _ = MEGABOX_COORDS.CHAR.SKILL_LEVELS_START
+        observation[i][j][k] = character.level(skills[k])
+        i, j, _ = MEGABOX_COORDS.CHAR.SKILL_EXP_START
+        observation[i][j][k] = character.get_exp(skills[k])
+    i, j, k = MEGABOX_COORDS.CHAR.X
+    observation[i][j][k] = character.location['x']
+    i, j, k = MEGABOX_COORDS.CHAR.Y
+    observation[i][j][k] = character.location['y']
+    i, j, k = MEGABOX_COORDS.CHAR.PRIMARY_RACE
+    observation[i][j][k] = race_to_number(character.primary_race)
+    i, j, k = MEGABOX_COORDS.CHAR.SECONDARY_RACE
+    observation[i][j][k] = race_to_number(character.secondary_race)
+    i, j, k = MEGABOX_COORDS.CHAR.PROJECT_TYPE
+    observation[i][j][k] = 0 if character.current_project is None else \
+        project_type_to_number(character.current_project.type)
+    i, j, k = MEGABOX_COORDS.CHAR.WORK_REQUIRED
+    observation[i][j][k] = -2 if character.current_project is None else \
+        character.current_project.work_required
+
+    i, j, k = MEGABOX_COORDS.CHAR.WORK_DONE
+    observation[i][j][k] = -2 if character.current_project is None else \
+        character.current_project.work_done
+
+    faction_idx = 0
+    _, j, k = MEGABOX_COORDS.FACTIONS
+    for f in character.factions.all():
+        observation[faction_idx][j][k] = f.faction.id
+        faction_idx += 1
+
+    min_x = max(0, c_x - 5)
+    max_x = min(world.width, c_x + 5)
+    min_y = max(0, c_y - 5)
+    max_y = min(world.height, c_x + 5)
+
+    pops_in_range = Pop.objects.filter(
+        location__x__gte=min_x,
+        location__x__lte=max_x,
+        location__y__gte=min_y,
+        location__y__lte=max_y,
+        location__world=world
+    )
+
+    pop_idx = 0
+    for pop in pops_in_range:
+        if randrange(0, MEGABOX_COORDS.SHAPE[0]) <= pop_idx:
+            continue
+        _, j, k = MEGABOX_COORDS.POP.ID
+        observation[pop_idx][j][k] = pop.id
+        _, j, k = MEGABOX_COORDS.POP.RACE
+        observation[pop_idx][j][k] = race_to_number(pop.race)
+        _, j, k = MEGABOX_COORDS.POP.GROWTH
+        observation[pop_idx][j][k] = pop.growth
+        _, j, k = MEGABOX_COORDS.POP.X
+        observation[pop_idx][j][k] = pop.location.x
+        _, j, k = MEGABOX_COORDS.POP.Y
+        observation[pop_idx][j][k] = pop.location.y
+
+        _, j, k = MEGABOX_COORDS.POP.SUPPORTS_YOU
+        if pop in character.supporters:
+            observation[pop_idx][j][k] = 1
+            continue
+        for faction in character.factions.all():
+            if not (faction.can_build or faction.is_leader):
+                continue
+            else:
+                if pop.faction == faction.faction:
+                    observation[pop_idx][j][k] = 1
+        pop_idx += 1
+    # print(f'Actor observed {pop_idx} pops')
+    others = Character.objects.filter(
+        tags__name=CHAR_TAG_NAMES.WORLD,
+        tags__content=str(world.id)
+    )
+
+    other_idx = 0
+    for other in others:
+        if max(
+                abs(other.location['x'] - character.location['x']),
+                abs(other.location['y'] - character.location['y'])
+        ) <= 5:
+            if randrange(0, MEGABOX_COORDS.SHAPE[0]) <= other_idx:  # this is so stupid but I really need memory
+                continue
+
+            _, j, k = MEGABOX_COORDS.OTHERS.ID
+            observation[other_idx][j][k] = other.id
+            for k in range(4):
+                _, j, _ = MEGABOX_COORDS.OTHERS.SKILL_LEVELS_START
+                observation[i][j][k] = other.level(skills[k])
+            _, j, k = MEGABOX_COORDS.OTHERS.X
+            observation[other_idx][j][k] = other.location['x']
+            _, j, k = MEGABOX_COORDS.OTHERS.Y
+            observation[other_idx][j][k] = other.location['y']
+            _, j, k = MEGABOX_COORDS.OTHERS.PRIMARY_RACE
+            observation[other_idx][j][k] = race_to_number(other.primary_race)
+            _, j, k = MEGABOX_COORDS.OTHERS.SECONDARY_RACE
+            observation[other_idx][j][k] = race_to_number(other.secondary_race)
+            _, j, k = MEGABOX_COORDS.OTHERS.IS_FRIEND
+            observation[other_idx][j][k] = 1 if other.is_friend_of(character) else 0
+
+            _, j, k = MEGABOX_COORDS.OTHERS.HAS_SHARED_FACTION
+
+            for faction in other.factions.all():
+                if character.factions.filter(faction=faction.faction).exists():
+                    observation[other_idx][j][k] = 1
+                    break
+
+            other_idx += 1
+    # print(f'Actor observed {other_idx} characters')
+
+    return observation
 
 def main_biome_to_number(text):
     if text==MAIN_BIOME.WATER:

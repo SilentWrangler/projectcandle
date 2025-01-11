@@ -10,7 +10,7 @@ from abc import ABC, abstractmethod
 
 from players.models import Character
 
-from ai.candle_ai_env import CandleAiEnvironment
+from ai.candle_ai_env import CandleAiEnvironment, create_observation
 from ai.actions import AI_ACTIONS
 
 from datetime import datetime
@@ -96,24 +96,32 @@ class TestAgent:
 
         save_path = "./pickled_models"
         filename = os.path.join(save_path, f'Agent_{count}.pickle')
+
+
         with open(filename, mode='wb') as out:
-            dump(dict(self.q_values), out)
+            save = AgentSave(self.q_values,self.epsilon)
+            dump(save, out)
         return filename
 
     def load_q_values(self, filename):
         from pickle import load
         with open(filename,mode='rb') as file:
-            self.q_values = defaultdict(lambda: np.zeros(env.action_space.n), load(file))
+            save = load(file)
+            self.q_values = defaultdict(lambda: np.zeros(env.action_space.n), save.q_values )
+            self.epsilon = save.epsilon
 
 
-
+class AgentSave:
+    def __init__(self,q_values,epsilon):
+        self.q_values = dict(q_values)
+        self.epsilon = epsilon
 
 
 
 def train(steps: int = 10):
 
     learning_rate = 0.01
-    n_episodes = 3
+    n_episodes = 5
     start_epsilon = 1.0
     epsilon_decay = start_epsilon / (n_episodes / 2)  # reduce the exploration over time
     final_epsilon = 0.1
@@ -190,11 +198,36 @@ class WeightedRandomAI(BaseActionAI):
         return choices(self.choices, weights = self.weights)[0]
 
 
+class TrainedActionAI(BaseActionAI):
+    def __init__(self, *args, **kwargs):
+        from pickle import load
+
+        filename = kwargs['filename']
+
+        with open(filename, mode='rb') as file:
+            save = load(file)
+            self.q_values = defaultdict(lambda: np.zeros(len(AI_ACTIONS.ACTION_LIST)), save.q_values)
+            self.epsilon = save.epsilon
+
+
+    def pick_action(self, character: Character) -> int:
+        observation = create_observation(character, character.world)
+
+        observation_hashable = tuple(observation.flatten())
+
+        if np.random.random() < self.epsilon:
+            return np.random.randint(0, len(AI_ACTIONS.ACTION_LIST))
+        # with probability (1 - epsilon) act greedily (exploit)
+        else:
+            return int(np.argmax(self.q_values[observation_hashable]))
+
+
 class DefaultTreeAI(BaseActionAI):
 
     RECRUITING_RANGE = 1
     RECRUITING_DRIVE = 5
     POP_SUPPORT_NEED = 5
+
     class SPECIALIZATIONS:
         ECONOMICS = (AI_ACTIONS.STUDY_ECONOMICS, 'economics')
         POLITICS = (AI_ACTIONS.STUDY_POLITICS, 'politics')
