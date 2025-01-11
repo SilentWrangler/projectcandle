@@ -78,9 +78,12 @@ class Character(models.Model):
     def world(self):
         try:
             tag = self.tags.get(name=CHAR_TAG_NAMES.WORLD)
+            if tag.content=='':
+                tag.content=str(get_active_world().id)
+                tag.save()
         except CharTag.DoesNotExist:
             tag = self.tags.create(name=CHAR_TAG_NAMES.WORLD,
-                                   content=get_active_world().id)
+                                   content=str(get_active_world().id))
             tag.save()
         finally:
             return World.objects.get(id=int(tag.content))
@@ -455,6 +458,20 @@ class Character(models.Model):
                 content = f'{value.id}'
                 )
             t.save()
+
+    def people_in_radius(self, radius):
+        base_x = self.location['x']
+        base_y = self.location['y']
+        locations = (f'{{"x":{i}, "y":{j} }}' for i in range(base_x-radius, base_x+1+radius) for j in range(base_y-radius, base_y+1+radius))
+        return Character.objects.filter(
+            tags__name = CHAR_TAG_NAMES.WORLD,
+            tags__content = str(self.world.id)
+        ).filter(
+            tags__name = CHAR_TAG_NAMES.LOCATION,
+            tags__content__in = locations
+        )
+
+
     #
     # END OF RELATIONS
     # ---------------------------------------------------------------

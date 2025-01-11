@@ -51,7 +51,8 @@ INSTALLED_APPS = [
     'rest_framework',
    # 'background_task',
     'rest_framework.authtoken',
-    'ai'
+    'ai',
+    'dbbackup',
 ]
 
 MIDDLEWARE = [
@@ -187,7 +188,9 @@ CSRF_COOKIE_DOMAIN = '.worldofcandle.club'
 TIMESTEP_MODULES = [
     'world.logic',
     'players.logic',
+    'ai.timestep',
     ]
+
 
 PROJECT_PROCESSORS =[
     'players.projects',

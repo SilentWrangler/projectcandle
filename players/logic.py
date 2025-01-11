@@ -197,7 +197,7 @@ class PCUtils:
                 result = [PROJECTS.TYPES.TEACH,PROJECTS.TYPES.STUDY]
             else:
                 result = [PROJECTS.TYPES.MAKE_FRIEND]
-                for faction in char.factions:
+                for faction in char.factions.all():
                     if faction.can_recruit or faction.is_leader:
                         result += [PROJECTS.TYPES.INVITE_TO_FACTION]
                         break

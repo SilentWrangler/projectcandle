@@ -1,5 +1,7 @@
-from pettingzoo import ParallelEnv
+from gymnasium import Env, register
 from gymnasium.spaces import Dict, Text, Discrete, Tuple, Box, Sequence, MultiDiscrete
+
+from typing import Optional
 
 import numpy as np
 
@@ -15,6 +17,9 @@ from players.logic import PCUtils, create_character_outta_nowhere
 
 from ai.constants import MEGABOX_COORDS, MEGABOX_HIGH, MEGABOX_LOW
 
+from ai.actions import AI_ACTIONS, process_ai_action
+from ai.targeting import RandomViableTargeting
+
 from candle.settings import TIMESTEP_MODULES
 
 from copy import copy
@@ -22,11 +27,14 @@ from importlib import import_module
 
 from random import randrange
 
-class CandleAiEnvironment(ParallelEnv):
+from django.core.management import call_command
+
+class CandleAiEnvironment(Env):
     metadata = {
-        "name": "candle_ai_v0",
+        "name": "candle_ai_v0.1",
+        "render_modes": ["ascii",]
     }
-    LENGTH_LIMIT = 1200
+
     def __init__(self):
         # Generate a smaller world
         width, height = WORLD_GEN.WIDTH//4, WORLD_GEN.HEIGHT//4
@@ -40,88 +48,67 @@ class CandleAiEnvironment(ParallelEnv):
             city_number=20,
             pops_per_city=2
         )
-        #self.wid = self.generator.generate_world()
-        #world = World.objects.get(id=self.wid)
-        #world.is_active = True
-        #world.save()
-        #self.create_characters(self.wid)
-        self.possible_agents = []
-        self.agent_0_id = None
+
+        self.targeting = RandomViableTargeting()
+
         self.timestep = None
         self.faction_count = 0
-        temp_dict = {}
-        temp_dict_2 = {}
-        for i in range(40):
-            self.possible_agents.append(str(i))
-            temp_dict[str(i)] = Box(
+
+        self.agent_0_id = None
+        self.observation_space = Box(
                 shape=MEGABOX_COORDS.SHAPE,
                 dtype=float,
                 low=MEGABOX_LOW,
                 high=MEGABOX_HIGH
             )
-            temp_dict_2[str(i)] = Box(shape=(3,3),dtype=float,
-                                      low=np.array([
-                                        [0, 0, 0],
-                                        [0, 0, 0],
-                                        [0, 0, 0]
-                                        ]),
-                                      high=np.array([
-                                        [8, 1, 3],
-                                        [100000, width, height],
-                                        [100000, 4, 100000]
-                                        ]))
-
-        self.observation_spaces = Dict(temp_dict)
-        self.action_spaces = Dict(temp_dict_2)
+        self.action_space = Discrete(len(AI_ACTIONS.ACTION_LIST))
         self.render_mode = 'ascii'
 
+        #call_command('dbbackup')
+
     def reset(self, seed=None, options=None):
+        # call_command('dbrestore','--noinput')
+        self.timestep = 0
+        self.faction_count = 0
         self.wid = self.generator.generate_world()
         world = World.objects.get(id=self.wid)
         world.is_active = True
         world.save()
+
+        #print(f"World id: {self.wid}")
+
         self.create_characters(self.wid)
-        self.agents = copy(self.possible_agents)
-        self.timestep = 0
-        self.faction_count = 0
 
-        observations = {}
-        infos = {a: {} for a in self.agents}
-        for i in range(40):
-            observations[str(i)] = self.generate_observation(i)
+        return self._get_obs() , {}
 
-        return observations, infos
-    def step(self, actions):
+    def step(self, action):
 
-        print(f"===== Starting step {self.timestep}")
-        rewards = {}
-        for actor in actions:
-            rewards[actor] = self.process_action(int(actor), actions[actor])
-
-        observations, terminations, truncations = {}, {}, {}
-        for i in range(40):
-            observations[str(i)] = self.generate_observation(i)
-            truncations[str(i)] = self.timestep >= CandleAiEnvironment.LENGTH_LIMIT
-            terminations[str(i)] = self.is_terminated(i)
-            rewards[str(i)] += self.calculate_reward(i)
+        #print(f"===== Starting step {self.timestep}")
+        character = Character.objects.get(id=self.agent_0_id)
+        reward = process_ai_action(action,character,self.targeting)
 
         for modname in TIMESTEP_MODULES:
             mod = import_module(modname)
             mod.do_time_step()
-        print(f"===== Finished step {self.timestep}")
+        #print(f"===== Finished step {self.timestep}")
         self.timestep += 1
-        infos = {a: {} for a in self.agents}
 
-        return observations, rewards, terminations, truncations, infos
+        truncation = False
+        termination = self.is_terminated()
+        observation = self._get_obs()
+        reward += self.calculate_reward()
+        info = {}
+
+        return observation, reward, termination, truncation, info
 
     def render(self):
         pass
 
-    def observation_space(self, agent):
-        return self.observation_spaces[agent]
+    def observation_space(self):
+        return self.observation_space
 
-    def action_space(self, agent):
-        return self.action_spaces[agent]
+    def action_space(self):
+        return self.action_space
 
     def create_characters(self, wid, minage=16, maxage=None):
         races = [
@@ -142,12 +129,12 @@ class CandleAiEnvironment(ParallelEnv):
                 if self.agent_0_id is None:
                     self.agent_0_id = c.id
 
-    def is_terminated(self,actor):
-        character = Character.objects.get(id=self.agent_0_id + actor)
+    def is_terminated(self):
+        character = Character.objects.get(id=self.agent_0_id)
         return character.death is not None
 
-    def generate_observation(self, actor):
-        character = Character.objects.get(id=self.agent_0_id+actor)
+    def _get_obs(self):
+        character = Character.objects.get(id=self.agent_0_id)
         world = World.objects.get(id=self.wid)
         c_x, c_y = character.location['x'], character.location['y']
 
@@ -245,7 +232,7 @@ class CandleAiEnvironment(ParallelEnv):
                     if pop.faction == faction.faction:
                         observation[pop_idx][j][k] = 1
             pop_idx += 1
-        print(f'Actor {actor}: observed {pop_idx} characters')
+        #print(f'Actor observed {pop_idx} pops')
         others = Character.objects.filter(
             tags__name=CHAR_TAG_NAMES.WORLD,
             tags__content=str(self.wid)
@@ -278,126 +265,20 @@ class CandleAiEnvironment(ParallelEnv):
 
                 _, j, k = MEGABOX_COORDS.OTHERS.HAS_SHARED_FACTION
 
-                for faction in other.factions:
+                for faction in other.factions.all():
                     if character.factions.filter(faction=faction.faction).exists():
                         observation[other_idx][j][k] = 1
                         break
 
                 other_idx += 1
-                print(f'Actor {actor}: observed {other_idx} characters')
+        #print(f'Actor observed {other_idx} characters')
 
         return observation
 
-    def process_action(self, actor, action):
-        if action is None:
-            return 0
-        character = Character.objects.get(id=self.agent_0_id + actor)
 
-        x, y = int(action[1][1]), int(action[1][2])
-        ptype = int(action[0][0])
-        rewards = [0, 5, 7, 7, 7, 7, 10, 9, 15]
-        try:
-            if ptype == 0:
-                current = 0 if character.current_project is None else\
-                    project_type_to_number(character.current_project.type)
-                return rewards[current]
-            elif ptype == 1:
-                subjects = ['economics','politics','military','science']
-                PCUtils.start_char_project(
-                    character,
-                    character,
-                    PROJECTS.TYPES.STUDY,
-                    {
-                        'subject': subjects[int(action[0][2])]
-                    }
-
-                )
-                return rewards[ptype]
-            elif ptype == 2:
-                target = Character.objects.get(id=int(action[1][0]))
-                PCUtils.start_char_project(
-                    character,
-                    target,
-                    PROJECTS.TYPES.MAKE_FRIEND,
-                    {}
-                )
-                return rewards[ptype]
-            elif ptype == 3:
-                PCUtils.start_cell_project(
-                    character,
-                    x,y,
-                    PROJECTS.TYPES.MAKE_FACTION,
-                    {
-                        'with_pop': int(action[2][0]),
-                        'name': 'AI Faction'
-                    }
-                )
-                return rewards[ptype]
-            elif ptype == 4:
-                target = Character.objects.get(id=int(action[1][0]))
-                PCUtils.start_char_project(
-                    character,
-                    target,
-                    PROJECTS.TYPES.INVITE_TO_FACTION,
-                    {
-                        'faction': int(action[2][2])
-                    }
-                )
-                return rewards[ptype]
-            elif ptype == 5:
-                target_types = [PROJECTS.TARGET_TYPES.CHARACTER,PROJECTS.TARGET_TYPES.FACTION]
-                ttype = target_types[int(action[0][1])]
-                target = None
-                if ttype == PROJECTS.TARGET_TYPES.CHARACTER:
-                    target = Character.objects.get(id=int(action[1][0]))
-                if ttype == PROJECTS.TARGET_TYPES.FACTION:
-                    target = Faction.objects.get(id=int(action[1][0]))
-                PCUtils.start_cell_project(
-                    character,
-                    x,y,
-                    PROJECTS.TYPES.GATHER_SUPPORT,
-                    {
-                        'target_type':ttype,
-                        'target': target.id,
-                        'with_pop': int(action[2][0])
-                    }
-                )
-                return rewards[ptype]
-            elif ptype == 6:
-                PCUtils.start_cell_project(
-                    character,
-                    x,y,
-                    PROJECTS.TYPES.FORTIFY_CITY,
-                    {
-                        'with_pop': int(action[2][0])
-                    }
-                )
-                return rewards[ptype]
-            elif ptype == 7:
-                PCUtils.start_cell_project(
-                    character,
-                    x,y,
-                    PROJECTS.TYPES.BUILD_TILE,
-                    {
-                        'with_pop': int(action[2][0]),
-                        'city_type': CIVILIAN_CITIES[int(action[2][1])],
-                    }
-                )
-                return rewards[ptype]
-            elif ptype == 8:
-                PCUtils.start_cell_project(
-                    character,
-                    x,y,
-                    PROJECTS.TYPES.UPGRADE_TILE,
-                    {}
-                )
-                return rewards[ptype]
-        except Exception:
-            return -10
-
-    def calculate_reward(self,actor):
+    def calculate_reward(self):
         world = World.objects.get(id=self.wid)
-        character = Character.objects.get(id=self.agent_0_id + actor)
+        character = Character.objects.get(id=self.agent_0_id)
         x = character.location['x']
         y = character.location['y']
         return self.recursive_tile_reward(world,x,y)
@@ -501,3 +382,10 @@ def race_to_number(text):
         return 4
     elif text == POP_RACE.FEY:
         return 5
+
+
+register(
+    id="candle_ai_v0.1",
+    entry_point=CandleAiEnvironment,
+    nondeterministic=True
+)

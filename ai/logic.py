@@ -2,78 +2,231 @@ import supersuit as ss
 from stable_baselines3 import PPO
 from stable_baselines3.ppo import CnnPolicy, MlpPolicy
 
+import gymnasium as gym
+from collections import defaultdict
+import numpy as np
+
+from abc import ABC, abstractmethod
+
+from players.models import Character
+
 from ai.candle_ai_env import CandleAiEnvironment
+from ai.actions import AI_ACTIONS
 
-def train(steps: int = 1_000):
-    env = CandleAiEnvironment()
+from datetime import datetime
 
-    #exitenv = ss.black_death_v3(env)
+from tqdm import tqdm
 
-    env.reset()
+class TestAgent:
+    def __init__(
+            self,
+            env: gym.Env,
+            learning_rate: float,
+            initial_epsilon: float,
+            epsilon_decay: float,
+            final_epsilon: float,
+            discount_factor: float = 0.95,
+    ):
+        """Initialize a Reinforcement Learning agent with an empty dictionary
+        of state-action values (q_values), a learning rate and an epsilon.
 
-    print(f"Starting training on {str(env.metadata['name'])}.")
+        Args:
+            env: The training environment
+            learning_rate: The learning rate
+            initial_epsilon: The initial epsilon value
+            epsilon_decay: The decay for epsilon
+            final_epsilon: The final epsilon value
+            discount_factor: The discount factor for computing the Q-value
+        """
+        self.env = env
+        self.q_values = defaultdict(lambda: np.zeros(env.action_space.n))
 
-    env = ss.pettingzoo_env_to_vec_env_v1(env)
-    env = ss.concat_vec_envs_v1(env, 8, num_cpus=1, base_class="stable_baselines3")
+        self.lr = learning_rate
+        self.discount_factor = discount_factor
 
-    model = PPO(
-        MlpPolicy,
-        env,
-        verbose=3,
-        batch_size=256,
+        self.epsilon = initial_epsilon
+        self.epsilon_decay = epsilon_decay
+        self.final_epsilon = final_epsilon
+
+        self.training_error = []
+
+    def get_action(self, obs: tuple[int, int, bool]) -> int:
+        """
+        Returns the best action with probability (1 - epsilon)
+        otherwise a random action with probability epsilon to ensure exploration.
+        """
+        # with probability epsilon return a random action to explore the environment
+        if np.random.random() < self.epsilon:
+            return self.env.action_space.sample()
+        # with probability (1 - epsilon) act greedily (exploit)
+        else:
+            return int(np.argmax(self.q_values[obs]))
+
+    def update(
+            self,
+            obs: tuple[int, int, bool],
+            action: int,
+            reward: float,
+            terminated: bool,
+            next_obs: tuple[int, int, bool],
+    ):
+        """Updates the Q-value of an action."""
+
+
+        future_q_value = (not terminated) * np.max(self.q_values[next_obs])
+        temporal_difference = (
+                reward + self.discount_factor * future_q_value - self.q_values[obs][action]
+        )
+
+        self.q_values[obs][action] = (
+                self.q_values[obs][action] + self.lr * temporal_difference
+        )
+        self.training_error.append(temporal_difference)
+
+    def decay_epsilon(self):
+        self.epsilon = max(self.final_epsilon, self.epsilon - self.epsilon_decay)
+
+    def save_q_values(self):
+        from pickle import dump
+        import os
+
+        path, dirs, files = next(os.walk("./pickled_models"))
+
+        count = len(files)
+
+        save_path = "./pickled_models"
+        filename = os.path.join(save_path, f'Agent_{count}.pickle')
+        with open(filename, mode='wb') as out:
+            dump(dict(self.q_values), out)
+        return filename
+
+    def load_q_values(self, filename):
+        from pickle import load
+        with open(filename,mode='rb') as file:
+            self.q_values = defaultdict(lambda: np.zeros(env.action_space.n), load(file))
+
+
+
+
+
+
+def train(steps: int = 10):
+
+    learning_rate = 0.01
+    n_episodes = 3
+    start_epsilon = 1.0
+    epsilon_decay = start_epsilon / (n_episodes / 2)  # reduce the exploration over time
+    final_epsilon = 0.1
+
+    env = gym.make("candle_ai_v0.1", steps)
+    env = gym.wrappers.FlattenObservation(env)
+    env = gym.wrappers.TimeLimit(env, steps)
+
+    env = gym.wrappers.RecordEpisodeStatistics(env, n_episodes)
+
+    agent = TestAgent(
+        env = env,
+        learning_rate=learning_rate,
+        initial_epsilon=start_epsilon,
+        epsilon_decay=epsilon_decay,
+        final_epsilon=final_epsilon
     )
 
-    model.learn(total_timesteps = steps)
+    print(f"{datetime.now()} Starting training on {str(env.metadata['name'])}.")
 
-    model.save(f"{env.unwrapped.metadata.get('name')}_world_{env.unwrapped.wid}")
+    for ep in tqdm(range(n_episodes)):
+        o,i = env.reset()
+        done = False
 
-    print("Model has been saved.")
+        for _ in tqdm(range(steps)):
+            act = agent.get_action(tuple(o))
+            n_o,rw,trm,trn,i = env.step(act)
 
-    env.close()
+            agent.update(
+                obs=tuple(o),
+                next_obs=tuple(n_o),
+                action=act,
+                reward=rw,
+                terminated=trm
+            )
+
+            done = trm or trn
+
+            if done:
+                break
+
+            o = n_o
+        agent.decay_epsilon()
+
+    fname = agent.save_q_values()
+    print(f"Agent saved as {fname}")
 
 
-def eval(num_games: int = 100):
-    env = CandleAiEnvironment()
-    try:
-        latest_policy = max(
-            glob.glob(f"{env.metadata['name']}_world_*.zip")
-        )
-    except ValueError:
-        print("Policy not found.")
-        return
 
-    model = PPO.load(latest_policy)
 
-    rewards = {a: 0 for a in env.possible_agents}
 
-    for i in range(num_games):
-        env.reset()
-        env.action_space(env.possible_agents[0])
 
-        for agent in env.agent_iter():
-            obs, reward, termination, truncation, info = env.last()
+class BaseActionAI(ABC):
 
-            actions = {}
-            for a in env.agents:
-                rewards[a] += env.rewards[a]
-                if termination or truncation:
-                    break
-                else:
-                    if agent == env.possible_agents[0]:
-                        actions[agent] = env.action_space(agent).sample()
-                    else:
-                        actions[agent] = model.predict(obs, deterministic = True)[0]
-            env.step(actions)
+    @abstractmethod
+    def pick_action(self, character: Character) -> int:
+        pass
 
-        env.close()
 
-        avg_reward = sum(rewards.values()) / len(rewards.values())
-        avg_reward_per_agent = {
-            agent: rewards[agent] / num_games for agent in env.possible_agents
-        }
-        print(f"Avg reward: {avg_reward}")
-        print("Avg reward per agent, per game: ", avg_reward_per_agent)
-        print("Full rewards: ", rewards)
-        return avg_reward
+class WeightedRandomAI(BaseActionAI):
+
+    def __init__(self, *args, **kwargs):
+        self.choices = []
+        self.weights = []
+        for action in AI_ACTIONS.ACTION_LIST:
+            self.choices.append(AI_ACTIONS.__dict__[action])
+            self.weights.append(kwargs.get(action.lower(),1))
+
+    def pick_action(self, character: Character) -> int:
+        from random import choices
+        current_project = character.current_project
+        if current_project is not None and current_project.work_required != 0:
+            return AI_ACTIONS.DO_NOTHING
+        return choices(self.choices, weights = self.weights)[0]
+
+
+class DefaultTreeAI(BaseActionAI):
+
+    RECRUITING_RANGE = 1
+    RECRUITING_DRIVE = 5
+    POP_SUPPORT_NEED = 5
+    class SPECIALIZATIONS:
+        ECONOMICS = (AI_ACTIONS.STUDY_ECONOMICS, 'economics')
+        POLITICS = (AI_ACTIONS.STUDY_POLITICS, 'politics')
+        MILITARY = (AI_ACTIONS.STUDY_MILITARY, 'military')
+        SCIENCE = (AI_ACTIONS.STUDY_SCIENCE, 'science')
+
+    def __init__(self, *args, **kwargs):
+        self.specialization = kwargs['specialization']
+        self.recruiting_range = kwargs.get('recruiting_range', DefaultTreeAI.RECRUITING_RANGE)
+        self.recruiting_drive = kwargs.get('recruiting_range', DefaultTreeAI.RECRUITING_DRIVE)
+        self.pop_support_need = kwargs.get('pop_support_need', DefaultTreeAI.POP_SUPPORT_NEED)
+    def pick_action(self, character: Character) -> int:
+        current_project = character.current_project
+        if current_project is not None and current_project.work_required!=0:
+            return AI_ACTIONS.DO_NOTHING
+        if character.level(self.specialization[1])<1:
+            return self.specialization[0]
+        if self.specialization == DefaultTreeAI.SPECIALIZATIONS.POLITICS:
+            if character.friends.count()<2:
+                return AI_ACTIONS.MAKE_FRIEND
+            if character.factions.count()<1:
+                return AI_ACTIONS.MAKE_FACTION
+
+            primary_faction_membership = character.factions.first()
+            if primary_faction_membership.faction.members.count() < self.recruiting_drive:
+                return AI_ACTIONS.INVITE_TO_FACTION
+            if (primary_faction_membership.can_recruit
+                    and primary_faction_membership.faction.pops.count() < self.pop_support_need):
+                return AI_ACTIONS.GATHER_SUPPORT_FACTION
+
+        if self.specialization == DefaultTreeAI.SPECIALIZATIONS.ECONOMICS:
+            return AI_ACTIONS.BUILD_HOUSING
+
 
 

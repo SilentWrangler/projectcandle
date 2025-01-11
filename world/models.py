@@ -50,6 +50,14 @@ class World(models.Model):
         return format_lazy('{years}, {month}',
                            years=years, month=month_names[months])
 
+    def get_world_characters(self):
+        from players.models import Character
+        from players.constants import CHAR_TAG_NAMES
+        return Character.objects.filter(
+            tags__name=CHAR_TAG_NAMES.WORLD,
+            tags__content=str(self.id)
+        )
+
     def __getitem__(self, value):
         class Column:
             def __init__(column, x):
@@ -188,10 +196,10 @@ class Pop(models.Model):
         from players.models import CharTag
         from players.constants import CHAR_TAG_NAMES
         try:
-            tag = CharTag.objects.get(
+            tag = CharTag.objects.filter(
                 name=CHAR_TAG_NAMES.TIED_POP,
                 content=f'{self.id}'
-            )
+            ).first()
             return tag.character
         except CharTag.DoesNotExist:
             return None
@@ -249,7 +257,7 @@ class PopTag(models.Model):
     def save(self, *args, **kwargs):
         if self.name in UNIQUE_TAGS.ONE_PER_POP:
             try:
-                todel = PopTag.objects.get(name=self.name, content=self.content)
+                todel = PopTag.objects.get(name=self.name, content=self.content, pop=self.pop)
                 todel.delete()
             except PopTag.DoesNotExist:
                 pass

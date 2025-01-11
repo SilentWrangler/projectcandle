@@ -360,20 +360,22 @@ def get_populated_cells(world):
         .annotate(pop_count=Count('pop'))\
         .filter(pop_count__gt=0, world=world)
 
-def get_active_world():
+def get_active_world() -> World:
     return World.objects.get(is_active=True)
 
 def modify_growth(cell):
     support = get_supported_population(cell)
     current = cell.pop_set.count()
     mod = (support - current) * BALANCE.POP_GROWTH_MODIFIER
-    print(f'{cell} growth mod: {mod}')
+    #print(f'{cell} growth mod: {mod}')
     if mod<0:
         for pop in cell.pop_set.all():
             pop.growth = pop.growth + mod
             if pop.growth <= BALANCE.POP_DEATH_THRESHOLD:
+                character = pop.tied_character
                 pop.tied_character.tied_pop = None
-                pop.tied_character.die()
+                character.die()
+
                 pop.delete()
     else:
         pop = choice(list(cell.pop_set.all()))
@@ -434,7 +436,7 @@ def check_for_migration(cell):
             # try_build_house(cell, chars)
 
 
-def process_population(world):
+def process_population(world, silent = False):
     populated_cells = get_populated_cells(world)
     for cell in populated_cells:
         modify_growth(cell)

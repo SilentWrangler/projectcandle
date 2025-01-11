@@ -22,6 +22,8 @@ gymnasium = "^0.29.1"
 pettingzoo = "^1.24.3"
 stable-baselines3 = "^2.3.2"
 supersuit = "^3.9.2"
+django-dbbackup = "^4.2.1"
+tqdm = "^4.67.1"
 
 [tool.poetry.dev-dependencies]
 
