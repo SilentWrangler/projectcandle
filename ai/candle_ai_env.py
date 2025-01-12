@@ -21,11 +21,11 @@ from ai.actions import AI_ACTIONS, process_ai_action
 from ai.targeting import RandomViableTargeting
 
 
+from world.timestep import do_full_time_step
 
-from candle.settings import TIMESTEP_MODULES
 
 from copy import copy
-from importlib import import_module
+
 
 from random import randrange
 
@@ -93,9 +93,7 @@ class CandleAiEnvironment(Env):
         character = Character.objects.get(id=self.agent_0_id)
         reward = process_ai_action(action,character,self.targeting)
 
-        for modname in TIMESTEP_MODULES:
-            mod = import_module(modname)
-            mod.do_time_step()
+        do_full_time_step()
         #print(f"===== Finished step {self.timestep}")
         self.timestep += 1
 
@@ -150,33 +148,34 @@ class CandleAiEnvironment(Env):
         character = Character.objects.get(id=self.agent_0_id)
         x = character.location['x']
         y = character.location['y']
-        return self.recursive_tile_reward(world,x,y)
+        return recursive_tile_reward(world,x,y)
 
-    def recursive_tile_reward(self,world,x,y, visited = []):
-        cell = world[x][y]
-        if x<0 or y<0 or x>=world.width or y>=world.height:
-            return 0
-        if cell.city_tier == 0:
-            return 1
-        if (x, y) in visited:
-            return 0
-        visited.append((x, y))
-        reward = 1
-        if cell.city_type == CITY_TYPE.FORT:
-            reward = 5 * cell.city_tier
-        elif cell.city_type == CITY_TYPE.FARM:
-            reward = 3 * cell.city_tier
-        elif cell.city_type == CITY_TYPE.MINE:
-            reward = 3 * cell.city_tier
-        elif cell.city_type == CITY_TYPE.MANA:
-            reward = 3 * cell.city_tier
-        elif cell.city_type == CITY_TYPE.GENERIC:
-            reward = 2 * cell.city_tier
 
-        for new_x in range(x-1,x+2):
-            for new_y in range(y-1,y+2):
-                reward += self.recursive_tile_reward(world,new_x,new_y, visited)
-        return reward
+def recursive_tile_reward(world, x, y, visited=[]):
+    cell = world[x][y]
+    if x<0 or y<0 or x>=world.width or y>=world.height:
+        return 0
+    if cell.city_tier == 0:
+        return 1
+    if (x, y) in visited:
+        return 0
+    visited.append((x, y))
+    reward = 1
+    if cell.city_type == CITY_TYPE.FORT:
+        reward = 5 * cell.city_tier
+    elif cell.city_type == CITY_TYPE.FARM:
+        reward = 3 * cell.city_tier
+    elif cell.city_type == CITY_TYPE.MINE:
+        reward = 3 * cell.city_tier
+    elif cell.city_type == CITY_TYPE.MANA:
+        reward = 3 * cell.city_tier
+    elif cell.city_type == CITY_TYPE.GENERIC:
+        reward = 2 * cell.city_tier
+
+    for new_x in range(x-1,x+2):
+        for new_y in range(y-1,y+2):
+            reward += recursive_tile_reward(world,new_x,new_y, visited)
+    return reward
 
 
 def create_observation(character,world):
