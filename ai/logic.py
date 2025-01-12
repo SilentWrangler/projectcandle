@@ -143,28 +143,34 @@ def train(steps: int = 50, n_episodes = 5):
     print(f"{datetime.now()} Starting training on {str(env.metadata['name'])}.")
 
     for ep in tqdm(range(n_episodes)):
-        o,i = env.reset()
-        done = False
+        try:
+            o,i = env.reset()
+            done = False
 
-        for _ in tqdm(range(steps)):
-            act = agent.get_action(tuple(o))
-            n_o,rw,trm,trn,i = env.step(act)
+            for _ in tqdm(range(steps)):
+                act = agent.get_action(tuple(o))
+                n_o,rw,trm,trn,i = env.step(act)
 
-            agent.update(
-                obs=tuple(o),
-                next_obs=tuple(n_o),
-                action=act,
-                reward=rw,
-                terminated=trm
-            )
+                agent.update(
+                    obs=tuple(o),
+                    next_obs=tuple(n_o),
+                    action=act,
+                    reward=rw,
+                    terminated=trm
+                )
 
-            done = trm or trn
+                done = trm or trn
 
-            if done:
-                break
+                if done:
+                    break
 
-            o = n_o
-        agent.decay_epsilon()
+                o = n_o
+            agent.decay_epsilon()
+        except KeyboardInterrupt:
+            print("Stopping...")
+            break
+
+
 
     fname = agent.save_q_values()
     print(f"Agent saved as {fname}")
