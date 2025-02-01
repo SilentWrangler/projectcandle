@@ -118,3 +118,17 @@ for k in range(4):
     i, j, _ = MEGABOX_COORDS.CHAR.SKILL_EXP_START
     MEGABOX_HIGH[i][j][k] = 20_000
 
+class REWARDS:
+    FRIEND_REWARD = 5
+    ENEMY_REWARD = 0
+
+    BASE_SKILL_REWARD = 10
+
+    @classmethod
+    def reward_for_skill(cls, skill_level):
+        reward = 0
+        for lvl in range(skill_level):
+            reward += lvl * REWARDS.BASE_SKILL_REWARD
+        return reward
+
+

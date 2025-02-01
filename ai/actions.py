@@ -207,9 +207,9 @@ def gather_support(action_id, character: Character, targeting: BaseTargeting):
     if action_id == AI_ACTIONS.GATHER_SUPPORT_SELF:
         tid = character.id
     elif action_id == AI_ACTIONS.GATHER_SUPPORT_FRIEND:
-        tid = targeting.acquire_character(character, PROJECTS.TYPES.GATHER_SUPPORT)
+        tid = targeting.acquire_character(character, PROJECTS.TYPES.GATHER_SUPPORT).id
     elif action_id == AI_ACTIONS.GATHER_SUPPORT_FACTION:
-        tid = targeting.acquire_faction(character, PROJECTS.TYPES.GATHER_SUPPORT)
+        tid = targeting.acquire_faction(character, PROJECTS.TYPES.GATHER_SUPPORT).id
     PCUtils.start_cell_project(
         character,
         pop.location.x, pop.location.y,

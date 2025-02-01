@@ -21,8 +21,7 @@ class EXP:
     EDUCATION_START = 12 * 6 # Начало учёбы с 6 лет
     YOUNG_BUFF_CUTOFF = 12 * 30
     OLD_DEBUFF_START = 12 * 55
-
-    TRAIT_EXP_REQUIREMENT = 12 * 12 * (NORMAL_EXP_GAIN + YOUNG_EXP_MOD) #12 лет обучения (для непися без бафов)
+    TRAIT_EXP_REQUIREMENT = 8 * 12 * (NORMAL_EXP_GAIN + YOUNG_EXP_MOD) # 8 лет обучения (для непися без бафов)
 
     TRAIT_EXR_MULT = 1.5 # Каждый следующий уровень увеличивает требования по EXP в полтора раза
 
@@ -173,7 +172,7 @@ class PROJECTS:
         CELL = 'cell', _("Клетка")
         CHARACTER = 'character',_("Персонаж")
 
-    TARGETS_CELL =  [TYPES.RELOCATE, TYPES.BUILD_TILE, TYPES.FORTIFY_CITY]
+    TARGETS_CELL =  [TYPES.RELOCATE, TYPES.BUILD_TILE, TYPES.FORTIFY_CITY, TYPES.MAKE_FACTION]
     TARGETS_CHARACTER = [TYPES.MAKE_FRIEND]
     TARGETS_VARIABLE = [TYPES.GATHER_SUPPORT]
     class WORK:

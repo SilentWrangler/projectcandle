@@ -8,6 +8,8 @@ from world.constants import POP_RACE, MAIN_BIOME, CIVILIAN_CITIES, BALANCE as WO
 from .namegens import hungarian
 from .constants import GENDER, CHAR_TAG_NAMES, EXP, PROJECTS, CHILDREN, HEALTH, BALANCE as PLAYER_BALANCE, ALLOWED_EXP
 from .projects import ProjectProcessor, RelocateHelpers
+from players.balance import normal_npc_trait_gain
+
 
 import json
 
@@ -410,6 +412,7 @@ class PCUtils:
 
             )
             proj_args['with_pop'] = pop_id
+            proj_args['target'] = {'x': x, 'y': y}
             proj_args['author'] = -1 if char.controller is None else char.controller.id
             proj_args['name'] = name
             project.arguments_dict = proj_args
@@ -483,7 +486,7 @@ class PCUtils:
 
             if target_type==PROJECTS.TARGET_TYPES.CHARACTER:
                 try:
-                    target_id = int(target)
+                    target_id = target
                     proj_args['target'] = target_id
                     target_char = Character.objects.get(id = target_id)
                     dist = max(abs(x-target_char.location['x']), abs(y-target_char.location['y']))
@@ -491,7 +494,7 @@ class PCUtils:
                         raise cls.InvalidParameters(f"Character {target_char} is dead.")
                     if dist>PLAYER_BALANCE.BASE_COMMUNICATION_RANGE:
                         raise cls.InvalidParameters(f"Character {target_char} is too far.")
-                except Character.DoesNotexist:
+                except Character.DoesNotExist:
                     raise cls.InvalidParameters(f"Character {target_id} does not exist")
             elif target_type==PROJECTS.TARGET_TYPES.FACTION:
                 try:
@@ -538,6 +541,14 @@ class PCUtils:
     @classmethod
     def remove_trait_in_bloodline(cls,player, trait):
         player.bloodline_traits.remove(trait)
+
+    @classmethod
+    def give_standard_exp(cls, character, subject):
+        lvl = normal_npc_trait_gain(character.age)
+        for _ in range(lvl):
+            character.level_up(subject)
+
+
 
     @classmethod
     def _check_missing(cls, needed, data):

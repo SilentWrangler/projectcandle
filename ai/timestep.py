@@ -25,6 +25,10 @@ def register_special_ai(character_id):
 def unregister_special_ai(character_id):
     SPECIAL_AI_LIST.remove(character_id)
 
+
+def clear_special_ais():
+    SPECIAL_AI_LIST.clear()
+
 def do_time_step():
     characters = get_active_world().get_world_characters().exclude(
         tags__name=CHAR_TAG_NAMES.DEATH

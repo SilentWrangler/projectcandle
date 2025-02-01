@@ -86,16 +86,13 @@ class TestAgent:
     def decay_epsilon(self):
         self.epsilon = max(self.final_epsilon, self.epsilon - self.epsilon_decay)
 
-    def save_q_values(self):
+    def save_q_values(self, s, e):
         from pickle import dump
         import os
 
-        path, dirs, files = next(os.walk("./pickled_models"))
-
-        count = len(files)
-
         save_path = "./pickled_models"
-        filename = os.path.join(save_path, f'Agent_{count}.pickle')
+        timestring = datetime.now().strftime("%d-%m-%y_%H-%M")
+        filename = os.path.join(save_path, f'Agent_s{s}_e{e}_{timestring}.pickle')
 
 
         with open(filename, mode='wb') as out:
@@ -170,9 +167,7 @@ def train(steps: int = 50, n_episodes = 5):
             print("Stopping...")
             break
 
-
-
-    fname = agent.save_q_values()
+    fname = agent.save_q_values(steps, n_episodes)
     print(f"Agent saved as {fname}")
 
 

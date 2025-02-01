@@ -1,7 +1,7 @@
 from django.core.management.base import BaseCommand
 
 from ai.eval import AICompetition
-from ai.logic import TrainedActionAI, DefaultTreeAI
+from ai.logic import TrainedActionAI, DefaultTreeAI, WeightedRandomAI
 from ai.targeting import RandomViableTargeting
 
 import argparse
@@ -22,12 +22,20 @@ class Command(BaseCommand):
 
         challenger = DefaultTreeAI(specialization=DefaultTreeAI.SPECIALIZATIONS.POLITICS)
 
+        randomized = WeightedRandomAI(
+            do_nothing=0,
+            make_friend=5,
+            study_politics=3,
+            study_economics=3,
+            study_science=0
+        )
+
         targeting = RandomViableTargeting()
 
-        competition = AICompetition(targeting,pupil,challenger)
+        competition = AICompetition(targeting,pupil, challenger, randomized)
 
         a = competition.compete(n_episodes=options['episodes'], steps_per_epsiode=options['steps'])
-        df = pd.DataFrame({'trained':a[0],'algorithm':a[1]})
+        df = pd.DataFrame({'trained':a[0],'algorithm':a[1],'random':a[2]})
         df.to_csv(options['out_file'])
 
 

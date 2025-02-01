@@ -53,7 +53,7 @@ def process_make_faction(project):
         name = kwargs.get('name')
         author_id = int(kwargs.get('author'))
         pop_id = int(kwargs.get('with_pop'))
-        pop = Pop.objects.get(pop_id)
+        pop = Pop.objects.get(id=pop_id)
 
         faction = Faction(name = 'Faction')
         faction.save()
@@ -83,7 +83,7 @@ def process_gather_support(project):
     target_type = kwargs.get('target_type')
     loc = project.character.location
     pop_id = int(kwargs.get('with_pop'))
-    pop = Pop.objects.get(pop_id)
+    pop = Pop.objects.get(id=pop_id)
     dist = max(abs(loc['x']-pop.location.x), abs(loc['y']-pop.location.y))
     if dist>PLAYER_BALANCE.BASE_COMMUNICATION_RANGE:
         project.character.start_next_project()

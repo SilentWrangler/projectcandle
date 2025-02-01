@@ -490,7 +490,7 @@ class Character(models.Model):
     # Time
     @property
     def age(self):
-         world_age = get_active_world().ticks_age
+         world_age = self.world.ticks_age
          return world_age - self.birth_date
 
     @property

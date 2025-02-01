@@ -15,7 +15,7 @@ from players.models import Character
 from players.constants import CHAR_TAG_NAMES, PROJECTS, BALANCE as PLAYER_BALANCE
 from players.logic import PCUtils, create_character_outta_nowhere
 
-from ai.constants import MEGABOX_COORDS, MEGABOX_HIGH, MEGABOX_LOW
+from ai.constants import MEGABOX_COORDS, MEGABOX_HIGH, MEGABOX_LOW, REWARDS
 
 from ai.actions import AI_ACTIONS, process_ai_action
 from ai.targeting import RandomViableTargeting
@@ -27,7 +27,7 @@ from world.timestep import do_full_time_step
 from copy import copy
 
 
-from random import randrange
+from random import randrange, choice
 
 from django.core.management import call_command
 
@@ -39,14 +39,14 @@ class CandleAiEnvironment(Env):
 
     def __init__(self):
         # Generate a smaller world
-        width, height = WORLD_GEN.WIDTH//4, WORLD_GEN.HEIGHT//4
+        width, height = WORLD_GEN.WIDTH, WORLD_GEN.HEIGHT
         self.generator = WorldGenerator(
             width=width,
             height=height,
-            eruptions=WORLD_GEN.ERUPTIONS//16,
-            eruption_power=WORLD_GEN.ERUPTION_POWER//16,
-            forest_cells=WORLD_GEN.FOREST_CELLS//16,
-            swamp_cells=WORLD_GEN.SWAMP_CELLS//16,
+            eruptions=WORLD_GEN.ERUPTIONS,
+            eruption_power=WORLD_GEN.ERUPTION_POWER,
+            forest_cells=WORLD_GEN.FOREST_CELLS,
+            swamp_cells=WORLD_GEN.SWAMP_CELLS,
             city_number=20,
             pops_per_city=2
         )
@@ -132,6 +132,8 @@ class CandleAiEnvironment(Env):
                 c.world = World.objects.get(id=wid)
                 if self.agent_0_id is None:
                     self.agent_0_id = c.id
+                skills = ['economics', 'politics', 'military', 'science']
+                PCUtils.give_standard_exp(c, choice(skills))
 
     def is_terminated(self):
         character = Character.objects.get(id=self.agent_0_id)
@@ -144,11 +146,30 @@ class CandleAiEnvironment(Env):
 
 
     def calculate_reward(self):
-        world = World.objects.get(id=self.wid)
         character = Character.objects.get(id=self.agent_0_id)
-        x = character.location['x']
-        y = character.location['y']
-        return recursive_tile_reward(world,x,y)
+        return total_reward(character)
+
+def total_reward(character):
+    personal = personal_achievements_reward(character)
+    tile = recursive_tile_reward(
+        character.world,
+        character.location['x'],
+        character.location['y'],
+        []
+    )
+
+    return personal + tile
+
+def personal_achievements_reward(character):
+    reward = 0
+    reward += character.friends.count() * REWARDS.FRIEND_REWARD
+    reward += character.enemies.count() * REWARDS.ENEMY_REWARD
+
+    for skill in ['economics', 'politics', 'military', 'science']:
+        r = REWARDS.reward_for_skill(character.level(skill))
+        reward += r * 3 if skill == 'science' else r
+
+    return reward
 
 
 def recursive_tile_reward(world, x, y, visited=[]):
