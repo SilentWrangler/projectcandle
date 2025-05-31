@@ -10,6 +10,9 @@ from abc import ABC, abstractmethod
 
 from players.models import Character
 
+from world.logic import food_value, cell_total_food, get_city_count, get_upgradeable_city_count
+from world.constants import CITY_TYPE
+
 from ai.candle_ai_env import CandleAiEnvironment, create_observation
 from ai.actions import AI_ACTIONS
 
@@ -26,6 +29,8 @@ class TestAgent:
             epsilon_decay: float,
             final_epsilon: float,
             discount_factor: float = 0.95,
+            advanced_exploration: 'BaseActionAI' = None,
+            advanced_chance: float = 0.5
     ):
         """Initialize a Reinforcement Learning agent with an empty dictionary
         of state-action values (q_values), a learning rate and an epsilon.
@@ -50,13 +55,18 @@ class TestAgent:
 
         self.training_error = []
 
-    def get_action(self, obs: tuple[int, int, bool]) -> int:
+        self.advanced_exploration = advanced_exploration
+        self.advanced_chance = advanced_chance
+
+    def get_action(self, obs: tuple[int, int, bool], character: Character = None) -> int:
         """
         Returns the best action with probability (1 - epsilon)
         otherwise a random action with probability epsilon to ensure exploration.
         """
         # with probability epsilon return a random action to explore the environment
         if np.random.random() < self.epsilon:
+            if self.advanced_exploration is not None and np.random.random() < self.advanced_chance:
+                return  self.advanced_exploration.pick_action(character)
             return self.env.action_space.sample()
         # with probability (1 - epsilon) act greedily (exploit)
         else:
@@ -115,7 +125,7 @@ class AgentSave:
 
 
 
-def train(steps: int = 50, n_episodes = 5):
+def train(steps: int = 50, n_episodes = 5, explore_fallback = None, explore_fallback_chance = 0.5):
 
     learning_rate = 0.01
 
@@ -134,7 +144,9 @@ def train(steps: int = 50, n_episodes = 5):
         learning_rate=learning_rate,
         initial_epsilon=start_epsilon,
         epsilon_decay=epsilon_decay,
-        final_epsilon=final_epsilon
+        final_epsilon=final_epsilon,
+        advanced_exploration=explore_fallback,
+        advanced_chance=explore_fallback_chance
     )
 
     print(f"{datetime.now()} Starting training on {str(env.metadata['name'])}.")
@@ -143,9 +155,10 @@ def train(steps: int = 50, n_episodes = 5):
         try:
             o,i = env.reset()
             done = False
+            character = Character.objects.get(id=env.agent_0_id)
 
             for _ in tqdm(range(steps)):
-                act = agent.get_action(tuple(o))
+                act = agent.get_action(tuple(o),character)
                 n_o,rw,trm,trn,i = env.step(act)
 
                 agent.update(
@@ -228,25 +241,45 @@ class DefaultTreeAI(BaseActionAI):
     RECRUITING_RANGE = 1
     RECRUITING_DRIVE = 5
     POP_SUPPORT_NEED = 5
+    FOOD_DEMAND = 1.2
+    MIN_FARMS = 2
 
     class SPECIALIZATIONS:
         ECONOMICS = (AI_ACTIONS.STUDY_ECONOMICS, 'economics')
         POLITICS = (AI_ACTIONS.STUDY_POLITICS, 'politics')
         MILITARY = (AI_ACTIONS.STUDY_MILITARY, 'military')
         SCIENCE = (AI_ACTIONS.STUDY_SCIENCE, 'science')
+        AUT0 = "__AUTO__"
+        LIST = (ECONOMICS, POLITICS, MILITARY, SCIENCE)
 
     def __init__(self, *args, **kwargs):
         self.specialization = kwargs['specialization']
         self.recruiting_range = kwargs.get('recruiting_range', DefaultTreeAI.RECRUITING_RANGE)
         self.recruiting_drive = kwargs.get('recruiting_range', DefaultTreeAI.RECRUITING_DRIVE)
         self.pop_support_need = kwargs.get('pop_support_need', DefaultTreeAI.POP_SUPPORT_NEED)
+        self.food_demand = kwargs.get('food_demand', DefaultTreeAI.FOOD_DEMAND)
+        self.min_farms = kwargs.get('min_farms', DefaultTreeAI.MIN_FARMS)
+
+    def get_spec(self, char):
+        if self.specialization != DefaultTreeAI.SPECIALIZATIONS.AUT0:
+            return self.specialization
+        max_level = -1
+        max_spec = None
+        for spec in DefaultTreeAI.SPECIALIZATIONS.LIST:
+            level = char.level(spec[1])
+            if level > max_level:
+                max_level = level
+                max_spec = spec
+        return max_spec
+
     def pick_action(self, character: Character) -> int:
         current_project = character.current_project
-        if current_project is not None and current_project.work_required!=0:
+        if current_project is not None and current_project.work_required != 0:
             return AI_ACTIONS.DO_NOTHING
-        if character.level(self.specialization[1])<1:
-            return self.specialization[0]
-        if self.specialization == DefaultTreeAI.SPECIALIZATIONS.POLITICS:
+        spec = self.get_spec(character)
+        if character.level(spec[1]) < 1:
+            return spec[0]
+        if spec == DefaultTreeAI.SPECIALIZATIONS.POLITICS:
             if character.friends.count()<2:
                 return AI_ACTIONS.MAKE_FRIEND
             if character.factions.count()<1:
@@ -259,8 +292,47 @@ class DefaultTreeAI(BaseActionAI):
                     and primary_faction_membership.faction.pops.count() < self.pop_support_need):
                 return AI_ACTIONS.GATHER_SUPPORT_FACTION
 
-        if self.specialization == DefaultTreeAI.SPECIALIZATIONS.ECONOMICS:
+        if spec == DefaultTreeAI.SPECIALIZATIONS.ECONOMICS:
+            cell = character.world[character.location['x']][character.location['y']]
+            if cell_total_food(cell) < cell.pop_set.count() * self.food_demand:
+                if get_city_count(cell, CITY_TYPE.FARM) < self.min_farms:
+                    return AI_ACTIONS.BUILD_FARM
+                if get_upgradeable_city_count(cell, CITY_TYPE.FARM) > 0:
+                    return AI_ACTIONS.UPGRADE_FARM
+                return AI_ACTIONS.BUILD_FARM
+
             return AI_ACTIONS.BUILD_HOUSING
 
+        if spec == DefaultTreeAI.SPECIALIZATIONS.MILITARY:
+            cell = character.world[character.location['x']][character.location['y']]
+            if get_upgradeable_city_count(cell, CITY_TYPE.FORT) > 0:
+                return AI_ACTIONS.UPGRADE_FORT
+            return AI_ACTIONS.BUILD_FORT
 
+
+        return spec[0]
+
+
+
+class TrainedAIWithFallback(BaseActionAI):
+    def __init__(self, *args, **kwargs):
+        from pickle import load
+        self.fallback = kwargs['fallback']
+        if not isinstance(self.fallback, BaseActionAI):
+            raise TypeError(f'{type(self.fallback)} is not a recognized AI. Use a subclass of BaseActionAI')
+        filename = kwargs['filename']
+
+        with open(filename, mode='rb') as file:
+            save = load(file)
+            self.q_values = defaultdict(lambda: np.zeros(len(AI_ACTIONS.ACTION_LIST)), save.q_values)
+            self.epsilon = save.epsilon
+
+    def pick_action(self, character: Character) -> int:
+        observation = create_observation(character, character.world)
+
+        observation_hashable = tuple(observation.flatten())
+
+        if observation_hashable not in self.q_values:
+            return self.fallback.pick_action(character)
+        return int(np.argmax(self.q_values[observation_hashable]))
 

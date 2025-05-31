@@ -1,7 +1,7 @@
 from django.core.management.base import BaseCommand
 
 from ai.eval import AICompetition
-from ai.logic import TrainedActionAI, DefaultTreeAI, WeightedRandomAI
+from ai.logic import TrainedActionAI, DefaultTreeAI, WeightedRandomAI, TrainedAIWithFallback
 from ai.targeting import RandomViableTargeting
 
 import argparse
@@ -16,11 +16,14 @@ class Command(BaseCommand):
         parser.add_argument('-e', '--episodes', type=int, default=3, help='Amount of training episodes')
         parser.add_argument('model_file',type=str)
         parser.add_argument('out_file', type=str)
+        parser.add_argument('--advanced', action='store_true', default = False)
     def handle(self, *args, **options):
 
-        pupil = TrainedActionAI(filename=options['model_file'])
 
-        challenger = DefaultTreeAI(specialization=DefaultTreeAI.SPECIALIZATIONS.POLITICS)
+        challenger = DefaultTreeAI(specialization=DefaultTreeAI.SPECIALIZATIONS.AUT0)
+
+        pupil = TrainedAIWithFallback(filename=options['model_file'], fallback=challenger) if options['advanced'] \
+            else TrainedActionAI(filename=options['model_file'])
 
         randomized = WeightedRandomAI(
             do_nothing=0,

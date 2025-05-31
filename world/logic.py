@@ -409,6 +409,23 @@ def get_expansion_candidates(cell):
     ).exclude(main_biome=MAIN_BIOME.WATER)
     return area
 
+def get_city_count(cell, type):
+    area = Cell.objects.filter(
+        world=cell.world,
+        x__gte=cell.x - 1, y__gte=cell.y - 1,
+        x__lte=cell.x + 1, y__lte=cell.y + 1,
+        city_type=type)
+    return area.count()
+
+def get_upgradeable_city_count(cell, type):
+    area = Cell.objects.filter(
+        world=cell.world,
+        x__gte=cell.x - 1, y__gte=cell.y - 1,
+        x__lte=cell.x + 1, y__lte=cell.y + 1,
+        city_type=type,
+        city_tier__lt=BALANCE.MAX_LEVELS[CITY_TYPE.FARM])
+    return area.count()
+
 def get_max_fertility(cell):
     potential = list(get_expansion_candidates(cell))
     scores = [food_value(c.x, c.y, c.world.id) for c in potential]
